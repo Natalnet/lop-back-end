@@ -1,0 +1,7 @@
+No mesmo diretório em que se encontra este arquivo, execute o comando. Isso irá fazer o download das libs nodejs necessárias ao projeto.
+
+$npm i -S express body-parser mongoose mongoose-paginate kerberos cors morgan bcryptjs moment jwt-simple
+
+Para executar o projeto utilize o comando abaixo:
+$ node app.js
+
