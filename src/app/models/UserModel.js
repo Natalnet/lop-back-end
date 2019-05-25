@@ -1,10 +1,11 @@
-const mongoose = require('../../../database');
+const mongoose = require('../../config/mongoose');
+const mongoosePaginate = require('mongoose-paginate-v2')
 const bcrypt = require('bcryptjs');
 
 const UserSchema = new mongoose.Schema({
     name:{
-        type:String,
-        require: true,
+        type: String,
+        required: true,
     },
     email: {
         type: String,
@@ -17,7 +18,18 @@ const UserSchema = new mongoose.Schema({
         required: true,
         select: false,
     },
-    passwordResetToken:{
+    enrollment:{
+        type: String,
+        unique:true,
+        required:true,
+    },
+    profile:{
+        type:String,
+        required:true,
+        enum:["Aluno","professor","Administrador"],
+        default:"Aluno"
+    },
+    passwordResetKey:{
         type: String,
         select: false,
     },
@@ -25,17 +37,16 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         select: false,
     },
-    createdAt:{
-        type: Date,
-        default: Date.now,
-    },
-});
+},{timestamps:true});
+
+UserSchema.plugin(mongoosePaginate)
 
 UserSchema.pre('save', async function(next){
     const hash = await bcrypt.hash(this.password, 10);
     this.password = hash;
     next();
 });
+
 const User = mongoose.model('User', UserSchema);
 
 module.exports = User;
