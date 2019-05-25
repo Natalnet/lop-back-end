@@ -26,8 +26,8 @@ const UserSchema = new mongoose.Schema({
     profile:{
         type:String,
         required:true,
-        enum:["Aluno","professor","Administrador"],
-        default:"Aluno"
+        enum:["ALUNO","PROFESSOR","ADMINISTRADOR"],
+        default:"ALUNO"
     },
     passwordResetKey:{
         type: String,
