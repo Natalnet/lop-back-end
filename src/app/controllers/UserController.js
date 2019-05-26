@@ -17,7 +17,7 @@ class UserController{
 		const id = req.params.id
 		const user = await User.findById(id).select('name')
 		if(!user){
-			return res.status(400).json({error:"User not found"})
+			return res.status(400).json({error:"User not found :("})
 		}
 		return res.status(200).json(user)
 	}
@@ -26,7 +26,7 @@ class UserController{
 		const userId = req.userId
 		const user = await User.findById(userId)
 		if(!user){
-			return res.status(400).json({error:"User not found"})
+			return res.status(400).json({error:"User not found :("})
 		}
 		return res.status(200).json(user)
 	}
@@ -36,9 +36,40 @@ class UserController{
 		const id = req.params.id
 		const user = await User.findById(id)
 		if(!user){
-			return res.status(400).json({error:"User not found"})
+			return res.status(400).json({error:"User not found :("})
 		}
 		return res.status(200).json(user)
+	}
+	async update(req,res){
+		const id = req.params.id
+		const {name,email,enrollment,profile} = req.body
+
+		const user = await User.findById(id)
+		if(!user){
+			return res.status(400).json({error:"User not found :("})
+		}
+		
+		await User.findByIdAndUpdate(id,{
+			'$set':{
+				name      : name,
+				email     : email,
+				enrollment: enrollment,
+				profile   : profile
+			}
+		})
+		return res.status(400).json(await User.findById(id))	
+	}
+	async delete(req,res){
+		const id = req.params.id
+		const user = await User.findById(id)
+		if(!user){
+			return res.status(400).json({error:"User not found :("})
+		}
+		await User.findByIdAndDelete(id)
+
+		if(!await User.findById(id)){
+			return res.status(200).json({msg:"deletd user with success :/"})
+		}
 	}
 }
 

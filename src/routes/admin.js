@@ -1,16 +1,15 @@
 const router = require('express').Router()
 const AuthMidlleware = require('../app/middlewares/authMiddleware')
-const AuthAdminMidlleware = require('../app/middlewares/authAdminMiddleware')
 const UserController = require('../app/controllers/UserController')
 
 //middlewares to admin
-router.use('/admin',AuthMidlleware,AuthAdminMidlleware)
+router.use('/admin',AuthMidlleware.authentication,AuthMidlleware.permitionAdmin)
 //routes to admin/users
 router.get('/admin/users',UserController.get_users)
 router.get('/admin/users/:id',UserController.get_user)
 router.get('/admin/users/:id/edit',UserController.get_user)
-//router.put('/admin/users/:id/update',UserController.update)
-//router.delete('/admin/users/:id/delete',UserController.delete)
+router.put('/admin/users/:id/update',UserController.update)
+router.delete('/admin/users/:id/delete',UserController.delete)
 
 //routes to admin/cousres
 /*router.get('/admin/cousres',CousreController.show)

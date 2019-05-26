@@ -15,8 +15,29 @@ function generateToken(params = {}){
 
 class AuthController {
     async register(req, res) {
-       const { email,enrollment } = req.body;
+        const { name,email,enrollment,password } = req.body;
+        let requireds = []
+        let erro = false
         try{
+            if(!name){
+                requireds.push("name required")
+                erro = true
+            }
+            if(!email){
+                requireds.push("email required")
+                erro = true 
+            }
+            if(!enrollment){
+                requireds.push("enrollment required")
+                erro = true
+            }
+            if(!password){
+                requireds.push("password required")
+                erro = true
+            }
+            if(erro){
+                return res.status(404).json(requireds)
+            }
             if(await User.findOne({ email })){
                 return res.status(404).json({error: "Já existe um usuário cadastrado com esse email"})
             }
@@ -30,7 +51,7 @@ class AuthController {
                 token: generateToken({ id: user.id }),
             });
         }catch(er){
-            return res.status(500).json({error: 'Registration failed'});
+            return res.status(500).json({error: 'Registration failed :('});
         }
     }
     async authenticate(req, res){
@@ -55,7 +76,7 @@ class AuthController {
             const user = await User.findOne({email:email});
             //console.log(user)
             if(!user){
-                return res.status(404).json({error: 'User not found'});
+                return res.status(404).json({error: 'User not found :('});
             }
             const key = crypto.randomBytes(20).toString('hex');
             const now = new Date();
@@ -85,13 +106,13 @@ class AuthController {
             await mailer.sendMail(mailOptions, (err,info) =>{
                 if(err){
                     console.log('<<<<ERRO>>>>\n',err)
-                    return res.status(404).json({error: 'Cannot send forgot password email'});
+                    return res.status(404).json({error: 'Cannot send forgot password email :('});
                 }
-                return res.status(200).json({msg:"Email sent sulccessefuly"});
+                return res.status(200).json({msg:"Email sent sulccessefuly :)"});
             })
             //console.log(key, now);
         }catch(err){
-            return res.status(500).json({error: 'erro on forgot password, try again'});
+            return res.status(500).json({error: 'erro on forgot password, try again :('});
         }
     }
     async reset_password(req,res){
@@ -103,19 +124,19 @@ class AuthController {
             const user = await User.findOne({passwordResetKey:key})
             .select('+passwordResetKey passwordResetExpires')
             if(!user){
-                return res.status(404).json({error:"key invalid"})
+                return res.status(404).json({error:"key invalid :("})
             }
             
             const now = new Date()
             if(now>user.passwordResetExpires){
-                return res.status(404).json({error:"key expired, generate a new one"})
+                return res.status(404).json({error:"key expired, generate a new one :("})
             }
             user.password = password
             await user.save()
-            return res.status(200).json({msg:"Password changed successfuly"})
+            return res.status(200).json({msg:"Password changed successfuly :("})
         }
         catch(err){
-            return res.status(500).json({error: 'Filed to change password'});
+            return res.status(500).json({error: 'Filed to change password :('});
         } 
     }
 }
