@@ -7,18 +7,30 @@ const InstitutionSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    cep:{
-        type: String,
-        required: true,
-    },
     street: {
         type: String,
         required: true,
     },
+    cep:{
+        type: String,
+        required: true,
+    },
+    number:{
+        type: String,
+        required:true,
+    },
     complement:{
         type: String,
     },
-    number:{
+    uf:{
+        type: String,
+        required:true,
+    },
+    neighborhood:{
+        type: String,
+        required:true,
+    },
+    state:{
         type: String,
         required:true,
     },
