@@ -5,7 +5,6 @@ class InstituitionController{
 		const options = {
 			page: req.params.page || 1,
 			limit:10, //limitede documentos por página
-			//select: "name email"
 		}
 		Instituition.paginate({},options,(err,result) => {
 			return res.status(200).json(result)
@@ -14,7 +13,7 @@ class InstituitionController{
 	async store(req,res){
 		const instituition = await Instituition.create(req.body)
 		if(!instituition){
-			return res.status(500).json({erro:"create instituition failed :("})
+			return res.status(500).json({error:"create instituition failed :("})
 		}
 		return res.status(200).json(instituition)	
 	}

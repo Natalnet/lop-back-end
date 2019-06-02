@@ -2,9 +2,11 @@ const router = require('express').Router()
 const AuthMidlleware = require('../app/middlewares/authMiddleware')
 const UserController = require('../app/controllers/UserController')
 const InstituitionController = require('../app/controllers/InstituitionController')
+const CourseController = require('../app/controllers/CourseController')
 
 //middlewares to admin
 router.use('/admin',AuthMidlleware.authentication,AuthMidlleware.permitionAdmin)
+
 //routes to admin/users
 router.get('/admin/users',UserController.get_users)
 router.get('/admin/users/:id',UserController.get_user)
@@ -20,15 +22,13 @@ router.post('/admin/instituitions/create',InstituitionController.store)
 router.put('/admin/instituitions/:id/update',InstituitionController.update)
 router.delete('/admin/instituitions/:id/delete',InstituitionController.delete)
 
-//routes to admin/cousres
-/*router.get('/admin/cousres',CousreController.show)
-router.get('/admin/cousres/:id',CousreController.get_cousre)
-router.get('/admin/cousres/:id/edit',CousreController.get_cousre)
-router.post('/admin/cousres/create',CousresController.store)
-router.put('/admin/cousres/:id/update',CousreController.update)
-router.delete('/admin/cousres/:id/delete',CousreController.delete)*/
-
-
+//routes to admin/couses
+router.get('/admin/courses',CourseController.show)
+router.get('/admin/courses/:id',CourseController.get_cousre)
+router.get('/admin/courses/:id/edit',CourseController.get_cousre)
+router.post('/admin/courses/create',CourseController.store)
+router.put('/admin/courses/:id/update',CourseController.update)
+router.delete('/admin/courses/:id/delete',CourseController.delete)
 
 //routes to admin/subjects
 /*router.get('/admin/subjects',SubjectController.show)
