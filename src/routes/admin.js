@@ -1,6 +1,7 @@
 const router = require('express').Router()
 const AuthMidlleware = require('../app/middlewares/authMiddleware')
 const UserController = require('../app/controllers/UserController')
+const InstituitionController = require('../app/controllers/InstituitionController')
 
 //middlewares to admin
 router.use('/admin',AuthMidlleware.authentication,AuthMidlleware.permitionAdmin)
@@ -11,19 +12,23 @@ router.get('/admin/users/:id/edit',UserController.get_user)
 router.put('/admin/users/:id/update',UserController.update)
 router.delete('/admin/users/:id/delete',UserController.delete)
 
+//routes to admin/instituitions
+router.get('/admin/instituitions',InstituitionController.show)
+router.get('/admin/instituitions/:id',InstituitionController.get_instituition)
+router.get('/admin/instituitions/:id/edit',InstituitionController.get_instituition)
+router.post('/admin/instituitions/create',InstituitionController.store)
+router.put('/admin/instituitions/:id/update',InstituitionController.update)
+router.delete('/admin/instituitions/:id/delete',InstituitionController.delete)
+
 //routes to admin/cousres
 /*router.get('/admin/cousres',CousreController.show)
 router.get('/admin/cousres/:id',CousreController.get_cousre)
 router.get('/admin/cousres/:id/edit',CousreController.get_cousre)
+router.post('/admin/cousres/create',CousresController.store)
 router.put('/admin/cousres/:id/update',CousreController.update)
 router.delete('/admin/cousres/:id/delete',CousreController.delete)*/
 
-//routes to admin/instituitions
-/*router.get('/admin/instituitions',InstituitionController.show)
-router.get('/admin/instituitions/:id',InstituitionController.get_instituition)
-router.get('/admin/instituitions/:id/edit',InstituitionController.get_get_instituition)
-router.put('/admin/instituitions/:id/update',InstituitionController.update)
-router.delete('/admin/instituitions/:id/delete',InstituitionController.delete)*/
+
 
 //routes to admin/subjects
 /*router.get('/admin/subjects',SubjectController.show)

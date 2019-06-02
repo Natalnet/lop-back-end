@@ -42,7 +42,7 @@ class UserController{
 	}
 	async update(req,res){
 		const id = req.params.id
-		const {name,email,enrollment,profile} = req.body
+		const {profile} = req.body
 
 		const user = await User.findById(id)
 		if(!user){
@@ -51,10 +51,7 @@ class UserController{
 		
 		await User.findByIdAndUpdate(id,{
 			'$set':{
-				name      : name,
-				email     : email,
-				enrollment: enrollment,
-				profile   : profile
+				profile  : profile
 			}
 		})
 		return res.status(400).json(await User.findById(id))	

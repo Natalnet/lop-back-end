@@ -2,7 +2,7 @@ const mongoose = require('../../config/mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2')
 const bcrypt = require('bcryptjs');
 
-const InstitutionSchema = new mongoose.Schema({
+const InstituitionSchema = new mongoose.Schema({
     name:{
         type: String,
         required: true,
@@ -42,14 +42,8 @@ const InstitutionSchema = new mongoose.Schema({
     
 },{timestamps:true});
 
-InstitutionSchema.plugin(mongoosePaginate)
+InstituitionSchema.plugin(mongoosePaginate)
 
-InstitutionSchema.pre('save', async function(next){
-    const hash = await bcrypt.hash(this.password, 10);
-    this.password = hash;
-    next();
-});
+const Instituition = mongoose.model('Institution', InstituitionSchema);
 
-const Institution = mongoose.model('Institution', InstitutionSchema);
-
-module.exports = Institution;
+module.exports = Instituition;
