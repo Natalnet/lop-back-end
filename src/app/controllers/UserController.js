@@ -49,11 +49,14 @@ class UserController{
 			return res.status(400).json({error:"User not found :("})
 		}
 		
-		await User.findByIdAndUpdate(id,{
+		const userUpdated = await User.findByIdAndUpdate(id,{
 			'$set':{
 				profile  : profile
 			}
 		})
+		if(!userUpdated){
+			return res.status(500).json({error:"User not updated :("})
+		}
 		return res.status(400).json(await User.findById(id))	
 	}
 	async delete(req,res){
@@ -62,11 +65,12 @@ class UserController{
 		if(!user){
 			return res.status(400).json({error:"User not found :("})
 		}
-		await User.findByIdAndDelete(id)
-
-		if(!await User.findById(id)){
-			return res.status(200).json({msg:"deletd user with success :/"})
+		const userDelete = await User.findByIdAndDelete(id)
+		if(!userDelete){
+			return res.status(500).json({error:"User not deleted :("})
 		}
+		return res.status(200).json({msg:"deletd user with success :/"})
+		
 	}
 }
 

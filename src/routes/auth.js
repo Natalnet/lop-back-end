@@ -6,7 +6,7 @@ const router = express.Router()
 router.post('/auth/register', AuthController.register)
 router.post('/auth/authenticate', AuthController.authenticate)
 router.post('/auth/forgotpassword', AuthController.forgot_password)
-router.post('/auth/resetpassword', AuthController.reset_password)
+router.put('/auth/resetpassword', AuthController.reset_password)
 
 
 module.exports = app => app.use(router)

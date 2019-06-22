@@ -1,43 +1,23 @@
 const User = require('../models/UserModel');
+const UserPendingModel = require('../models/UserPendingModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const mailer = require('../../config/mailer');
-const config = require('../../config/env');
+const {transport} = require('../../config/mailer');
+const {TOKEN_SECRET} = require('../../config/env');
 const fs = require('fs')
 const handlebars = require('handlebars')
 const path = require('path')
 
 //gera o token
 function generateToken(params = {}){
-    return jwt.sign(params, config.TOKEN_SECRET, {expiresIn: 86400,});
+    return jwt.sign(params, TOKEN_SECRET, {expiresIn: 86400,});
 }
 
 class AuthController {
     async register(req, res) {
         const { name,email,enrollment,password } = req.body;
-        let requireds = []
-        let erro = false
         try{
-            if(!name){
-                requireds.push("name required")
-                erro = true
-            }
-            if(!email){
-                requireds.push("email required")
-                erro = true 
-            }
-            if(!enrollment){
-                requireds.push("enrollment required")
-                erro = true
-            }
-            if(!password){
-                requireds.push("password required")
-                erro = true
-            }
-            if(erro){
-                return res.status(404).json(requireds)
-            }
             if(await User.findOne({ email })){
                 return res.status(404).json({error: "Já existe um usuário cadastrado com esse email"})
             }
@@ -46,6 +26,7 @@ class AuthController {
             }
             const user = await User.create(req.body);
             user.password = undefined;
+
             return res.json({
                 user,
                 token: generateToken({ id: user.id }),
@@ -53,6 +34,9 @@ class AuthController {
         }catch(er){
             return res.status(500).json({error: 'Registration failed :('});
         }
+    }
+    async confirmRegister(req,res){
+
     }
     async authenticate(req, res){
         const { email, password} = req.body;
@@ -72,7 +56,7 @@ class AuthController {
     async forgot_password(req, res){
         const { email } =  req.body;
         //console.log(req.body.email)
-        try{
+        //try{
             const user = await User.findOne({email:email});
             //console.log(user)
             if(!user){
@@ -103,7 +87,7 @@ class AuthController {
                 html: result
                 //html: '<p>Clique no link a seguir para recurerar sua senha: http://localhost:3000/auth/reset_password?token=' + token+'</p>'
             };
-            await mailer.sendMail(mailOptions, (err,info) =>{
+            await transport.sendMail(mailOptions, (err,info) =>{
                 if(err){
                     console.log('<<<<ERRO>>>>\n',err)
                     return res.status(404).json({error: 'Cannot send forgot password email :('});
@@ -111,15 +95,14 @@ class AuthController {
                 return res.status(200).json({msg:"Email sent sulccessefuly :)"});
             })
             //console.log(key, now);
-        }catch(err){
-            return res.status(500).json({error: 'erro on forgot password, try again :('});
-        }
+        //}catch(err){
+            //return res.status(500).json({error: 'erro on forgot password, try again :('});
+        //}
     }
     async reset_password(req,res){
 
         const key = req.query.key
         const {password}=req.body
-        //console.log(key)
     try{
             const user = await User.findOne({passwordResetKey:key})
             .select('+passwordResetKey passwordResetExpires')
@@ -132,6 +115,8 @@ class AuthController {
                 return res.status(404).json({error:"key expired, generate a new one :("})
             }
             user.password = password
+            user.passwordResetKey = undefined
+            user.passwordResetExpires = undefined
             await user.save()
             return res.status(200).json({msg:"Password changed successfuly :("})
         }
