@@ -3,7 +3,7 @@ const UserPendingModel = require('../models/UserPendingModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const {transport} = require('../../config/mailer');
+const {transport,mailOptions} = require('../../config/mailer');
 const {TOKEN_SECRET} = require('../../config/env');
 const fs = require('fs')
 const handlebars = require('handlebars')
@@ -56,7 +56,7 @@ class AuthController {
     async forgot_password(req, res){
         const { email } =  req.body;
         //console.log(req.body.email)
-        //try{
+        try{
             const user = await User.findOne({email:email});
             //console.log(user)
             if(!user){
@@ -77,16 +77,8 @@ class AuthController {
             const data =  {key:key}
             const result =  tamplate(data)
             //console.log(result)
-
-            const mailOptions = {
-                from: 'projetosect@gmail.com',
-                to: email,
-                //template: 'auth/forgot_password',
-                subject: 'Recuperação de senha',
-                //context: {key},
-                html: result
-                //html: '<p>Clique no link a seguir para recurerar sua senha: http://localhost:3000/auth/reset_password?token=' + token+'</p>'
-            };
+            mailOptions.to = email
+            mailOptions.html = result
             await transport.sendMail(mailOptions, (err,info) =>{
                 if(err){
                     console.log('<<<<ERRO>>>>\n',err)
@@ -95,18 +87,20 @@ class AuthController {
                 return res.status(200).json({msg:"Email sent sulccessefuly :)"});
             })
             //console.log(key, now);
-        //}catch(err){
-            //return res.status(500).json({error: 'erro on forgot password, try again :('});
-        //}
+        }catch(err){
+            return res.status(500).json({error: 'erro on forgot password, try again :('});
+        }
     }
     async reset_password(req,res){
 
         const key = req.query.key
         const {password}=req.body
+        
     try{
             const user = await User.findOne({passwordResetKey:key})
             .select('+passwordResetKey passwordResetExpires')
-            if(!user){
+            
+            if(!user || !key){
                 return res.status(404).json({error:"key invalid :("})
             }
             

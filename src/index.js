@@ -1,7 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser')
 const cors = require('cors')
-const config = require("./config/env");
+const {LISTEN_PORT} = require("./config/env");
 const app = express();
 
 
@@ -14,6 +14,6 @@ app.use(bodyParser.urlencoded({extended: false}));
 //importa rotas
 require('./routes')(app);  
 
-app.listen(config.LISTEN_PORT,(req,res) => {
-    console.log(`Ativo em localhost:${config.LISTEN_PORT}`)
+app.listen(LISTEN_PORT,(req,res) => {
+    console.log(`Ativo em localhost:${LISTEN_PORT}`)
 })

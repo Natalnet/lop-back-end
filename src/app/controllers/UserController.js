@@ -57,7 +57,7 @@ class UserController{
 		if(!userUpdated){
 			return res.status(500).json({error:"User not updated :("})
 		}
-		return res.status(400).json(await User.findById(id))	
+		return res.status(200).json({msg:"updated user with success :/"})	
 	}
 	async delete(req,res){
 		const id = req.params.id
