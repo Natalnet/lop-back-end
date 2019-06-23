@@ -5,21 +5,29 @@ module.exports = {
 	    host:'smtp.mailtrap.io',
 	    port:  2525,
 	    auth: {
-	        user: "a7517f24fdde39",
-	        pass: "999305890853c2"
+	        user: "01249380c30569",
+	        pass: "d3dd78f0530c19"
 	    }
 	}),
     mailOptions : {
-        from: 'projetosect@gmail.com',
-        to: undefined,
-        //template: 'auth/forgot_password',
-        subject: 'Recuperação de senha',
-        //context: {key},
-        html: undefined
-        //html: '<p>Clique no link a seguir para recurerar sua senha: http://localhost:3000/auth/reset_password?token=' + token+'</p>'
+        from: 'projetosect@gmail.com', //email remetente
+        to: undefined, //email do destinatário
+        subject: undefined, //Assunto: 'Confirmação de cadastro' ou 'Recuperação de senha'
+        html: undefined // tamplate de email: 'confirm_registration.html' ou 'forgot_password.html'
     }
 	
 }
+
+/*para acessar mailtrap:
+
+login : plataforma_lop_lip@outlook.com
+senha : plat_LOP2
+
+conta criada para que todos testem os serviços de 
+confirmação de cadastro e recuperação de senha 
+com as mesmas credenciais 
+*/
+
 
 
 
