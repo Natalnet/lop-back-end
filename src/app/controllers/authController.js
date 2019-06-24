@@ -95,7 +95,6 @@ class AuthController {
                 return res.status(404).json({error:"user not created"})
             }
             await userPending.remove()
-            //await userPending.save()
             user.password = undefined
             if(user)
             return res.status(200).json({
@@ -153,7 +152,7 @@ class AuthController {
         
         try{
             const user = await User.findOne({passwordResetKey:key})
-            .select('+passwordResetKey passwordResetExpires')
+            .select('+passwordResetKey +passwordResetExpires')
             
             if(!user || !key){
                 return res.status(404).json({error:"key invalid :("})
@@ -163,10 +162,11 @@ class AuthController {
             if(now>user.passwordResetExpires){
                 return res.status(404).json({error:"key expired, generate a new one :("})
             }
-            user.password = password
+            user.password = await bcrypt.hash(password, 10);
             user.passwordResetKey = undefined
             user.passwordResetExpires = undefined
             await user.save()
+            user.password = undefined
             return res.status(200).json({ 
                 user,
                 token: generateToken({ id: user.id }),
