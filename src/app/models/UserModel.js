@@ -29,6 +29,10 @@ const UserSchema = new mongoose.Schema({
         enum:["ALUNO","PROFESSOR","ADMINISTRADOR"],
         default:"ALUNO"
     },
+    classes:[{
+        type:mongoose.Schema.Types.ObjectId,
+        ref:'Class',
+    }],
     passwordResetKey:{
         type: String,
         select: false,

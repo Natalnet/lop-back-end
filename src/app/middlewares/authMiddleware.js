@@ -37,7 +37,15 @@ class authMiddleware{
         const id = req.userId;
         const user = await User.findById(id).select('profile');
         if(user.profile!=="ADMINISTRADOR"){
-            res.status(401).json({error:"You do not have permission to access this page :("})
+            return res.status(401).json({error:"You do not have permission to access this page :("})
+        }
+        return next()
+    }
+    async permitionProfessor(req,res,next){
+        const id = req.userId;
+        const user = await User.findById(id).select('profile');
+        if(user.profile!=="PROFESSOR"){
+            return res.status(401).json({error:"You do not have permission to access this page :("})
         }
         return next()
     }
