@@ -72,6 +72,19 @@ class UserController{
 		return res.status(200).json({msg:"deletd user with success :/"})
 		
 	}
+	async get_all_professores(req,res){
+		try{
+			const professores = await User.find({profile:"PROFESSOR"}).populate('class')
+			console.log(professores);
+			return res.status(200).json(professores)
+		}catch(err){
+			console.log('---err---');
+			console.log(Object.getOwnPropertyDescriptors(err));
+			console.log('---------');
+			return res.status(500).json({erro:"erro ao obter professores"})
+		}
+
+	}
 }
 
 module.exports = new UserController();
