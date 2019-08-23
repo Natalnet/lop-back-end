@@ -1,6 +1,6 @@
 const router = require('express').Router()
 const AuthMidlleware = require('../app/middlewares/authMiddleware')
-const UserController = require('../app/controllers/UserController')
+const UserController = require('../app/controllers/userController')
 
 //middlewares to admin
 router.use('/admin',AuthMidlleware.authentication,AuthMidlleware.permitionAdmin)
