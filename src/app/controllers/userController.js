@@ -30,7 +30,6 @@ class UserController{
 		}
 		return res.status(200).json(user)
 	}
-
 	//Get an individual user's private profile information in admin
 	async get_user(req,res){
 		const id = req.params.id

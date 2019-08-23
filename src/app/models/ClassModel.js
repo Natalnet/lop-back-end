@@ -15,6 +15,7 @@ const ClassSchema = new mongoose.Schema({
     },
     semester:{
         type: String,
+        enum:['1','2'],
         required: true,
         select: false,
     },
@@ -28,6 +29,10 @@ const ClassSchema = new mongoose.Schema({
         enum:["ATIVA","DESATIVADA"],
         default:"ATIVA"
     },
+    listsQuestions:[{
+        type : mongoose.Schema.Types.ObjectId, 
+        ref:'ListQuestion'
+    }],
     professores: [{
         type : mongoose.Schema.Types.ObjectId, 
         ref:'User'
