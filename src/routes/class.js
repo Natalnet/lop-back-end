@@ -7,6 +7,7 @@ router.use('/class',AuthMiddleware.authentication, AuthMiddleware.permitionProfe
 
 //obtem lista de todas as turmas cadastradas
 router.get('/class',ClassController.get_all_classes)
+router.get('/class/:id',ClassController.get_class)
 //criar turma
 router.post('/class/store',ClassController.store)
 

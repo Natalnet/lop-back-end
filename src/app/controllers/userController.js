@@ -22,9 +22,9 @@ class UserController{
 		return res.status(200).json(user)
 	}
 	//Get an individual user's private profile information
-	async profile(req,res){
+	async profile_user(req,res){
 		const userId = req.userId
-		const user = await User.findById(userId)
+		const user = await User.findById('5d615e9d68fad10b904f08fa').populate('classes')
 		if(!user){
 			return res.status(400).json({error:"User not found :("})
 		}
