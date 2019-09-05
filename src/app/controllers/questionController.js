@@ -24,7 +24,7 @@ class QuestionController{
 		
 		try{
 			const {title,description,results} = req.body
-			const question = await Question.create({title,description,results})
+			const question = await Question.create({title,description,results,creator:req.userId})
 			console.log(question);
 			return res.status(200).json(question)
 		}

@@ -1,8 +1,6 @@
 const mongoose = require('../../config/mongoose');
 const mongoosePaginate = require('mongoose-paginate-v2')
-const User = require('./UserModel')
 const bcrypt = require('bcryptjs');
-
 
 const ClassSchema = new mongoose.Schema({
     name:{
@@ -26,7 +24,7 @@ const ClassSchema = new mongoose.Schema({
     state:{
         type:String,
         required:true,
-        enum:["ATIVA","DESATIVADA"],
+        enum:["ATIVA","INATIVA"],
         default:"ATIVA"
     },
     listsQuestions:[{
@@ -38,6 +36,10 @@ const ClassSchema = new mongoose.Schema({
         ref:'User'
     }],
     students: [{
+        type : mongoose.Schema.Types.ObjectId, 
+        ref:'User'
+    }],
+    requestingUsers: [{
         type : mongoose.Schema.Types.ObjectId, 
         ref:'User'
     }],
