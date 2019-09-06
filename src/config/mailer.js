@@ -5,9 +5,9 @@ module.exports = {
 	    host:'smtp.mailtrap.io',
 	    port:  2525,
 	    auth: {
-	        user: "01249380c30569",
-	        pass: "d3dd78f0530c19"
-	    }
+			user: "01249380c30569",
+			pass: "d3dd78f0530c19"
+		}
 	}),
     mailOptions : {
         from: 'projetosect@gmail.com', //email remetente
