@@ -3,7 +3,7 @@ const AuthMiddleware = require('../app/middlewares/authMiddleware')
 const ClassController = require('../app/controllers/classController')
 
 //middleware de autenticação
-//router.use('/class',AuthMiddleware.authentication)
+router.use('/class',AuthMiddleware.authentication)
 //obtem lista de todas as turmas
 router.get('/class',ClassController.get_all_classes)
 //obtem lista de todas as turmas abertas páginadas
@@ -23,12 +23,12 @@ router.use('/class/:idClass/acceptRequest/user/:idUser',AuthMiddleware.permition
 router.put('/class/:idClass/rejectRequest/user/:idUser',ClassController.rejectRequest)
 
 //middleware para criar turma (só professor pode)
-//router.use('/class/store',AuthMiddleware.permitionProfessor)
+router.use('/class/store',AuthMiddleware.permitionProfessor)
 //criar turma
 router.post('/class/store',ClassController.store)
 
 //middleware para editar turma (só professor pode)
-//router.use('/class/:id/update',AuthMiddleware.permitionProfessor)
+router.use('/class/:id/update',AuthMiddleware.permitionProfessor)
 //criar turma
 router.put('/class/:id/update',ClassController.update)
 

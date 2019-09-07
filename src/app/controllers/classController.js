@@ -1,6 +1,6 @@
 const Class = require('../models/ClassModel')
 const User = require('../models/UserModel')
-
+const arrayPaginate = require('array-paginate')
 
 class ClassController{
 	async get_all_classes(req,res){
@@ -9,18 +9,17 @@ class ClassController{
 
 	}
 	async get_all_classes_paginate(req,res){
-		const query={state:'ATIVA'/*,requestingUsers:ObjectId(req.userId)*/}
-		const options = {
-			page: req.params.page || 1,
-			limit:8, //limite de documentos por página
-			populate:'professores students listsQuestions requestingUsers'
+		const page = req.params.page || 1;
+		const limitDocsPerPage=8;
+		try{
+			const classes = await Class.find({state:'ATIVA'}).populate('professores students listsQuestions ruquestingUsers')
+			const classesPaginate = arrayPaginate(classes,page,limitDocsPerPage)
+			return res.status(200).json(classesPaginate)
 		}
-		Class.paginate(query,options).then(function(result) {
-			console.log(result);
-			return res.status(200).json(result)
-		}).catch(function(err) {
+		catch(err){
+			console.log(err);
 			return res.status(500).json(err)
-		})
+		}
 	}
 	async get_all_classes_open(req,res){
 		const classes = await Class.find({state:'ATIVA'}).populate('professores students listsQuestions ruquestingUsers')

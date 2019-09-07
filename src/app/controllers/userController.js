@@ -1,17 +1,44 @@
 const User = require('../models/UserModel');
 const Class = require('../models/ClassModel');
+const arrayPaginate = require('array-paginate')
 
 class UserController{
 	// Get a paginated list of all Users
 	async get_users(req,res){
-		const options = {
-			page: req.params.page || 1,
-			limit:10, //limitede documentos por página
-			//select: "name email"
+		const users = await User.find()
+		return res.status(200).json(users)
+	}
+	async get_usersPaginate(req,res){
+		const include = req.query.contentInputSeach
+		const page = req.params.page || 1;
+		const limitDocsPerPage=10;
+		try{
+			const users = await User.find({ title: { $regex: '.*' + include + '.*' }})
+			const usersPaginate = arrayPaginate(classes,page,limitDocsPerPage)
+			return res.status(200).json(usersPaginate)
 		}
-		User.paginate({},options,(err,result) => {
-			return res.status(200).json(result)
-		})
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+	async get_myClassesPaginate(req,res){
+		const include = req.query.include || ''
+		const page = req.params.page || 1;
+		const limitDocsPerPage=8;
+		try{
+			const users = await User.findById(req.userId).populate({
+				path:'classes',
+				match:{name:{$regex: '.*' + include + '.*'}},
+				options:{sort:{createdAt:-1}}
+			})
+			const myClassesPaginate = arrayPaginate(users.classes,page,limitDocsPerPage)
+			return res.status(200).json(myClassesPaginate)
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
 	}
 	//Get an individual User's public information
 	async show(req,res){
