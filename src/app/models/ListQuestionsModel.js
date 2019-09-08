@@ -6,9 +6,9 @@ const ListQuestionSchema = new mongoose.Schema({
 		type:String,
 		required:true
 	},
-	typeList:{
+	code:{
 		type:String,
-		required:true,
+		required:true
 	},
 	questions:[{
         type : mongoose.Schema.Types.ObjectId, 
