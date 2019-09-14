@@ -1,5 +1,4 @@
 const mongoose = require('../../config/mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2')
 const bcrypt = require('bcryptjs');
 
 const ClassSchema = new mongoose.Schema({
@@ -45,7 +44,6 @@ const ClassSchema = new mongoose.Schema({
     }],
 },{timestamps:true});
 
-ClassSchema.plugin(mongoosePaginate)
 
 const Class = mongoose.model('Class', ClassSchema);
 

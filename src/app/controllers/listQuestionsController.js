@@ -18,7 +18,7 @@ class ListQuestionsController{
 		else if(fild==='code'){
 			queyBilder = {code:{$regex: '.*' + include + '.*'}}
 		}
-		const sort = req.query.sort || 'createdAt'
+		const sort = req.query.sort || '-createdAt'
 		const page = req.params.page || 1;
 		const limitDocsPerPage=10;
 		try{
@@ -39,9 +39,14 @@ class ListQuestionsController{
 	}
 	async store(req,res){
 		try{
-			const {title,typeList,questions} = req.body
-			let code = crypto.randomBytes(5).toString('hex')
-			const listQuestion = await ListQuestions.create({title,questions,code})
+			const {title,questions} = req.body
+			const code = crypto.randomBytes(5).toString('hex')
+			const listQuestion = await ListQuestions.create({
+				title,
+				questions,
+				code,
+				createdBy:req.userId
+			})
 			return res.status(200).json(listQuestion)
 		}
 		catch(err){
@@ -50,12 +55,11 @@ class ListQuestionsController{
 	}
 	async update(req,res){
 		const id = req.params.id
-		const {title,typeList,questions} = req.body
+		const {title,questions} = req.body
 		await ListQuestions.findByIdAndUpdate(id,{
 			'$set':{
-				title    : title,
-				typeList : typeList,
-				questions: questions
+				title,
+				questions,
 			}
 		})
 		return res.status(200).json(listQuestion)

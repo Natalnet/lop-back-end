@@ -1,5 +1,4 @@
 const mongoose = require('../../config/mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2')
 
 const ListQuestionSchema = new mongoose.Schema({
 	title:{
@@ -8,13 +7,18 @@ const ListQuestionSchema = new mongoose.Schema({
 	},
 	code:{
 		type:String,
-		required:true
+		required:true,
+		unique: true
 	},
 	questions:[{
         type : mongoose.Schema.Types.ObjectId, 
         ref:'Question'
-	}]
+	}],
+	createdBy:{
+        type : mongoose.Schema.Types.ObjectId, 
+        ref:'User',
+        required:true
+    }
 },{timestamps:true})
-ListQuestionSchema.plugin(mongoosePaginate)
 
 module.exports=mongoose.model('ListQuestion',ListQuestionSchema)
