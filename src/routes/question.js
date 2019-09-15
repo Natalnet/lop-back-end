@@ -1,7 +1,6 @@
 const route = require('express').Router()
 const QuestionController = require('../app/controllers/questionController')
 const AuthMiddleware = require('../app/middlewares/authMiddleware')
-const arrayPaginate = require('array-paginate')
 
 //Midllware de autenticação
 route.use('/question',AuthMiddleware.authentication)

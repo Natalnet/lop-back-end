@@ -12,24 +12,16 @@ router.get('/class/open/page/:page',ClassController.get_all_classes_paginate)
 router.get('/class/open',ClassController.get_all_classes_open)
 //obtem informações de uma turma específica
 router.get('/class/:id',ClassController.get_class)
-
-//middleware para aceitar aluno na turma (só professor pode) 
-router.use('/class/:idClass/acceptRequest/user/:idUser',AuthMiddleware.permitionProfessor)
-//adiiona aluno na turma
-router.put('/class/:idClass/acceptRequest/user/:idUser',ClassController.acceptRequest)
-//middleware para rejeitar aluno na turma (só professor pode) 
-router.use('/class/:idClass/acceptRequest/user/:idUser',AuthMiddleware.permitionProfessor)
+router.get('/class/:id/participants',ClassController.get_class_participants)
+router.get('/class/:id/requests',ClassController.get_class_requests)
+router.get('/class/:id/lists',ClassController.get_class_lists)
+//adiciona aluno na turma
+router.put('/class/:idClass/acceptRequest/user/:idUser',AuthMiddleware.permitionProfessor,ClassController.acceptRequest)
 //rejeita aluno na turma
-router.put('/class/:idClass/rejectRequest/user/:idUser',ClassController.rejectRequest)
-
-//middleware para criar turma (só professor pode)
-router.use('/class/store',AuthMiddleware.permitionProfessor)
+router.put('/class/:idClass/rejectRequest/user/:idUser',AuthMiddleware.permitionProfessor,ClassController.rejectRequest)
 //criar turma
-router.post('/class/store',ClassController.store)
-
-//middleware para editar turma (só professor pode)
-router.use('/class/:id/update',AuthMiddleware.permitionProfessor)
-//criar turma
-router.put('/class/:id/update',ClassController.update)
+router.post('/class/store',AuthMiddleware.permitionProfessor,ClassController.store)
+//atualiza turma
+router.put('/class/:id/update',AuthMiddleware.permitionProfessor,ClassController.update)
 
 module.exports = app => app.use(router)
