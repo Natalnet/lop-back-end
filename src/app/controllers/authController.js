@@ -11,7 +11,7 @@ const path = require('path')
 
 //gera o token
 function generateToken(params = {}){
-    return jwt.sign(params, TOKEN_SECRET, {expiresIn: 86400,});
+    return jwt.sign(params, TOKEN_SECRET);
 }
 
 async function sendEmail(name_html,key,email){
@@ -92,7 +92,7 @@ class AuthController {
                 password   : userPending.password
             });
             if(!user){
-                return res.status(404).json({error:"user not created"})
+                return res.status(400).json({error:"user not created"})
             }
             await userPending.remove()
             user.password = undefined
@@ -109,10 +109,10 @@ class AuthController {
         const { email, password} = req.body;
         const user = await User.findOne({ email}).select('+password');
         if(!user){
-            return res.status(404).json({error: 'O usuário não foi encontrado!'});
+            return res.status(400).json('O e-mail inserido não corresponde a nenhuma conta :(');
         }
         if(!await bcrypt.compare(password, user.password)){
-            return res.status(404).json({error: 'Senha inválida'});
+            return res.status(400).json('Senha incorreta :(');
         }
         user.password = undefined;
         return res.status(200).json({ 
@@ -127,7 +127,7 @@ class AuthController {
             const user = await User.findOne({email:email});
             //console.log(user)
             if(!user){
-                return res.status(404).json({error: 'User not found :('});
+                return res.status(400).json('O e-mail inserido não corresponde a nenhuma conta :(');
             }
             const key = crypto.randomBytes(20).toString('hex');
             const now = new Date();
@@ -140,7 +140,7 @@ class AuthController {
             });
             //-----envia email-----
             await sendEmail('forgot_password.html',key,email)
-            return res.status(200).json({msg:"Email sent sulccessefuly :)"});
+            return res.status(200).json(`Foi enviado um email de recuperação de senha para ${email}`);
         }catch(err){
             return res.status(500).json({error: 'erro on forgot password, try again :('});
         }
@@ -155,12 +155,12 @@ class AuthController {
             .select('+passwordResetKey +passwordResetExpires')
             
             if(!user || !key){
-                return res.status(404).json({error:"key invalid :("})
+                return res.status(400).json('Erro: o link usado expirou ou é inválido.')
             }
             
             const now = new Date()
             if(now>user.passwordResetExpires){
-                return res.status(404).json({error:"key expired, generate a new one :("})
+                return res.status(400).json('Erro: o link usado expirou ou é inválido.')
             }
             user.password = await bcrypt.hash(password, 10);
             user.passwordResetKey = undefined
@@ -173,6 +173,7 @@ class AuthController {
             });
         }
         catch(err){
+            console.log(err);
             return res.status(500).json({error: 'Filed to change password :('});
         } 
     }
