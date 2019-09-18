@@ -37,10 +37,10 @@ class AuthController {
         const { name,email,enrollment,password } = req.body;
         try{
             if(await User.findOne({ email })){
-                return res.status(404).json({error: "Já existe um usuário cadastrado com esse email"})
+                return res.status(400).json("Já existe um usuário cadastrado com esse email")
             }
             if(await User.findOne({ enrollment })){
-                return res.status(404).json({error: "Já existe um usuário cadastrado com essa matrícula!"})
+                return res.status(400).json("Já existe um usuário cadastrado com essa matrícula!")
             }
             const pendingEmail = await UserPending.findOne({ email })
             if (pendingEmail){
@@ -66,7 +66,7 @@ class AuthController {
             //-----envia email-----
             await sendEmail('confirm_registration.html',key,email)
             userPending.password = undefined;
-            return res.json({msg:`foi enviado um email de confirmação para ${email}`});
+            return res.json(`foi enviado um email de confirmação para ${email}`);
             
         }catch(er){
             return res.status(500).json({error: 'Registration failed :('});
