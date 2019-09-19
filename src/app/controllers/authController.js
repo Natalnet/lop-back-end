@@ -35,12 +35,21 @@ async function sendEmail(name_html,key,email){
 class AuthController {
     async register(req, res) {
         const { name,email,enrollment,password } = req.body;
+        const regexName = /^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/;
+        const regexEmail = /^([a-zA-Z0-9_.+-])+@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
+        const listErro={}
         try{
-            if(await User.findOne({ email })){
-                return res.status(400).json("Já existe um usuário cadastrado com esse email")
-            }
-            if(await User.findOne({ enrollment })){
-                return res.status(400).json("Já existe um usuário cadastrado com essa matrícula!")
+            if (!name || !regexName.test(name)) listErro.name="Informe um nome válido";
+
+            if (!enrollment) listErro.enrollment = "Informe sua matrícula";
+            else if(await User.findOne({ enrollment })) listErro.enrollment = "Já existe um usuário cadastrado com essa matrícula!";
+                            
+            if (!email || !regexEmail.test(email)) listErro.email = "Informe um endereço de email válido";
+            else if (await User.findOne({ email })) listErro.email = "Já existe um usuário cadastrado com esse email";  
+            
+            if (!password) listErro.password = "Informe uma senha";
+            if (Object.keys(listErro).length>0){
+                return res.status(400).json(listErro)
             }
             const pendingEmail = await UserPending.findOne({ email })
             if (pendingEmail){
