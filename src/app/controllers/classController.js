@@ -1,5 +1,7 @@
 const Class = require('../models/ClassModel')
 const User = require('../models/UserModel')
+const List = require('../models/ListQuestionsModel')
+
 const arrayPaginate = require('array-paginate')
 
 class ClassController{
@@ -39,7 +41,7 @@ class ClassController{
 				path:'professores students',
 				options:{sort:{name:-1}}
 			})
-			const participants = myClass.professores.concat(myClass.students)
+			const participants = [...myClass.professores,...myClass.students]
 			const participantsPaginate = arrayPaginate(participants,page,limitDocsPerPage)
 			return res.status(200).json(participantsPaginate)
 		}
@@ -94,6 +96,27 @@ class ClassController{
 		}
 
 		return res.status(200).json(newClass) 
+	}
+	async addList(req,res){
+		const idClass = req.params.idClass
+		const idList = req.params.idList
+		try{
+			const myClass = Class.findById(idClass)
+			if(!myClass){
+				return res.satus(404).json('página não encontrada')
+			}
+			const list = await List.findById(req.idList)
+			if(!list){
+				console.log('list not found');
+				return res.status(400).json('list not found')
+			}
+			myClass.listsQuestions.push(list)
+			return res.status(200).json('ok')
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
 	}
 	async update(req,res){
 		const id = req.params.id

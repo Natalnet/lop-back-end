@@ -1,5 +1,4 @@
 const mongoose = require('../../config/mongoose');
-const mongoosePaginate = require('mongoose-paginate-v2')
 const bcrypt = require('bcryptjs');
 
 const UserPendingSchema = new mongoose.Schema({
@@ -33,7 +32,6 @@ const UserPendingSchema = new mongoose.Schema({
     },
 },{timestamps:true});
 
-UserPendingSchema.plugin(mongoosePaginate)
 
 UserPendingSchema.pre('save', async function(next){
     const hash = await bcrypt.hash(this.password, 10);

@@ -68,8 +68,9 @@ class UserController{
 		return res.status(200).json(user)
 	}
 	async requestClass(req,res){
-		const id = req.params.id
-		const turma = await Class.findById(id)
+		try{
+		const idTurma = req.params.id
+		const turma = await Class.findById(idTurma).populate('requestingUsers')
 		const user = await User.findById(req.userId)
 		if(!turma || !user){
 			return res.status(400).json({error:"User or class not found :("})
@@ -78,27 +79,41 @@ class UserController{
 		user.requestedClasses.push(turma)
 		await turma.save()
 		await user.save()
-		return res.status(200).json({msg:"ok"})
+		req.io.sockets.in(idTurma).emit('RequestsClass',turma.requestingUsers)
+		return res.status(200).json("ok")
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
+		}
 
 	}
 	async removeRequestClass(req,res){
-		const id = req.params.id
-		const turma = await Class.findById(id)
-		const user = await User.findById(req.userId)
-		console.log(turma);
-		if(!turma){
-			console.log('class not found');
-			return res.status(400).json({err:'class not found'})
+		const idTurma = req.params.id
+		try{
+			const turma = await Class.findById(idTurma).populate('requestingUsers')
+			//console.log(turma);
+			if(!turma){
+				console.log('class not found');
+				return res.status(400).json('class not found')
+			}
+			const user = await User.findById(req.userId)
+
+			if(!user){
+				console.log('user not found');
+				return res.status(400).json('user not found')
+			}
+			turma.requestingUsers.pull(user)
+			user.requestedClasses.pull(turma)
+			await turma.save()
+			await user.save()
+			req.io.sockets.in(idTurma).emit('RequestsClass',turma.requestingUsers)
+			return res.status(200).json("ok")
 		}
-		if(!user){
-			console.log('user not found');
-			return res.status(400).json({err:'user not found'})
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
 		}
-		turma.requestingUsers.pull(user)
-		user.requestedClasses.pull(turma)
-		await turma.save()
-		await user.save()
-		return res.status(200).json({msg:"ok"})
 	}
 	async update(req,res){
 		const id = req.params.id
