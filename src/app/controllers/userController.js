@@ -98,7 +98,6 @@ class UserController{
 				return res.status(400).json('class not found')
 			}
 			const user = await User.findById(req.userId)
-
 			if(!user){
 				console.log('user not found');
 				return res.status(400).json('user not found')

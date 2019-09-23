@@ -14,8 +14,21 @@ class ClassController{
 		const page = req.params.page || 1;
 		const limitDocsPerPage=8;
 		try{
-			const classes = await Class.find({state:'ATIVA'}).populate('professores students listsQuestions ruquestingUsers')
-			const classesPaginate = arrayPaginate(classes,page,limitDocsPerPage)
+			const classes = await Class.find({state:'ATIVA'})//.populate('professores students listsQuestions requestingUsers')
+			const user = await User.findById(req.userId).select('classes')
+			let classesOpen=[]
+			let souParticipante = false
+			for(let turma of classes){
+				for(let myClasse of user.classes){
+					if(turma._id.toString()==myClasse._id.toString()){
+						souParticipante=true;
+						break;
+					}
+				}
+				if(!souParticipante) classesOpen.push(turma);
+				souParticipante=false		
+			}
+			const classesPaginate = arrayPaginate(classesOpen,page,limitDocsPerPage)
 			return res.status(200).json(classesPaginate)
 		}
 		catch(err){
@@ -24,7 +37,7 @@ class ClassController{
 		}
 	}
 	async get_all_classes_open(req,res){
-		const classes = await Class.find({state:'ATIVA'}).populate('professores students listsQuestions ruquestingUsers')
+		const classes = await Class.find({state:'ATIVA'}).populate('professores students listsQuestions requestingUsers')
 		return res.status(200).json(classes)
 	}
 	async get_class(req,res){
@@ -143,25 +156,33 @@ class ClassController{
 		return res.status(200).json(updatedClass) 
 	}
 	async acceptRequest(req,res){
-		const idClass = req.params.idClass
-		const idUser = req.params.idUser
-		const turma = await Class.findById(idClass)
-		const user = await User.findById(idUser)
-		if(!turma || !user){
-			return res.status(400).json({error:"User or class not found :("})
+		try{
+			const idClass = req.params.idClass
+			const idUser = req.params.idUser
+			const turma = await Class.findById(idClass)
+			const user = await User.findById(idUser)
+			if(!turma || !user){
+				return res.status(400).json({error:"User or class not found :("})
+			}
+			turma.requestingUsers.pull(user)
+			user.requestedClasses.pull(turma)
+			turma.students.push(user)
+			user.classes.push(turma)
+			await turma.save()
+			await user.save()
+			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+			return res.status(200).json("ok")
 		}
-		turma.requestingUsers.pull(user)
-		user.requestedClasses.pull(turma)
-		turma.students.push(user)
-		user.classes.push(turma)
-		await turma.save()
-		await user.save()
-		return res.status(200).json({msg:"ok"})
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
 
 	}
 	async rejectRequest(req,res){
 		const idClass = req.params.idClass
 		const idUser = req.params.idUser
+		try{
 		const turma = await Class.findById(idClass)
 		const user = await User.findById(idUser)
 		if(!turma || !user){
@@ -171,7 +192,15 @@ class ClassController{
 		user.requestedClasses.pull(turma)
 		await turma.save()
 		await user.save()
-		return res.status(200).json({msg:"ok"})
+		console.log('no contoller');
+		console.log(idUser);
+		req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+		return res.status(200).json("ok")
+	}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
 	}
 }
 module.exports = new ClassController()

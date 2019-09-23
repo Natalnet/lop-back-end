@@ -21,7 +21,10 @@ router.put('/class/:idClass/acceptRequest/user/:idUser',AuthMiddleware.permition
 router.put('/class/:idClass/rejectRequest/user/:idUser',AuthMiddleware.permitionProfessor,ClassController.rejectRequest)
 //criar turma
 router.post('/class/store',AuthMiddleware.permitionProfessor,ClassController.store)
+//adiciona lista a uma turma especifica
 //atualiza turma
+router.post('/class/:idClass/addList/list/:idList',AuthMiddleware.permitionProfessor,ClassController.addList)
+
 router.put('/class/:id/update',AuthMiddleware.permitionProfessor,ClassController.update)
 
 module.exports = app => app.use(router)

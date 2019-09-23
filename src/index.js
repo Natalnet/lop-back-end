@@ -6,9 +6,14 @@ const app = express();
 const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
+
+
 io.on('connection',socket=>{
 	socket.on('connectRoonRequestClass',idRoon=>{
-		socket.join(idRoon)//adicionando o sockt a uma sala com o id 'idRonn'
+		socket.join(idRoon)//adicionando o socket a uma sala com o id 'idRonn'
+	})
+	socket.on('connectRoonMyRequestsClass',idRoon=>{
+		socket.join(idRoon)
 	})
 })
 //middlewares globais
