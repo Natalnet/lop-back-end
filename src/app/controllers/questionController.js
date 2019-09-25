@@ -24,7 +24,10 @@ class QuestionController{
 		const page = req.params.page || 1;
 		const limitDocsPerPage=10;
 		try{
-			const question = await Question.find(queyBilder).sort(sort).populate('createBy')
+			const question = await Question.find(queyBilder).sort(sort).populate({
+				path:'createdBy',
+				select:'email'
+			})
 			const questionPaginate = arrayPaginate(question)
 			//console.log(listQuestionPaginate);
 			return res.status(200).json(questionPaginate)
@@ -50,16 +53,20 @@ class QuestionController{
 	async store(req,res){
 		
 		try{
-			const {title,description,results} = req.body
+			const {title,description,results,difficulty,status,katexDescription,solution} = req.body
 			const code = crypto.randomBytes(5).toString('hex')
 			const question = await Question.create({
 				title,
 				description,
 				results,
 				code,
+				status,
+				difficulty,
+				katexDescription,
+				solution,
 				createdBy:req.userId
 			})
-			console.log(question);
+			//console.log(question);
 			return res.status(200).json(question)
 		}
 		catch(err){
@@ -70,12 +77,16 @@ class QuestionController{
 	async update(req,res){
 		try{
 			const id = req.params.id
-			const {title,description,results} = req.body
+			const {title,description,results,difficulty,status,katexDescription,solution} = req.body
 			await Question.findByIdAndUpdate(id,{
 				"$set":{
-					title       : title,
-					description : description,
-					results     : results
+					title,
+					description,
+					results,
+					status,
+					difficulty,
+					katexDescription,
+					solution,
 				}
 			})
 			return res.status(200).json({msg:'ok'})

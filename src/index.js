@@ -7,21 +7,9 @@ const server = require('http').Server(app)
 const io = require('socket.io')(server)
 
 
-
-io.on('connection',socket=>{
-	socket.on('connectRoonRequestClass',idRoon=>{
-		socket.join(idRoon)//adicionando o socket a uma sala com o id 'idRonn'
-	})
-	socket.on('connectRoonMyRequestsClass',idRoon=>{
-		socket.join(idRoon)
-	})
-})
 //middlewares globais
 app.use(cors())
-app.use((req,res,next)=>{
-	req.io = io
-	return next()
-})
+app.use(require('./sockets')(io))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 

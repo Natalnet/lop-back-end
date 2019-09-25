@@ -17,6 +17,18 @@ const QuestionSchema = mongoose.Schema({
         enum:['Muito fácil', 'Fácil', 'Médio', 'Difícil', 'Muito difícil'],
         default:'Fácil'
     },
+    katexDescription:{
+        type:String
+    },
+    status:{
+        type:String,
+        enum:['PÚBLICA','PRIVADA'],
+        default:'PÚBLICA',
+        required:true
+    },
+    solution:{
+        type: String
+    },
     code:{
         type:String,
         required:true,
