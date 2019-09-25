@@ -155,52 +155,5 @@ class ClassController{
 		})
 		return res.status(200).json(updatedClass) 
 	}
-	async acceptRequest(req,res){
-		try{
-			const idClass = req.params.idClass
-			const idUser = req.params.idUser
-			const turma = await Class.findById(idClass)
-			const user = await User.findById(idUser)
-			if(!turma || !user){
-				return res.status(400).json({error:"User or class not found :("})
-			}
-			turma.requestingUsers.pull(user)
-			user.requestedClasses.pull(turma)
-			turma.students.push(user)
-			user.classes.push(turma)
-			await turma.save()
-			await user.save()
-			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
-			return res.status(200).json("ok")
-		}
-		catch(err){
-			console.log(err);
-			return res.status(500).json(err)
-		}
-
-	}
-	async rejectRequest(req,res){
-		const idClass = req.params.idClass
-		const idUser = req.params.idUser
-		try{
-		const turma = await Class.findById(idClass)
-		const user = await User.findById(idUser)
-		if(!turma || !user){
-			return res.status(400).json({error:"User or class not found :("})
-		}
-		turma.requestingUsers.pull(user)
-		user.requestedClasses.pull(turma)
-		await turma.save()
-		await user.save()
-		console.log('no contoller');
-		console.log(idUser);
-		req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
-		return res.status(200).json("ok")
-	}
-		catch(err){
-			console.log(err);
-			return res.status(500).json(err)
-		}
-	}
 }
 module.exports = new ClassController()

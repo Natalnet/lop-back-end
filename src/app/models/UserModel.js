@@ -32,10 +32,6 @@ const UserSchema = new mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'Class',
     }],
-    requestedClasses: [{
-        type : mongoose.Schema.Types.ObjectId, 
-        ref:'Class'
-    }],
     passwordResetKey:{
         type: String,
         select: false,

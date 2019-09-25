@@ -38,10 +38,7 @@ const ClassSchema = new mongoose.Schema({
         type : mongoose.Schema.Types.ObjectId, 
         ref:'User'
     }],
-    requestingUsers: [{
-        type : mongoose.Schema.Types.ObjectId, 
-        ref:'User'
-    }],
+
 },{timestamps:true});
 
 
