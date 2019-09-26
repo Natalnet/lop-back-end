@@ -1,6 +1,7 @@
 const User = require('../models/UserModel');
 const Class = require('../models/ClassModel');
 const arrayPaginate = require('array-paginate')
+const SolicitationToClass = require('../models/SolicitationToClassModel')
 
 class UserController{
 	// Get a paginated list of all Users
@@ -27,12 +28,19 @@ class UserController{
 		const page = req.params.page || 1;
 		const limitDocsPerPage=8;
 		try{
-			const users = await User.findById(req.userId).populate({
+			const user = await User.findById(req.userId).populate({
 				path:'classes',
 				match:{name:{$regex: '.*' + include + '.*'}},
 				options:{sort:{createdAt:-1}}
 			})
-			const myClassesPaginate = arrayPaginate(users.classes,page,limitDocsPerPage)
+			const myClassesPaginate = arrayPaginate(user.classes,page,limitDocsPerPage)
+
+			myClassesPaginate.docs = await Promise.all([...myClassesPaginate.docs].map(async myClass=>{
+				let myClassWithSolicitations = JSON.parse(JSON.stringify(myClass))//passa uma cópia do o objeto 'myClass'
+				myClassWithSolicitations.solicitations = await SolicitationToClass.find({classSolicited:myClass._id},{status:'PENDENTE'})
+				return myClassWithSolicitations
+			}))
+
 			return res.status(200).json(myClassesPaginate)
 		}
 		catch(err){

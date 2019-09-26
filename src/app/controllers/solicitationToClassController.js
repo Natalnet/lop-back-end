@@ -37,10 +37,16 @@ class SolicitationToClassController{
 	async solicitClass(req,res){
 		const idClass = req.params.id
 		try{
-			const solicitationToClass = await SolicitationToClass.create({
+			const newSolicitationToClass = await SolicitationToClass.create({
 				user : req.userId,
 				classSolicited : idClass
 			})
+			const solicitationToClass = await SolicitationToClass.findById(newSolicitationToClass._id)
+			if(!solicitationToClass){
+				const msg = 'solicitação não pôde ser feita'
+				console.log(msg);
+				return res.status(500).json(msg)
+			}
 			req.io.sockets.in(idClass).emit('RequestsClass',solicitationToClass)
 			return res.status(200).json(solicitationToClass)
 		}
