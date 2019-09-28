@@ -10,12 +10,8 @@ const SolicitationToClassSchema = mongoose.Schema({
         type:mongoose.Schema.Types.ObjectId,
         ref:'Class',
         required:true,
-    },
-    status:{
-        type:String,
-        enum:['PENDENTE','ACEITA'],
-        default:'PENDENTE'
-    },
+    }
+
 
 },{timestamps:true})
 

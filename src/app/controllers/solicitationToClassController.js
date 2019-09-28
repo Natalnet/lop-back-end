@@ -15,7 +15,7 @@ class SolicitationToClassController{
 	}
 	async get_my_solicitations(req,res){
 		try{
-			const mySolicitations = await SolicitationToClass.find({user:req.userId},{status:'PENDENTE'}).populate('classSolicited')
+			const mySolicitations = await SolicitationToClass.find({user:req.userId}).populate('classSolicited')
 			return res.status(200).json(mySolicitations)
 		}
 		catch(err){
@@ -26,7 +26,7 @@ class SolicitationToClassController{
 	async get_class_solicitations(req,res){
 		const idClass = req.params.id
 		try{
-			const classSolicitations = await SolicitationToClass.find({classSolicited:idClass},{status:'PENDENTE'}).populate('user')
+			const classSolicitations = await SolicitationToClass.find({classSolicited:idClass}).populate('user')
 			return res.status(200).json(classSolicitations)
 		}
 		catch(err){
@@ -55,7 +55,7 @@ class SolicitationToClassController{
 			return res.status(500).json('err')
 		}	
 	}
-	async removeSolicitClass(req,res){
+	/*async removeSolicitClass(req,res){
 		const idClass = req.params.id
 		try{
 			const solicitationToClassDeleted = await SolicitationToClass.findOneAndDelete(
@@ -75,7 +75,7 @@ class SolicitationToClassController{
 			console.log(err);
 			return res.status(500).json('err')
 		}	
-	}
+	}*/
 	async acceptSolicitClass(req,res){
 			const idClass = req.params.idClass
 			const idUser = req.params.idUser
@@ -93,17 +93,12 @@ class SolicitationToClassController{
 				{classSolicited:idClass}
 			)
 			if(!solicitationToClass){
-				return res.status(400).json({error:"Solicitation not found :("})
+				return res.status(400).json("Solicitation not found :(")
 			}
-
-
 			turma.students.push(user)
 			user.classes.push(turma)
 			await turma.save()
 			await user.save()
-			solicitationToClass.status="ACEITA"
-			await solicitationToClass.save()
-
 			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
 			return res.status(200).json("ok")
 		}
@@ -112,15 +107,14 @@ class SolicitationToClassController{
 			return res.status(500).json('err')
 		}	
 	}
-	async rejectSolicitClass(req,res){
+	async destroySolicitClass(req,res){
 		const idClass = req.params.idClass
-		const idUser = req.params.idUser
+		const idUser =  req.params.idUser
 		try{
 			const solicitationToClassDeleted = await SolicitationToClass.findOneAndDelete(
 				{user:idUser},
 				{classSolicited:idClass}
 			)
-
 			const solicitationToClass = await SolicitationToClass.findById(solicitationToClassDeleted._id)
 
 			if(solicitationToClass){
@@ -128,7 +122,9 @@ class SolicitationToClassController{
 				console.log(msg);
 				return res.status(500).json(msg)
 			}
-			req.io.sockets.in(idUser).emit('MyRequestsClass',idClass)
+			req.io.sockets.in(idUser).emit('MyRequestsClass',solicitationToClass)
+			req.io.sockets.in(idClass).emit('RequestsClass',solicitationToClass)
+
 			return res.status(200).json('ok')
 		}
 		catch(err){

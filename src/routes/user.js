@@ -5,7 +5,9 @@ const router = express.Router()
 
 //user Routes
 //middlawares para user
+
 router.use('/user',AuthMiddleware.authentication)
+router.get('/users',UserController.get_users)//teste
 router.get('/user/page/:page',UserController.get_usersPaginate)
 router.get('/user/class/page/:page',UserController.get_myClassesPaginate)
 router.get('/user/info/profile',UserController.profile_user)

@@ -6,7 +6,13 @@ const SolicitationToClass = require('../models/SolicitationToClassModel')
 class UserController{
 	// Get a paginated list of all Users
 	async get_users(req,res){
-		const users = await User.find()
+		let users = await User.find()
+		users = await Promise.all([...users].map(async user=>{
+			let userWithMyClasses = JSON.parse(JSON.stringify(user))
+			let solicitationsToClass = await SolicitationToClass.find({user:user._id},{status:'ACEITA'}).populate('classSolicited')
+			userWithMyClasses.myClasses = [...solicitationsToClass].map(solicitation => solicitation.classSolicited)
+			return userWithMyClasses
+		}))
 		return res.status(200).json(users)
 	}
 	async get_usersPaginate(req,res){
@@ -37,7 +43,7 @@ class UserController{
 
 			myClassesPaginate.docs = await Promise.all([...myClassesPaginate.docs].map(async myClass=>{
 				let myClassWithSolicitations = JSON.parse(JSON.stringify(myClass))//passa uma cópia do o objeto 'myClass'
-				myClassWithSolicitations.solicitations = await SolicitationToClass.find({classSolicited:myClass._id},{status:'PENDENTE'})
+				myClassWithSolicitations.solicitations = await SolicitationToClass.find({classSolicited:myClass._id})
 				return myClassWithSolicitations
 			}))
 
