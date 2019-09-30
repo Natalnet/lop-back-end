@@ -1,6 +1,6 @@
-const Class = require('../models/ClassModel')
-const User = require('../models/UserModel')
-const SolicitationToClass = require('../models/SolicitationToClassModel')
+//const Class = require('../modelsMongo/ClassModel')
+//const User = require('../modelsMongo/UserModel')
+//const SolicitationToClass = require('../modelsMongo/SolicitationToClassModel')
 
 class SolicitationToClassController{
 	async get_all_solicitatuion(req,res){

@@ -1,5 +1,5 @@
-const Question = require('../models/QuestionModel')
-const ListQuestions = require('../models/ListQuestionsModel')
+//const Question = require('../modelsMongo/QuestionModel')
+//const ListQuestions = require('../modelsMongo/ListQuestionsModel')
 const arrayPaginate = require('array-paginate')
 const crypto = require('crypto');
 

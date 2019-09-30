@@ -1,5 +1,4 @@
 const User = require('../models/UserModel');
-const UserPending = require('../models/UserPendingModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -35,84 +34,105 @@ async function sendEmail(name_html,key,email){
 class AuthController {
     async register(req, res) {
         const { name,email,enrollment,password } = req.body;
-        const regexName = /^[A-Za-záàâãéèêíïóôõöúçñÁÀÂÃÉÈÍÏÓÔÕÖÚÇÑ ]+$/;
-        const regexEmail = /^([a-zA-Z0-9_.+-])+@(([a-zA-Z0-9-])+\.)+([a-zA-Z0-9]{2,4})+$/;
-        const listErro={}
         try{
-            if (!name || !regexName.test(name)) listErro.name="Informe um nome válido";
-
-            if (!enrollment) listErro.enrollment = "Informe sua matrícula";
-            else if(await User.findOne({ enrollment })) listErro.enrollment = "Já existe um usuário cadastrado com essa matrícula!";
-                            
-            if (!email || !regexEmail.test(email)) listErro.email = "Informe um endereço de email válido";
-            else if (await User.findOne({ email })) listErro.email = "Já existe um usuário cadastrado com esse email";  
-            
-            if (!password) listErro.password = "Informe uma senha";
-            if (Object.keys(listErro).length>0){
-                return res.status(400).json(listErro)
-            }
-            const pendingEmail = await UserPending.findOne({ email })
-            if (pendingEmail){
-                await pendingEmail.remove()
-            }
-
-            const pendingEnrollment = await UserPending.findOne({ enrollment })
-            if (pendingEnrollment){
-                await pendingEnrollment.remove()
-            }
-            
             const key = crypto.randomBytes(20).toString('hex');
             const now = new Date();
             now.setHours(now.getHours() + 1);
-            const userPending = await UserPending.create({
-                name : name,
-                email : email,
-                enrollment : enrollment,
-                password : password,
-                solicitationKey : key,
-                solicitationExpires : now
+            const [user, created] = await User.findOrCreate({
+                where:{
+                    email:email,
+                },
+                defaults:{
+                    id : crypto.randomBytes(12).toString('hex'),
+                    name : name,
+                    email : email,
+                    enrollment : enrollment,
+                    password : await bcrypt.hash(password, 10),
+                    solicitationKey : key,
+                    solicitationExpires : now
+                }
             });
+            //caso o usário já exista
+            if(!created){
+                //caso já exista e o usuário já foi verificado
+                if(user.checked){
+                    console.log('já existe e o usuário já foi verificado');
+                    const msgErro = [{fild:'email',msg:"Já existe um usuário cadastrado com esse email :("}]
+                    return res.status(400).json(msgErro)
+                }
+                //caso já exista, mas o usuário não foi verificado
+                else{
+                    console.log('já existe, mas o usuário não foi verificado');
+                    user.solicitationKey = key
+                    user.solicitationExpires =now
+                    await user.save()
+                }
+            }
             //-----envia email-----
             await sendEmail('confirm_registration.html',key,email)
-            userPending.password = undefined;
+            user.password = null;
             return res.json(`foi enviado um email de confirmação para ${email}`);
             
-        }catch(er){
-            return res.status(500).json({error: 'Registration failed :('});
+        }catch(err){
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }
         }
     }
     async confirmRegister(req,res){
         const key = req.query.key
         try{
-            const userPending = await UserPending.findOne({solicitationKey:key}).select('+password')
-            //console.log(userPending)
-            if(!userPending || !key){
-                return res.status(404).json({error:"key invalid :("})
+            const user = await User.findOne({
+                where:{
+                    solicitationKey:key
+                }
+            })
+            if(!user || !key){
+                return res.status(404).json("Link inválido :)")
             }
             const now = new Date()
-            if(now > userPending){
-                return res.status(404).json({error:"key expired, generate a new one :("})
+            if(now > user.dataValues.solicitationExpires){
+                return res.status(404).json("link expirado :(")
             }
-            const user = await User.create({
-                _id        : userPending._id,
-                name       : userPending.name,
-                email      : userPending.email,
-                enrollment : userPending.enrollment,
-                password   : userPending.password
-            });
-            if(!user){
-                return res.status(400).json({error:"user not created"})
-            }
-            await userPending.remove()
-            user.password = undefined
-            if(user)
+            user.checked=true
+            user.solicitationKey=null
+            user.solicitationExpires=null
+            await user.save()
+            user.dataValues.password = undefined
             return res.status(200).json({
                 user  : user,
                 token : generateToken({ id: user._id })
             });
-        }catch(er){
-            return res.status(500).json({error: 'Registration failed :('});
-        }
+        }catch(err){
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }        }
     }
     async authenticate(req, res){
         const { email, password} = req.body;

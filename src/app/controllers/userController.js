@@ -1,7 +1,9 @@
-const User = require('../models/UserModel');
-const Class = require('../models/ClassModel');
+//const User = require('../modelsMongo/UserModel');
+//const Class = require('../modelsMongo/ClassModel');
 const arrayPaginate = require('array-paginate')
-const SolicitationToClass = require('../models/SolicitationToClassModel')
+//const SolicitationToClass = require('../modelsMongo/SolicitationToClassModel')
+const User = require('../models/UserModel')
+const crypto = require('crypto');
 
 class UserController{
 	// Get a paginated list of all Users
@@ -126,6 +128,36 @@ class UserController{
 			return res.status(500).json({erro:"erro ao obter professores"})
 		}
 
+	}
+	async teste(req,res){
+		const {name,email} = req.body
+		try{
+			const user = await User.create({
+				id:crypto.randomBytes(12).toString('hex'),
+				name,
+				email
+			})
+			const users = await User.findAll()
+			return res.status(200).json({user,users})
+		}
+		catch(err){
+			if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+				const validationsErros = ([...err.errors].map(erro=>{
+					let erroType = {
+						fild:erro.path,
+						message:erro.message,
+						
+					}
+					return erroType
+				}));
+				console.log(validationsErros)
+				return res.status(400).json(validationsErros)
+			}
+			else{
+				console.log(err);
+				return res.status(500).json('err')
+			}
+		}
 	}
 }
 

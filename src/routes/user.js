@@ -7,6 +7,7 @@ const router = express.Router()
 //middlawares para user
 
 router.use('/user',AuthMiddleware.authentication)
+router.post('/cria',UserController.teste)
 router.get('/users',UserController.get_users)//teste
 router.get('/user/page/:page',UserController.get_usersPaginate)
 router.get('/user/class/page/:page',UserController.get_myClassesPaginate)

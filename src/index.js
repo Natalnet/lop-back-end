@@ -13,6 +13,9 @@ app.use(require('./sockets')(io))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
+//Verifica a conexão com o bacno de dados e cria as tabelas caso não foram criadas
+require('./database/auto_migrate')
+
 //importa rotas
 require('./routes')(app);  
 

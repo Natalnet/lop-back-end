@@ -1,6 +1,6 @@
-const Class = require('../models/ClassModel')
-const User = require('../models/UserModel')
-const List = require('../models/ListQuestionsModel')
+//const Class = require('../modelsMongo/ClassModel')
+//const User = require('../modelsMongo/UserModel')
+//const List = require('../modelsMongo/ListQuestionsModel')
 
 const arrayPaginate = require('array-paginate')
 
