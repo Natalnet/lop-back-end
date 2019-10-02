@@ -1,6 +1,10 @@
-//const Question = require('../modelsMongo/QuestionModel')
+const sequelize = require('../../database/connection')
 const crypto = require('crypto');
 const arrayPaginate = require('array-paginate')
+const path = require('path')
+
+const Question = sequelize.import(path.resolve(__dirname,'..','models','QuestionModel'))
+
 
 class QuestionController{
 	async get_all_questions(req,res){
@@ -64,14 +68,28 @@ class QuestionController{
 				difficulty,
 				katexDescription,
 				solution,
-				createdBy:req.userId
+				author_id:req.userId
 			})
 			//console.log(question);
 			return res.status(200).json(question)
 		}
 		catch(err){
-			console.log(err);
-			return res.status(500).json({err:'err'})
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }
 		}
 	}
 	async update(req,res){
@@ -92,8 +110,22 @@ class QuestionController{
 			return res.status(200).json({msg:'ok'})
 		}
 		catch(err){
-			console.log(rr);
-			return res.status(500).json({err:'err'})
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }
 		}
 	}
 }

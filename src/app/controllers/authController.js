@@ -1,4 +1,3 @@
-const User = require('../models/UserModel');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -7,6 +6,11 @@ const {TOKEN_SECRET} = require('../../config/env');
 const fs = require('fs')
 const handlebars = require('handlebars')
 const path = require('path')
+const sequelize = require('../../database/connection')
+
+const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
+const UserPending = sequelize.import(path.resolve(__dirname,'..','models','UserPendingModel'))
+
 
 //gera o token
 function generateToken(params = {}){
@@ -35,15 +39,23 @@ class AuthController {
     async register(req, res) {
         const { name,email,enrollment,password } = req.body;
         try{
+            if(await User.findOne({where:{email:email}})){
+                const msgErro = [{fild:'email',msg:"Já existe um usuário cadastrado com esse email :("}]
+                return res.status(400).json(msgErro)
+            }
+            if(await User.findOne({where:{enrollment:enrollment}})){
+                const msgErro = [{fild:'enrollment',msg:"Já existe um usuário cadastrado com essa matrícula :("}]
+                return res.status(400).json(msgErro)
+            }
             const key = crypto.randomBytes(20).toString('hex');
             const now = new Date();
             now.setHours(now.getHours() + 1);
-            const [user, created] = await User.findOrCreate({
+            const [userPending, created] = await UserPending.findOrCreate({
                 where:{
                     email:email,
+                    enrollment:enrollment
                 },
                 defaults:{
-                    id : crypto.randomBytes(12).toString('hex'),
                     name : name,
                     email : email,
                     enrollment : enrollment,
@@ -52,25 +64,14 @@ class AuthController {
                     solicitationExpires : now
                 }
             });
-            //caso o usário já exista
             if(!created){
-                //caso já exista e o usuário já foi verificado
-                if(user.checked){
-                    console.log('já existe e o usuário já foi verificado');
-                    const msgErro = [{fild:'email',msg:"Já existe um usuário cadastrado com esse email :("}]
-                    return res.status(400).json(msgErro)
-                }
-                //caso já exista, mas o usuário não foi verificado
-                else{
-                    console.log('já existe, mas o usuário não foi verificado');
-                    user.solicitationKey = key
-                    user.solicitationExpires =now
-                    await user.save()
-                }
+                userPending.solicitationKey = key
+                userPending.solicitationExpires =now
+                await userPending.save()
             }
             //-----envia email-----
             await sendEmail('confirm_registration.html',key,email)
-            user.password = null;
+            userPending.password = null;
             return res.json(`foi enviado um email de confirmação para ${email}`);
             
         }catch(err){
@@ -95,26 +96,39 @@ class AuthController {
     async confirmRegister(req,res){
         const key = req.query.key
         try{
-            const user = await User.findOne({
+            const userPending = await UserPending.findOne({
                 where:{
                     solicitationKey:key
                 }
             })
-            if(!user || !key){
+            if(!userPending || !key){
                 return res.status(404).json("Link inválido :)")
             }
             const now = new Date()
-            if(now > user.dataValues.solicitationExpires){
+            if(now > userPending.dataValues.solicitationExpires){
                 return res.status(404).json("link expirado :(")
             }
-            user.checked=true
-            user.solicitationKey=null
-            user.solicitationExpires=null
-            await user.save()
-            user.dataValues.password = undefined
+            const [user,created] = await User.findOrCreate({
+                where:{
+                    id : userPending.id
+                },
+                defaults:{
+                    id         : userPending.id,
+                    name       : userPending.name,
+                    email      : userPending.email,
+                    enrollment : userPending.enrollment,
+                    password   : userPending.password
+                }
+            })
+            if(!created){
+                const msgErro = [{fild:'email',msg:"Já existe um usuário cadastrado com esse email :("}]
+                return res.status(400).json(msgErro)            
+            }
+            await userPending.destroy({ force: true })
+            user.password = null
             return res.status(200).json({
                 user  : user,
-                token : generateToken({ id: user._id })
+                token : generateToken({ id: user.id })
             });
         }catch(err){
             if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
@@ -135,25 +149,38 @@ class AuthController {
             }        }
     }
     async authenticate(req, res){
-        const { email, password} = req.body;
-        const user = await User.findOne({ email}).select('+password');
-        if(!user){
-            return res.status(400).json('O e-mail inserido não corresponde a nenhuma conta :(');
+        try{
+            const { email, password} = req.body;
+            const user = await User.findOne({
+                where: {
+                    email:email
+                }
+            })
+            if(!user){
+                return res.status(400).json('O e-mail inserido não corresponde a nenhuma conta :(');
+            }
+            if(!await bcrypt.compare(password, user.password)){
+                return res.status(400).json('Senha incorreta :(');
+            }
+            user.password = null;
+            return res.status(200).json({ 
+                user,
+                token: generateToken({ id: user.id }),
+            });
         }
-        if(!await bcrypt.compare(password, user.password)){
-            return res.status(400).json('Senha incorreta :(');
+        catch(err){
+            return res.status(500).json(err)
         }
-        user.password = undefined;
-        return res.status(200).json({ 
-            user,
-            token: generateToken({ id: user.id }),
-        });
     }
     async forgot_password(req, res){
         const { email } =  req.body;
         //console.log(req.body.email)
         try{
-            const user = await User.findOne({email:email});
+            const user = await User.findOne({
+                where:{
+                    email:email
+                }
+            });
             //console.log(user)
             if(!user){
                 return res.status(400).json('O e-mail inserido não corresponde a nenhuma conta :(');
@@ -161,28 +188,27 @@ class AuthController {
             const key = crypto.randomBytes(20).toString('hex');
             const now = new Date();
             now.setHours(now.getHours() + 1);
-            await User.findByIdAndUpdate(user._id, {
-                '$set':{
-                    passwordResetKey: key,
-                    passwordResetExpires: now,
-                }
+            await user.update({
+                passwordResetKey: key,
+                passwordResetExpires: now,
+                
             });
             //-----envia email-----
             await sendEmail('forgot_password.html',key,email)
             return res.status(200).json(`Foi enviado um email de recuperação de senha para ${email}`);
         }catch(err){
-            return res.status(500).json({error: 'erro on forgot password, try again :('});
+            return res.status(500).json('erro ao tentar solicitar recuperação de senha, tente novamente :(');
         }
     }
     async reset_password(req,res){
-
         const key = req.query.key
         const {password}=req.body
-        
         try{
-            const user = await User.findOne({passwordResetKey:key})
-            .select('+passwordResetKey +passwordResetExpires')
-            
+            const user = await User.findOne({
+                where:{
+                    passwordResetKey:key
+                }
+            })            
             if(!user || !key){
                 return res.status(400).json('Erro: o link usado expirou ou é inválido.')
             }
@@ -192,18 +218,15 @@ class AuthController {
                 return res.status(400).json('Erro: o link usado expirou ou é inválido.')
             }
             user.password = await bcrypt.hash(password, 10);
-            user.passwordResetKey = undefined
-            user.passwordResetExpires = undefined
+            user.passwordResetKey = null
+            user.passwordResetExpires = null
             await user.save()
-            user.password = undefined
-            return res.status(200).json({ 
-                user,
-                token: generateToken({ id: user.id }),
-            });
+            user.password = null
+            return res.status(200).json('Senha alterada com sucesso :)');
         }
         catch(err){
             console.log(err);
-            return res.status(500).json({error: 'Filed to change password :('});
+            return res.status(500).json('Filed to change password :(');
         } 
     }
 }

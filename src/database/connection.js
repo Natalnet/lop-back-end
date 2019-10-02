@@ -6,4 +6,4 @@ const sequelize = new Sequelize('4tUg4WH3yX', '4tUg4WH3yX', 'GKasm01Bx5', {
   logging: false
 })
 
-module.exports = [sequelize,Sequelize]
+module.exports = sequelize

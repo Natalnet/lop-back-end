@@ -1,15 +1,9 @@
-'use strict';
-
-/*
-Sequelize associações:
-https://sequelize.org/master/manual/associations.html
-
-Para criar campos virtuais:
+/*para criar campos virtuais:
 https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
 */ 
 module.exports = (sequelize,DataTypes)=>{
 
-	const User = sequelize.define('user',{
+	const UserPending = sequelize.define('userPending',{
 		id:{
 			type:DataTypes.UUID,
 			allowNull:false,
@@ -43,7 +37,7 @@ module.exports = (sequelize,DataTypes)=>{
 			},
 			validate:{
 				isEmail:{
-					msg:"Informe um email válido"
+					msg:"Informe um email válido :("
 				},
 				notNull:{
 					msg:"Email é obrigatório"
@@ -95,19 +89,18 @@ module.exports = (sequelize,DataTypes)=>{
 				}
 			}
 		},
-		passwordResetKey:{
+		solicitationKey:{
 			type: DataTypes.STRING(40),
 		},
-		passwordResetExpires:{
+		solicitationExpires:{
 			type: DataTypes.DATE,
 			validate:{
 				isDate:true
-			}
-		}
+			}	
+		},
 	},{
 		freezeTableName:true,
-		//underscored: true,
 	})
-	return User;
+	return UserPending;
 
 }

@@ -1,6 +1,9 @@
 const jwt = require('jsonwebtoken')
 const config = require('../../config/env')
-const User = require('../models/UserModel')
+const path = require('path')
+const sequelize = require('../../database/connection')
+
+const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
 
 class authMiddleware{
     authentication(req, res, next){
@@ -35,7 +38,7 @@ class authMiddleware{
     }
     async permitionAdmin(req,res,next){
         const id = req.userId;
-        const user = await User.findById(id).select('profile');
+        const user = await User.findByPk(id);
         if(user.profile!=="ADMINISTRADOR"){
             return res.status(401).json({error:"You do not have permission to access this page :("})
         }
@@ -43,7 +46,7 @@ class authMiddleware{
     }
     async permitionProfessor(req,res,next){
         const id = req.userId;
-        const user = await User.findById(id).select('profile');
+        const user = await User.findByPk(id);
         if(user.profile!=="PROFESSOR"){
             return res.status(401).json({error:"You do not have permission to access this page :("})
         }

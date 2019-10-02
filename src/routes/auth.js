@@ -4,7 +4,7 @@ const router = express.Router()
 
 //Authentication routes
 router.post('/auth/register', AuthController.register)
-router.put('/auth/confirm_register',AuthController.confirmRegister)
+router.post('/auth/confirm_register',AuthController.confirmRegister)
 router.post('/auth/authenticate', AuthController.authenticate)
 router.post('/auth/forgotpassword', AuthController.forgot_password)
 router.put('/auth/resetpassword', AuthController.reset_password)
