@@ -20,7 +20,7 @@ module.exports = (sequelize,DataTypes)=>{
 			type:DataTypes.STRING(50),
 			allowNull:false,
 		    set(name) {
-		      this.setDataValue('name', name.trim());
+		      if (name) this.setDataValue('name', name.trim());
 		    },
 			validate:{
 				notNull:{

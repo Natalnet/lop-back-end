@@ -6,7 +6,7 @@ Para criar campos virtuais:
 https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
 */ 
 module.exports = (sequelize,DataTypes)=>{
-	const ListQuestion = sequelize.define('listQuestion',{
+	const ListQuestions = sequelize.define('listQuestions',{
 		id:{
 			type:DataTypes.UUID,
 			allowNull:false,
@@ -17,7 +17,7 @@ module.exports = (sequelize,DataTypes)=>{
 			type:DataTypes.STRING(50),
 			allowNull:false,
 		    set(title) {
-		      this.setDataValue('title', title.trim());
+		      if (title) this.setDataValue('title', title.trim());
 		    },
 			validate:{
 				notNull:{
@@ -46,6 +46,6 @@ module.exports = (sequelize,DataTypes)=>{
 	},{
 		freezeTableName:true,
 	})
-	return ListQuestion;
+	return ListQuestions;
 
 }

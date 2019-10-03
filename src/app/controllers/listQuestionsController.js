@@ -1,7 +1,13 @@
 //const Question = require('../modelsMongo/QuestionModel')
-//const ListQuestions = require('../modelsMongo/ListQuestionsModel')
 const arrayPaginate = require('array-paginate')
 const crypto = require('crypto');
+
+const path = require('path')
+const {Op} = require('sequelize')
+
+const sequelize = require('../../database/connection')
+const ListQuestions = sequelize.import(path.resolve(__dirname,'..','models','ListQuestionsModel'))
+const Question = sequelize.import(path.resolve(__dirname,'..','models','QuestionModel'))
 
 class ListQuestionsController{
 	async get_all_listQuestions(req,res){
@@ -11,25 +17,33 @@ class ListQuestionsController{
 	async get_all_listQuestions_paginate(req,res){
 		const include = req.query.include || ''
 		const fild = req.query.fild || 'title'
-		let queyBilder = ''
-		if(fild==='title'){
-			queyBilder = {title:{$regex: '.*' + include + '.*'}}
-		}
-		else if(fild==='code'){
-			queyBilder = {code:{$regex: '.*' + include + '.*'}}
-		}
-		const sort = req.query.sort || '-createdAt'
+		const includeString = req.query.include || ''
+		//const sort = req.query.sort || '-createdAt'
+		
+		const limitDocsPerPage=req.query.docsPerPage || 10;
 		const page = req.params.page || 1;
-		const limitDocsPerPage=10;
 		try{
-			const listQuestion = await ListQuestions.find(queyBilder).sort(sort).populate('questions')
-			const listQuestionPaginate = arrayPaginate(listQuestion)
+			const listQuestions = await ListQuestions.findAll({
+				where: { 
+					title: { 
+						[Op.like]: `%${fild==='title'?includeString:''}%` 
+					},
+					code: { 
+						[Op.like]: `%${fild==='code'?includeString:''}%` 
+					}
+				},
+				include : [{
+					model : Question,
+					as    : 'Questions',
+				}]
+			})
+			const listQuestionsPaginate = arrayPaginate(listQuestions,page,limitDocsPerPage)
 			//console.log(listQuestionPaginate);
-			return res.status(200).json(listQuestionPaginate)
+			return res.status(200).json(listQuestionsPaginate)
 		}
 		catch(err){
+			console.log(err);
 			return res.status(500).json(err)
-
 		}
 	}
 	async get_listQuestions(req,res){
@@ -43,14 +57,35 @@ class ListQuestionsController{
 			const code = crypto.randomBytes(5).toString('hex')
 			const listQuestion = await ListQuestions.create({
 				title,
-				questions,
 				code,
-				createdBy:req.userId
 			})
-			return res.status(200).json(listQuestion)
+			const bulkQuestions = await Promise.all([...questions].map(async q => {
+				const question = await Question.findByPk(q.id)
+				return question
+			}))
+			if(bulkQuestions.length>0){
+				await listQuestion.addQuestions(bulkQuestions)
+			}
+			await listQuestion.getQuestions()
+			return res.status(200).json('ok')
 		}
 		catch(err){
-			return ser.status(500).json(err)
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }
 		}
 	}
 	async update(req,res){

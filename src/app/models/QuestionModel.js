@@ -22,7 +22,7 @@ module.exports = (sequelize,DataTypes)=>{
 			type:DataTypes.STRING(50),
 			allowNull:false,
 		    set(title) {
-		      this.setDataValue('title', title.trim());
+		      if (title) this.setDataValue('title', title.trim());
 		    },
 			validate:{
 				notNull:{
@@ -53,7 +53,7 @@ module.exports = (sequelize,DataTypes)=>{
 			type : DataTypes.TEXT,
 			allowNull : false, // default é true
 		    set(description) {
-		      this.setDataValue('description', description.trim());
+		      if(description) this.setDataValue('description', description.trim());
 		    },
 			validate:{
 				notNull:{
@@ -70,7 +70,7 @@ module.exports = (sequelize,DataTypes)=>{
 		katexDescription:{
 			type : DataTypes.TEXT,
 		    set(katexDescription) {
-		      this.setDataValue('latexDescription', katexDescription.trim());
+		      if (katexDescription) this.setDataValue('katexDescription', katexDescription.trim());
 		    },
 		},
 		status:{
@@ -117,7 +117,7 @@ module.exports = (sequelize,DataTypes)=>{
 		//underscored: true,
 	})
 
-	Question.belongsTo(User,{as: 'Author', foreignKey : 'author_id'})
+	Question.belongsTo(User,{as: 'author', foreignKey : 'author_id'})
 	return Question;
 
 }

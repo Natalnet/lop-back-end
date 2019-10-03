@@ -1,9 +1,11 @@
-const sequelize = require('../../database/connection')
 const crypto = require('crypto');
 const arrayPaginate = require('array-paginate')
 const path = require('path')
+const {Op} = require('sequelize')
 
+const sequelize = require('../../database/connection')
 const Question = sequelize.import(path.resolve(__dirname,'..','models','QuestionModel'))
+const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
 
 
 class QuestionController{
@@ -17,36 +19,44 @@ class QuestionController{
 	async get_all_questions_paginate(req,res){
 		const include = req.query.include || ''
 		const fild = req.query.fild || 'title'
-		let queyBilder = ''
-		if(fild==='title'){
-			queyBilder = {title:{$regex: '.*' + include + '.*'}}
-		}
-		else if(fild==='code'){
-			queyBilder = {code:{$regex: '.*' + include + '.*'}}
-		}
-		const sort = req.query.sort || '-createdAt'
+		const includeString = req.query.include || ''
+		//const sort = req.query.sort || '-createdAt'
+
+		const limitDocsPerPage=req.query.docsPerPage || 10;
 		const page = req.params.page || 1;
-		const limitDocsPerPage=10;
 		try{
-			const question = await Question.find(queyBilder).sort(sort).populate({
-				path:'createdBy',
-				select:'email'
+			const questions = await Question.findAll({
+				where: { 
+					title: { 
+						[Op.like]: `%${fild==='title'?includeString:''}%` 
+					},
+					code: { 
+						[Op.like]: `%${fild==='code'?includeString:''}%` 
+					}
+				},
+				include : [{
+					model : User,
+					as    : 'author',
+					attributes:['email']
+
+				}]
 			})
-			const questionPaginate = arrayPaginate(question)
+			const questionsPaginate = arrayPaginate(questions,page,limitDocsPerPage)
 			//console.log(listQuestionPaginate);
-			return res.status(200).json(questionPaginate)
+			return res.status(200).json(questionsPaginate)
 		}
 		catch(err){
 			console.log(err);
 			return res.status(500).json(err)
-
 		}
 	}
 	async get_question(req,res){
 		const id = req.params.id
 		try{
-			let question = await Question.findById(id)
-
+			let question = await Question.findByPk(id)
+			if(!question){
+				return res.status(404).json('questão não encontrada')
+			}
 			return res.status(200).json(question)
 		}
 		catch(err){
@@ -96,18 +106,21 @@ class QuestionController{
 		try{
 			const id = req.params.id
 			const {title,description,results,difficulty,status,katexDescription,solution} = req.body
-			await Question.findByIdAndUpdate(id,{
-				"$set":{
-					title,
-					description,
-					results,
-					status,
-					difficulty,
-					katexDescription,
-					solution,
-				}
+			const question = await Question.findByPk(id)
+			//console.log(title,description,results,difficulty,status,katexDescription,solution);
+			if(!question){
+				return res.status(404).json('questão não encontrada')
+			}
+			await question.update({
+					title:title,
+					description:description,
+					results:results,
+					status:status,
+					difficulty:difficulty,
+					katexDescription:katexDescription,
+					solution:solution,
 			})
-			return res.status(200).json({msg:'ok'})
+			return res.status(200).json('ok')
 		}
 		catch(err){
             if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
