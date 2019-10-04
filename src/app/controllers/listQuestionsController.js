@@ -1,4 +1,3 @@
-//const Question = require('../modelsMongo/QuestionModel')
 const arrayPaginate = require('array-paginate')
 const crypto = require('crypto');
 
@@ -31,7 +30,7 @@ class ListQuestionsController{
 				},
 				include : [{
 					model : Question,
-					as    : 'Questions',
+					as    : 'questions',
 				}]
 			})
 			const listQuestionsPaginate = arrayPaginate(listQuestions,page,limitDocsPerPage)
@@ -63,7 +62,7 @@ class ListQuestionsController{
 			if(bulkQuestions.length>0){
 				await listQuestion.addQuestions(bulkQuestions)
 			}
-			await listQuestion.getQuestions()
+			//await listQuestion.getQuestions()
 			return res.status(200).json('ok')
 		}
 		catch(err){

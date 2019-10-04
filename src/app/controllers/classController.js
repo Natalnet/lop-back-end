@@ -17,7 +17,7 @@ class ClassController{
 		try{
 			const user = await User.findByPk(req.userId)
 			const myClasses = await user.getClasses({
-				attributes:['id']
+				as:'class'
 			})
 			const classes = await Class.findAll()
 			let classesOpen=[]

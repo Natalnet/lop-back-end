@@ -40,16 +40,36 @@ class UserController{
 		const page = req.params.page || 1;
 		try{
 			const user = await User.findByPk(req.userId)
+			/*const user = await User.findOne({
+				where:{
+					id:req.userId
+				},
+				include:[{
+					model:Class,
+					as:'classes',
+					where: { 
+						name: { 
+							[Op.like]: `%${fild==='name'?includeString:''}%` 
+						},
+					},
+					include : [{
+						model : User,
+						as    : 'Users',
+						attributes:['id'],
+
+					}]
+				}],
+
+			})*/
 			const myClasses = await user.getClasses({
 				where: { 
 					name: { 
 						[Op.like]: `%${fild==='name'?includeString:''}%` 
 					},
 				},
-
 				include : [{
 					model : User,
-					as    : 'Users',
+					as    : 'users',
 					attributes:['id'],
 
 				}]	
@@ -64,6 +84,21 @@ class UserController{
 		}
 	}
 	//Get an individual User's public information
+	async solicitClass(req,res){
+		const idClass = req.params.id
+		try{
+			const user = await User.findByPk(req.userId)
+			const classSolicited = await Class.findByPk(idClass)
+			const solicitation = await user.addSolicitation(classSolicited)
+			//console.log(solicitation);
+			req.io.sockets.in(idClass).emit('RequestsClass',user)
+			return res.status(200).json('ok')
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
+		}
+	}
 	async show(req,res){
 		const id = req.params.id
 		const user = await User.findById(id).select('name')
@@ -135,36 +170,6 @@ class UserController{
 		catch(err){
 			console.log(err);
 			return res.status(500).json(err)
-		}
-	}
-	async teste(req,res){
-		const {name,email} = req.body
-		try{
-			const user = await User.create({
-				id:crypto.randomBytes(12).toString('hex'),
-				name,
-				email
-			})
-			const users = await User.findAll()
-			return res.status(200).json({user,users})
-		}
-		catch(err){
-			if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
-				const validationsErros = ([...err.errors].map(erro=>{
-					let erroType = {
-						fild:erro.path,
-						message:erro.message,
-						
-					}
-					return erroType
-				}));
-				console.log(validationsErros)
-				return res.status(400).json(validationsErros)
-			}
-			else{
-				console.log(err);
-				return res.status(500).json('err')
-			}
 		}
 	}
 }

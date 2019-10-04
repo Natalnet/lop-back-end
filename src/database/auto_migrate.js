@@ -3,14 +3,15 @@ const path = require('path')
 sequelize
 	.authenticate()
 	.then(async () => {
-		const {User,UserPending,Question,ListQuestions,ListHasQuestion,Class,ClassHasUser} = require('../app/models')
+		const {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion} = require('../app/models')
 		await User.sync()
 		await UserPending.sync()
 		await Question.sync()
 		await ListQuestions.sync()
-		await ListHasQuestion.sync()
 		await Class.sync()
+		await SolicitationToClass.sync()
 		await ClassHasUser.sync()
+		await ListHasQuestion.sync()
 		console.log('conexão com o banco de dados realizada com sucesso!');
 	})
 	.catch(err => {
