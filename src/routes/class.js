@@ -19,7 +19,9 @@ router.post('/class/store',AuthMiddleware.permitionProfessor,ClassController.sto
 //adiciona lista a uma turma especifica
 //atualiza turma
 router.post('/class/:idClass/addList/list/:idList',AuthMiddleware.permitionProfessor,ClassController.addList)
-
 router.put('/class/:id/update',AuthMiddleware.permitionProfessor,ClassController.update)
+
+router.get('/class/solicitations/class/:id',ClassController.get_solicitations)
+
 
 module.exports = app => app.use(router)

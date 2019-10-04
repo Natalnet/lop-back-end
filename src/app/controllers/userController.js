@@ -32,7 +32,6 @@ class UserController{
 		}
 	}
 	async get_myClassesPaginate(req,res){
-
 		const include = req.query.include || ''
 		const fild = req.query.fild || 'name'
 		const includeString = req.query.include || ''		
@@ -40,27 +39,6 @@ class UserController{
 		const page = req.params.page || 1;
 		try{
 			const user = await User.findByPk(req.userId)
-			/*const user = await User.findOne({
-				where:{
-					id:req.userId
-				},
-				include:[{
-					model:Class,
-					as:'classes',
-					where: { 
-						name: { 
-							[Op.like]: `%${fild==='name'?includeString:''}%` 
-						},
-					},
-					include : [{
-						model : User,
-						as    : 'Users',
-						attributes:['id'],
-
-					}]
-				}],
-
-			})*/
 			const myClasses = await user.getClasses({
 				where: { 
 					name: { 
@@ -71,7 +49,10 @@ class UserController{
 					model : User,
 					as    : 'users',
 					attributes:['id'],
-
+				},{
+					model : User,
+					as    : 'solicitationsToClass',
+					attributes:['id'],
 				}]	
 			})
 			const myClassesPaginate = arrayPaginate(myClasses,page,limitDocsPerPage)
@@ -83,7 +64,19 @@ class UserController{
 			return res.status(500).json(err)
 		}
 	}
-	//Get an individual User's public information
+	async get_my_solicitations(req,res){
+		try{
+			const user = await User.findByPk(req.userId)
+			const myClasses = await user.getSolicitations({
+				attributes:['id']
+			})
+			return res.status(200).json(myClasses)
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
+		}
+	}
 	async solicitClass(req,res){
 		const idClass = req.params.id
 		try{
@@ -98,6 +91,20 @@ class UserController{
 			console.log(err);
 			return res.status(500).json('err')
 		}
+	}
+	async cancelSolicitClass(req,res){
+		const idClass = req.params.id
+		try{
+			const user = await User.findByPk(req.userId)
+			const classSoliceted = await Class.findByPk(idClass)
+			await user.removeSolicitation(classSoliceted)
+			req.io.sockets.in(idClass).emit('RequestsClass',classSoliceted)
+			return res.status(200).json('ok')
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
+		}	
 	}
 	async show(req,res){
 		const id = req.params.id

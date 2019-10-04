@@ -46,8 +46,38 @@ class ClassController{
 	}
 	async get_class(req,res){
 		const id=req.params.id
-		const classInfo = await Class.findById(id).populate()
+		const classInfo = await Class.findByPk(id)
 		return res.status(200).json(classInfo)
+	}
+	async get_solicitations(req,res){
+		const idClass =  req.params.id
+		try{
+			const turma = await Class.findByPk(idClass)
+			console.log(turma)
+			const userSolicitations = await turma.getSolicitationsToClass()
+			return res.status(200).json(userSolicitations)
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json('err')
+		}
+	}
+	async acceptSolicitClass(req,res){
+		try{
+			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+		}
+		catch(err){
+
+		}
+	}
+	async rejectSolicitClass(req,res){
+		const idClass = req.params.id
+		try{
+			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+		}
+		catch(err){
+
+		}
 	}
 	async get_class_participants(req,res){
 		const id=req.params.id

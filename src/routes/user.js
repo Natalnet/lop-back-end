@@ -12,9 +12,10 @@ router.get('/user/page/:page',UserController.get_usersPaginate)
 router.get('/user/class/page/:page',UserController.get_myClassesPaginate)
 router.get('/user/info/profile',UserController.profile_user)
 router.get('/user/:id',UserController.show)
+router.get('/user/solicitation/classes',UserController.get_my_solicitations)
 
-router.post('/user/solicit/class/:id/solicit',UserController.solicitClass)
-
+router.post('/user/solicit/class/:id',UserController.solicitClass)
+router.delete('/user/removeSolicitation/class/:id',UserController.cancelSolicitClass)
 //middlawares para obter todos os professores
 router.use('/user/professor',AuthMiddleware.permitionProfessor)
 //obtem todos os usuarios com o perfil "PROFESSOR"

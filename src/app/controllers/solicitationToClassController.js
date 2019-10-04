@@ -122,7 +122,7 @@ class SolicitationToClassController{
 				console.log(msg);
 				return res.status(500).json(msg)
 			}
-			req.io.sockets.in(idUser).emit('MyRequestsClass',solicitationToClass)
+			
 			req.io.sockets.in(idClass).emit('RequestsClass',solicitationToClass)
 
 			return res.status(200).json('ok')
