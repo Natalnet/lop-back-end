@@ -6,10 +6,8 @@ const {TOKEN_SECRET} = require('../../config/env');
 const fs = require('fs')
 const handlebars = require('handlebars')
 const path = require('path')
-const sequelize = require('../../database/connection')
 
-const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
-const UserPending = sequelize.import(path.resolve(__dirname,'..','models','UserPendingModel'))
+const {User,UserPending} = require('../models')
 
 
 //gera o token

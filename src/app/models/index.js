@@ -1,17 +1,25 @@
+const sequelize = require('../../database/connection')
 const path = require('path')
-const fs = require('fs')
 
-module.exports = async sequelize => {
-	const User = sequelize.import(path.resolve(__dirname,'UserModel'))
-	const UserPending = sequelize.import(path.resolve(__dirname,'UserPendingModel'))
-	const Question = sequelize.import(path.resolve(__dirname,'QuestionModel'))
-	const ListQuestions = sequelize.import(path.resolve(__dirname,'ListQuestionsModel'))
-	const ListHasQuestion = sequelize.import(path.resolve(__dirname,'ListHasQuestionModel'))
+const User = sequelize.import(path.resolve(__dirname,'UserModel'))
+const UserPending = sequelize.import(path.resolve(__dirname,'UserPendingModel'))
+const Question = sequelize.import(path.resolve(__dirname,'QuestionModel'))
+const ListQuestions = sequelize.import(path.resolve(__dirname,'ListQuestionsModel'))
+const ListHasQuestion = sequelize.import(path.resolve(__dirname,'ListHasQuestionModel'))
+const Class = sequelize.import(path.resolve(__dirname,'ClassModel'))
+const ClassHasUser = sequelize.import(path.resolve(__dirname,'ClassHasUserModel'))
 
-	await User.sync()
-	await UserPending.sync()
-	await Question.sync()
-	await ListQuestions.sync()
-	await ListHasQuestion.sync()
-	console.log('tabelas criadas/verificadas com sucesso!');
-}
+/*associations*/
+
+//User 1:N Question
+Question.belongsTo(User,{as: 'author', foreignKey : 'author_id'})
+
+//User N:N Class
+User.belongsToMany(Class, { as: 'Classes', foreignKey : 'user_id',through: ClassHasUser })
+Class.belongsToMany(User, { as: 'Users', foreignKey : 'class_id',through: ClassHasUser })
+
+//Question N:N ListQuestions
+Question.belongsToMany(ListQuestions, { as: 'Lists', foreignKey : 'question_id',through: ListHasQuestion })
+ListQuestions.belongsToMany(Question, { as: 'Questions', foreignKey : 'list_id',through: ListHasQuestion })
+
+module.exports = {User,UserPending,Question,ListQuestions,ListHasQuestion,Class,ClassHasUser}

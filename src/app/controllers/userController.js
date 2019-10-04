@@ -1,9 +1,9 @@
-//const User = require('../modelsMongo/UserModel');
-//const Class = require('../modelsMongo/ClassModel');
 const arrayPaginate = require('array-paginate')
-//const SolicitationToClass = require('../modelsMongo/SolicitationToClassModel')
-const User = require('../models/UserModel')
 const crypto = require('crypto');
+
+const {User,Class} = require('../models')
+const {Op} = require('sequelize')
+
 
 class UserController{
 	// Get a paginated list of all Users
@@ -32,23 +32,30 @@ class UserController{
 		}
 	}
 	async get_myClassesPaginate(req,res){
+
 		const include = req.query.include || ''
+		const fild = req.query.fild || 'name'
+		const includeString = req.query.include || ''		
+		const limitDocsPerPage=req.query.docsPerPage || 10;
 		const page = req.params.page || 1;
-		const limitDocsPerPage=8;
 		try{
-			const user = await User.findById(req.userId).populate({
-				path:'classes',
-				match:{name:{$regex: '.*' + include + '.*'}},
-				options:{sort:{createdAt:-1}}
+			const user = await User.findByPk(req.userId)
+			const myClasses = await user.getClasses({
+				where: { 
+					name: { 
+						[Op.like]: `%${fild==='name'?includeString:''}%` 
+					},
+				},
+
+				include : [{
+					model : User,
+					as    : 'Users',
+					attributes:['id'],
+
+				}]	
 			})
-			const myClassesPaginate = arrayPaginate(user.classes,page,limitDocsPerPage)
-
-			myClassesPaginate.docs = await Promise.all([...myClassesPaginate.docs].map(async myClass=>{
-				let myClassWithSolicitations = JSON.parse(JSON.stringify(myClass))//passa uma cópia do o objeto 'myClass'
-				myClassWithSolicitations.solicitations = await SolicitationToClass.find({classSolicited:myClass._id})
-				return myClassWithSolicitations
-			}))
-
+			const myClassesPaginate = arrayPaginate(myClasses,page,limitDocsPerPage)
+			//console.log(listQuestionPaginate);
 			return res.status(200).json(myClassesPaginate)
 		}
 		catch(err){
@@ -118,16 +125,17 @@ class UserController{
 	}
 	async get_all_professores(req,res){
 		try{
-			const professores = await User.find({profile:"PROFESSOR"}).populate('class')
-			//console.log(professores);
+			const professores = await User.findAll({
+				where:{
+					profile:"PROFESSOR"
+				}
+			})
 			return res.status(200).json(professores)
-		}catch(err){
-			console.log('---err---');
-			console.log(Object.getOwnPropertyDescriptors(err));
-			console.log('---------');
-			return res.status(500).json({erro:"erro ao obter professores"})
 		}
-
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
 	}
 	async teste(req,res){
 		const {name,email} = req.body

@@ -3,10 +3,7 @@ const arrayPaginate = require('array-paginate')
 const path = require('path')
 const {Op} = require('sequelize')
 
-const sequelize = require('../../database/connection')
-const Question = sequelize.import(path.resolve(__dirname,'..','models','QuestionModel'))
-const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
-
+const {User,Question} = require('../models')
 
 class QuestionController{
 	async get_all_questions(req,res){
@@ -32,7 +29,8 @@ class QuestionController{
 					},
 					code: { 
 						[Op.like]: `%${fild==='code'?includeString:''}%` 
-					}
+					},
+					status:'PÚBLICA'
 				},
 				include : [{
 					model : User,

@@ -9,8 +9,6 @@ https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
 */ 
 const path = require('path')
 module.exports = (sequelize,DataTypes)=>{
-	const User = sequelize.import(path.resolve(__dirname,'UserModel'))
-
 	const Question = sequelize.define('question',{
 		id:{
 			type:DataTypes.UUID,
@@ -117,7 +115,7 @@ module.exports = (sequelize,DataTypes)=>{
 		//underscored: true,
 	})
 
-	Question.belongsTo(User,{as: 'author', foreignKey : 'author_id'})
+	
 	return Question;
 
 }

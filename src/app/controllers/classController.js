@@ -1,6 +1,7 @@
 //const Class = require('../modelsMongo/ClassModel')
 //const User = require('../modelsMongo/UserModel')
 //const List = require('../modelsMongo/ListQuestionsModel')
+const {Class,User} = require('../models')
 
 const arrayPaginate = require('array-paginate')
 
@@ -14,13 +15,16 @@ class ClassController{
 		const page = req.params.page || 1;
 		const limitDocsPerPage=8;
 		try{
-			const classes = await Class.find({state:'ATIVA'})//.populate('professores students listsQuestions requestingUsers')
-			const user = await User.findById(req.userId).select('classes')
+			const user = await User.findByPk(req.userId)
+			const myClasses = await user.getClasses({
+				attributes:['id']
+			})
+			const classes = await Class.findAll()
 			let classesOpen=[]
 			let souParticipante = false
 			for(let turma of classes){
-				for(let myClasse of user.classes){
-					if(turma._id.toString()==myClasse._id.toString()){
+				for(let myClasse of myClasses){
+					if(turma.id==myClasse.id){
 						souParticipante=true;
 						break;
 					}
@@ -47,16 +51,31 @@ class ClassController{
 	}
 	async get_class_participants(req,res){
 		const id=req.params.id
+		const include = req.query.include || ''
+		const fild = req.query.fild || 'title'
+		const includeString = req.query.include || ''
+		//const sort = req.query.sort || '-createdAt'
+		
+		const limitDocsPerPage=req.query.docsPerPage || 10;
 		const page = req.params.page || 1;
-		const limitDocsPerPage=15;
 		try{
-			const myClass = await Class.findById(id).select('professores students').populate({
-				path:'professores students',
-				options:{sort:{name:-1}}
+			const listQuestions = await ListQuestions.findAll({
+				where: { 
+					title: { 
+						[Op.like]: `%${fild==='title'?includeString:''}%` 
+					},
+					code: { 
+						[Op.like]: `%${fild==='code'?includeString:''}%` 
+					}
+				},
+				include : [{
+					model : Question,
+					as    : 'Questions',
+				}]
 			})
-			const participants = [...myClass.professores,...myClass.students]
-			const participantsPaginate = arrayPaginate(participants,page,limitDocsPerPage)
-			return res.status(200).json(participantsPaginate)
+			const listQuestionsPaginate = arrayPaginate(listQuestions,page,limitDocsPerPage)
+			//console.log(listQuestionPaginate);
+			return res.status(200).json(listQuestionsPaginate)
 		}
 		catch(err){
 			console.log(err);
@@ -100,15 +119,43 @@ class ClassController{
 	}
 	async store(req,res){
 		const {name,year,semester,description,state,professores} = req.body
-		const newClass = await Class.create(req.body)
-		
-		for (let i = 0; i < professores.length; i++) {
-			let prof = await User.findById(professores[i])
-			prof.classes.push(newClass)
-			await prof.save()
+		console.log(professores);
+		try{
+			const newClass = await Class.create({
+				name,
+				year,
+				semester,
+				description,
+				state,
+			})
+			const bulkProfessores = await Promise.all([...professores].map(async pId => {
+				const user = await User.findByPk(pId)
+				return user
+			}))
+			//console.log(bulkProfessores);
+			if(bulkProfessores.length>0){
+				await newClass.addUsers(bulkProfessores)
+			}
+			return res.status(200).json('ok')
+		} 
+		catch(err){
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        fild:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json('err')
+            }
 		}
-
-		return res.status(200).json(newClass) 
 	}
 	async addList(req,res){
 		const idClass = req.params.idClass

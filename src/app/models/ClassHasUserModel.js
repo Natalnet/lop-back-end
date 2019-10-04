@@ -7,7 +7,7 @@ https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
 */ 
 const path = require('path')
 module.exports = (sequelize,DataTypes)=>{
-	const ListHasQuestion = sequelize.define('listHasQuestion',{
+	const ClassHasUser = sequelize.define('classHasUser',{
 		id:{
 			type:DataTypes.UUID,
 			allowNull:false,
@@ -19,5 +19,5 @@ module.exports = (sequelize,DataTypes)=>{
 	})
 
 
-	return ListHasQuestion;
+	return ClassHasUser;
 }
