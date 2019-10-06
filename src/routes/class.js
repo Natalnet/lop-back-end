@@ -21,7 +21,9 @@ router.post('/class/store',AuthMiddleware.permitionProfessor,ClassController.sto
 router.post('/class/:idClass/addList/list/:idList',AuthMiddleware.permitionProfessor,ClassController.addList)
 router.put('/class/:id/update',AuthMiddleware.permitionProfessor,ClassController.update)
 
-router.get('/class/solicitations/class/:id',ClassController.get_solicitations)
+router.get('/class/:id/solicitations',ClassController.get_solicitations)
 
+router.post('/class/:idClass/acceptSolicit/user/:idUser',ClassController.acceptSolicitClass)
+router.delete('/class/:idClass/removeSolicitation/user/:idUser',ClassController.rejectSolicitClass)
 
 module.exports = app => app.use(router)

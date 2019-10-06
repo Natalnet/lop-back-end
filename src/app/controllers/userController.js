@@ -1,9 +1,10 @@
 const arrayPaginate = require('array-paginate')
 const crypto = require('crypto');
-
-const {User,Class} = require('../models')
 const {Op} = require('sequelize')
+const path = require('path')
 
+const sequelize = require('../../database/connection')
+const {User,Class} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 class UserController{
 	// Get a paginated list of all Users

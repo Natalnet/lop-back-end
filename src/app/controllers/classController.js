@@ -1,9 +1,10 @@
-//const Class = require('../modelsMongo/ClassModel')
-//const User = require('../modelsMongo/UserModel')
-//const List = require('../modelsMongo/ListQuestionsModel')
-const {Class,User} = require('../models')
 
+const path = require('path')
 const arrayPaginate = require('array-paginate')
+
+const sequelize = require('../../database/connection')
+const {Class,User,List} = sequelize.import(path.resolve(__dirname,'..','models'))
+
 
 class ClassController{
 	async get_all_classes(req,res){
@@ -53,7 +54,9 @@ class ClassController{
 		const idClass =  req.params.id
 		try{
 			const turma = await Class.findByPk(idClass)
-			console.log(turma)
+			if(!turma){
+				return res.status(404).json('página não encontrada')
+			}
 			const userSolicitations = await turma.getSolicitationsToClass()
 			return res.status(200).json(userSolicitations)
 		}
@@ -63,49 +66,67 @@ class ClassController{
 		}
 	}
 	async acceptSolicitClass(req,res){
+		const idClass = req.params.idClass
+		const idUser = req.params.idUser
 		try{
+			const turma = await Class.findByPk(idClass)
+			if(!turma){
+				return res.status(404).json('página não encontrada')
+			}
+			const user = await User.findByPk(idUser)
+			await turma.addUser(user)
+			if(!await turma.hasUser(user)){
+				return res.status(500).json('usuário não pôde ser adicionado à turma')
+			}
 			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+			return res.status(200).json(turma)
 		}
 		catch(err){
-
+			console.log(err);
+			return res.status(500).json('err')
 		}
 	}
 	async rejectSolicitClass(req,res){
-		const idClass = req.params.id
+		const idClass = req.params.idClass
+		const idUser = req.params.idUser
 		try{
+			const turma = await Class.findByPk(idClass)
+			if(!turma){
+				return res.status(404).json('página não encontrada')
+			}
+			const user = await User.findByPk(idUser)
+			await turma.removeSolicitationToClass(user)
+			if(await turma.hasSolicitationToClass(user)){
+				return res.status(500).json('Solicitação não pôde ser cancelada')
+			}
 			req.io.sockets.in(idUser).emit('MyRequestsClass',turma)
+			return res.status(200).json(turma)
 		}
 		catch(err){
-
+			console.log(err);
+			return res.status(500).json('err')
 		}
 	}
 	async get_class_participants(req,res){
-		const id=req.params.id
-		const include = req.query.include || ''
-		const fild = req.query.fild || 'title'
-		const includeString = req.query.include || ''
-		//const sort = req.query.sort || '-createdAt'
-		
-		const limitDocsPerPage=req.query.docsPerPage || 10;
-		const page = req.params.page || 1;
+		const idClass=req.params.id
 		try{
-			const listQuestions = await ListQuestions.findAll({
-				where: { 
-					title: { 
-						[Op.like]: `%${fild==='title'?includeString:''}%` 
-					},
-					code: { 
-						[Op.like]: `%${fild==='code'?includeString:''}%` 
-					}
+			const turma = await Class.findByPk(idClass)
+			if(!turma){
+				return res.status(404).json('página não encontrada')
+			}
+			const studants = await turma.getUsers({
+				where:{
+					profile:'PROFESSOR'
 				},
-				include : [{
-					model : Question,
-					as    : 'Questions',
-				}]
+				order: ['name']
 			})
-			const listQuestionsPaginate = arrayPaginate(listQuestions,page,limitDocsPerPage)
-			//console.log(listQuestionPaginate);
-			return res.status(200).json(listQuestionsPaginate)
+			const professors = await turma.getUsers({
+				where:{
+					profile:'ALUNO'
+				},
+				order: ['name']
+			})
+			return res.status(200).json([...studants,...professors])
 		}
 		catch(err){
 			console.log(err);
@@ -113,7 +134,7 @@ class ClassController{
 		}
 	}
 	async get_class_lists(req,res){
-		const id = req.params.id 
+		const idclass = req.params.id 
 		try{
 			const myclass = await Class.findById(id).select('listsQuestions').populate({
 				path:'listsQuestions',

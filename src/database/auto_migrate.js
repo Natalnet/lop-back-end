@@ -3,7 +3,7 @@ const path = require('path')
 sequelize
 	.authenticate()
 	.then(async () => {
-		const {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion} = require('../app/models')
+		const {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion} = sequelize.import(path.resolve(__dirname,'..','app','models'))
 		await User.sync()
 		await UserPending.sync()
 		await Question.sync()

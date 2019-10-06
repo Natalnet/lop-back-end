@@ -1,9 +1,10 @@
 const crypto = require('crypto');
 const arrayPaginate = require('array-paginate')
-const path = require('path')
 const {Op} = require('sequelize')
 
-const {User,Question} = require('../models')
+const path = require('path')
+const sequelize = require('../../database/connection')
+const  {User,Question}= sequelize.import(path.resolve(__dirname,'..','models'))
 
 class QuestionController{
 	async get_all_questions(req,res){

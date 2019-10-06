@@ -1,29 +1,39 @@
-const sequelize = require('../../database/connection')
 const path = require('path')
+const fs = require('fs')
 
-const User = sequelize.import(path.resolve(__dirname,'UserModel'))
-const UserPending = sequelize.import(path.resolve(__dirname,'UserPendingModel'))
-const Question = sequelize.import(path.resolve(__dirname,'QuestionModel'))
-const ListQuestions = sequelize.import(path.resolve(__dirname,'ListQuestionsModel'))
-const ListHasQuestion = sequelize.import(path.resolve(__dirname,'listHasQuestionModel'))
-const Class = sequelize.import(path.resolve(__dirname,'ClassModel'))
-const ClassHasUser = sequelize.import(path.resolve(__dirname,'ClassHasUserModel'))
-const SolicitationToClass = sequelize.import(path.resolve(__dirname,'SolicitationToClassModel'))
-/*associations*/
+module.exports = (sequelize) => {
+	const model = {}
+	fs.readdirSync(__dirname)
+	.filter(file => ((file.indexOf('.')) !== 0 && (file !== "index.js")))
+	.forEach(file =>{
+		model[file.replace('Model.js','')] = sequelize.import(path.resolve(__dirname,file))
+	})
+	
+	/*associations*/
 
-//User 1:N Question
-Question.belongsTo(User,{as: 'author', foreignKey : 'author_id'})
+	//User 1:N Question
+	model['Question'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
 
-//User N:N Class
-User.belongsToMany(Class, { as: {singular: 'class', plural: 'classes'}, foreignKey : 'user_id',through: ClassHasUser })
-Class.belongsToMany(User, { as: {singular: 'user', plural: 'users'}, foreignKey : 'class_id',through: ClassHasUser })
+	//User N:N Class
+	model['User'].belongsToMany(model['Class'], { as: {singular: 'class', plural: 'classes'}, foreignKey : 'user_id',through: model['ClassHasUser'] })
+	model['Class'].belongsToMany(model['User'], { as: {singular: 'user', plural: 'users'}, foreignKey : 'class_id',through: model['ClassHasUser'] })
 
-//User N:N Class
-User.belongsToMany(Class, { as: {singular: 'solicitation', plural: 'solicitations'}, foreignKey : 'user_id',through: SolicitationToClass })
-Class.belongsToMany(User, { as: {singular: 'solicitationToClass', plural: 'solicitationsToClass'}, foreignKey : 'class_id',through: SolicitationToClass })
+	//User N:N Class
+	model['User'].belongsToMany(model['Class'], { as: {singular: 'solicitation', plural: 'solicitations'}, foreignKey : 'user_id',through: model['SolicitationToClass'] })
+	model['Class'].belongsToMany(model['User'], { as: {singular: 'solicitationToClass', plural: 'solicitationsToClass'}, foreignKey : 'class_id',through: model['SolicitationToClass'] })
 
-//Question N:N ListQuestions
-Question.belongsToMany(ListQuestions, { as: {singular: 'list', plural: 'lists'}, foreignKey : 'question_id',through: ListHasQuestion })
-ListQuestions.belongsToMany(Question, { as: {singular: 'question', plural: 'questions'}, foreignKey : 'list_id',through: ListHasQuestion })
+	//Question N:N ListQuestions
+	model['Question'].belongsToMany(model['ListQuestions'], { as: {singular: 'list', plural: 'lists'}, foreignKey : 'question_id',through: model['ListHasQuestion'] })
+	model['ListQuestions'].belongsToMany(model['Question'], { as: {singular: 'question', plural: 'questions'}, foreignKey : 'list_id',through: model['ListHasQuestion'] })
 
-module.exports = {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion}
+	return {
+		User 				: model['User'],
+		UserPending 		: model['UserPending'],
+		Question 			: model['Question'],
+		ListQuestions 		: model['ListQuestions'],
+		Class 				: model['Class'],
+		SolicitationToClass : model['SolicitationToClass'],
+		ClassHasUser        : model['ClassHasUser'],
+		ListHasQuestion     : model['ListHasQuestion']
+	}
+}

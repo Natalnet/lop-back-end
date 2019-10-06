@@ -7,7 +7,9 @@ const fs = require('fs')
 const handlebars = require('handlebars')
 const path = require('path')
 
-const {User,UserPending} = require('../models')
+const sequelize = require('../../database/connection')
+const {User,UserPending}= sequelize.import(path.resolve(__dirname,'..','models'))
+
 
 
 //gera o token

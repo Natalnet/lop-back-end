@@ -3,7 +3,9 @@ const crypto = require('crypto');
 
 const {Op} = require('sequelize')
 
-const {ListQuestions,Question} = require('../models')
+const path = require('path')
+const sequelize = require('../../database/connection')
+const {ListQuestions,Question} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 class ListQuestionsController{
 	async get_all_listQuestions(req,res){
