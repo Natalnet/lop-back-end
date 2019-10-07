@@ -3,7 +3,7 @@ const path = require('path')
 sequelize
 	.authenticate()
 	.then(async () => {
-		const {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion} = sequelize.import(path.resolve(__dirname,'..','app','models'))
+		const {User,UserPending,Question,ListQuestions,Class,SolicitationToClass,ClassHasUser,ListHasQuestion,ClassHasListQuestion} = sequelize.import(path.resolve(__dirname,'..','app','models'))
 		await User.sync()
 		await UserPending.sync()
 		await Question.sync()
@@ -12,6 +12,7 @@ sequelize
 		await SolicitationToClass.sync()
 		await ClassHasUser.sync()
 		await ListHasQuestion.sync()
+		await ClassHasListQuestion.sync()
 		console.log('conexão com o banco de dados realizada com sucesso!');
 	})
 	.catch(err => {

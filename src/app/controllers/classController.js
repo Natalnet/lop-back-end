@@ -1,9 +1,7 @@
-
-const path = require('path')
 const arrayPaginate = require('array-paginate')
-
+const path = require('path')
 const sequelize = require('../../database/connection')
-const {Class,User,List} = sequelize.import(path.resolve(__dirname,'..','models'))
+const {Class,User,List,Question} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 
 class ClassController{
@@ -136,32 +134,18 @@ class ClassController{
 	async get_class_lists(req,res){
 		const idclass = req.params.id 
 		try{
-			const myclass = await Class.findById(id).select('listsQuestions').populate({
-				path:'listsQuestions',
-				populate:{
-					path:'questions'
-				}
-			})
+			const turma = await Class.findByPk(idclass)
 			//console.log(myclass.listsQuestions);
-			if(!myclass){
-				return res.status(404).json({err:'err'})
+			if(!turma){
+				return res.status(404).json('página não encontrada')
 			}
-			return res.status(200).json(myclass.listsQuestions)
-		}
-		catch(err){
-			console.log(err)
-			return res.status(500).json(err)
-		}
-	}
-	async get_class_requests(req,res){
-		const id = req.params.id 
-		try{
-			const classRequests = await Class.findById(id).select('requestingUsers').populate('requestingUsers')
-			//console.log(classRequests);
-			if(!classRequests){
-				return res.status(404).json({err:'err'})
-			}
-			return res.status(200).json(classRequests.requestingUsers)
+			const listas = await turma.getLists({
+				include:[{
+					model:Question,
+					as:'questions'
+				}]
+			})
+			return res.status(200).json(listas)
 		}
 		catch(err){
 			console.log(err)
@@ -180,8 +164,8 @@ class ClassController{
 				state,
 			})
 			const bulkProfessores = await Promise.all([...professores].map(async pId => {
-				const user = await User.findByPk(pId)
-				return user
+				const user = await User.findByPk(req.userId)
+				return user;
 			}))
 			//console.log(bulkProfessores);
 			if(bulkProfessores.length>0){
