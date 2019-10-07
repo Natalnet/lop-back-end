@@ -1,5 +1,6 @@
 const arrayPaginate = require('array-paginate')
 const path = require('path')
+const {Op} = require('sequelize')
 const sequelize = require('../../database/connection')
 const {Class,User,List,Question} = sequelize.import(path.resolve(__dirname,'..','models'))
 
@@ -16,10 +17,19 @@ class ClassController{
 		try{
 			const user = await User.findByPk(req.userId)
 			const myClasses = await user.getClasses({
-				as:'class'
+				as:'class',
 			})
-			const classes = await Class.findAll()
-			let classesOpen=[]
+			const idsMyclass =[...myClasses].map(turma => turma.id)
+			console.log(idsMyclass);
+			const classesOpen = await Class.findAll({
+				where:{
+					id:{
+						[Op.notIn]:idsMyclass
+					},
+					state:'ATIVA'
+				}
+			})
+			/*let classesOpen=[]
 			let souParticipante = false
 			for(let turma of classes){
 				for(let myClasse of myClasses){
@@ -30,7 +40,7 @@ class ClassController{
 				}
 				if(!souParticipante) classesOpen.push(turma);
 				souParticipante=false		
-			}
+			}*/
 			const classesPaginate = arrayPaginate(classesOpen,page,limitDocsPerPage)
 			return res.status(200).json(classesPaginate)
 		}
@@ -196,16 +206,19 @@ class ClassController{
 		const idClass = req.params.idClass
 		const idList = req.params.idList
 		try{
-			const myClass = Class.findById(idClass)
-			if(!myClass){
-				return res.satus(404).json('página não encontrada')
+			const turma = Class.findById(idClass)
+			if(!turma){
+				return res.status(404).json('página não encontrada')
 			}
-			const list = await List.findById(req.idList)
+			const list = await List.findByPk(idList)
 			if(!list){
 				console.log('list not found');
 				return res.status(400).json('list not found')
 			}
-			myClass.listsQuestions.push(list)
+			await turma.addList(list)
+			if(! await  turma.hasList(list)){
+				return res.status(500).json('lista não pôde ser adicionado à turma')
+			}
 			return res.status(200).json('ok')
 		}
 		catch(err){

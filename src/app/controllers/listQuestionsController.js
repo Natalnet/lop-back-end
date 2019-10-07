@@ -9,7 +9,12 @@ const {ListQuestions,Question} = sequelize.import(path.resolve(__dirname,'..','m
 
 class ListQuestionsController{
 	async get_all_listQuestions(req,res){
-		const listQuestion = await ListQuestions.find().populate('questions')
+		const listQuestion = await ListQuestions.findAll({
+			include:[{
+				model:Question,
+				as:'questions'
+			}]
+		})
 		return res.status(200).json(listQuestion)
 	}
 	async get_all_listQuestions_paginate(req,res){
