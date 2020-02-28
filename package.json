@@ -16,7 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.16.4",
     "fs": "^0.0.1-security",
-    "handlebars": "^4.1.2",
+    "handlebars": "^4.3.0",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.4.22",
     "mysql2": "^1.7.0",
