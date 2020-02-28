@@ -70,7 +70,7 @@ class QuestionController{
 			query.offset = (page-1)*limitDocsPerPage
 			query.limit = limitDocsPerPage
 			
-			questions = questions.slice((page-1)*limitDocsPerPage,limitDocsPerPage)
+			questions = questions.slice((page-1)*limitDocsPerPage,(page-1)*limitDocsPerPage+limitDocsPerPage)
 			
 
 			questions= await Promise.all(questions.map(async question=>{
