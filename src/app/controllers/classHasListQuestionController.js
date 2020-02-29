@@ -71,13 +71,13 @@ class ClassHasListQuestionController{
 		const idList = req.params.id
 		let {submissionDeadline} = req.body
 
-		const [year,month,day] = submissionDeadline.split('-')
+		const [year,month,day,hours,minutes] = submissionDeadline.split('-')
 		submissionDeadline = new Date()
 		submissionDeadline.setFullYear(year)
 		submissionDeadline.setMonth(month-1)
 		submissionDeadline.setDate(day)
-		submissionDeadline.setHours(23);
-		submissionDeadline.setMinutes(59)
+		submissionDeadline.setHours(hours);
+		submissionDeadline.setMinutes(minutes)
 		submissionDeadline.setSeconds(59)
 		//console.log(submissionDeadline);
 
