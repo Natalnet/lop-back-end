@@ -14,7 +14,7 @@ module.exports = (sequelize,DataTypes)=>{
 			defaultValue:DataTypes.UUIDV4
 		},
 		title:{
-			type:DataTypes.STRING(50),
+			type:DataTypes.STRING(200),
 			allowNull:false,
 		    set(title) {
 		      if (title) this.setDataValue('title', title.trim());

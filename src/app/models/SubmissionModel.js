@@ -14,7 +14,7 @@ module.exports = (sequelize,DataTypes)=>{
 			defaultValue:DataTypes.UUIDV4
 		},
 		ip:{
-			type:DataTypes.STRING(60),
+			type:DataTypes.STRING(200),
 		},
 		environment:{
 			type:DataTypes.ENUM('desktop','mobile'),
