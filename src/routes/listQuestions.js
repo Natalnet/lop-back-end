@@ -60,5 +60,6 @@ router.get('/listQuestion/:id',ListQuestionsMiddleware.show, ListQuestionsContro
 
 router.get('/listQuestion/page/:page',ListQuestionsMiddleware.index_paginate,ListQuestionsController.index_paginate)
 router.post('/listQuestion/store',ListQuestionsMiddleware.store, ListQuestionsController.store)
+router.put('/listQuestion/:id/update', ListQuestionsController.update)
 
 module.exports = (app) => app.use(router) 
