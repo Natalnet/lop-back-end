@@ -1,3 +1,4 @@
+require("dotenv/config")
 const express = require('express');
 const bodyParser = require('body-parser')
 const cors = require('cors')
@@ -22,3 +23,6 @@ require('./routes')(app);
 server.listen(PORT,(req,res) => {
     console.log(`Ativo em localhost:${PORT}`)
 })
+
+
+

@@ -16,6 +16,9 @@ module.exports = (sequelize) => {
 	//Class N:1 User
 	model['Class'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
 
+	//ListQuestion N:1 User
+	model['ListQuestions'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
+
 	//User N:N Class
 	model['User'].belongsToMany(model['Class'], { as: {singular: 'class', plural: 'classes'}, foreignKey : 'user_id',through: model['ClassHasUser'] })
 	model['Class'].belongsToMany(model['User'], { as: {singular: 'user', plural: 'users'}, foreignKey : 'class_id',through: model['ClassHasUser'] })

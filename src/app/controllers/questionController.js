@@ -3,15 +3,64 @@ const {Op} = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const  {User,Question,Difficulty,Tag,Draft,Submission,Access}= sequelize.import(path.resolve(__dirname,'..','models'))
+const  {User,Question,Difficulty,Tag,Draft,Submission,Access,ListQuestions}= sequelize.import(path.resolve(__dirname,'..','models'))
 
 class QuestionController{
+	
 	async index(req,res){
-		const questions = await Question.findAll()
-		if(questions.length===0){
-			res.status(200).json()
+		const {idList} = req.query;
+		try{ 
+			const listPromise = ListQuestions.findOne({
+				where:{
+					id: idList
+				},
+				attributes:["title"]
+			})
+			const questionsPromise = Question.findAll({
+				include:[{
+					model:ListQuestions,
+					as:"lists",
+					where:{
+						id: idList,
+					},
+					attributes:["id"]
+				},{
+					model: User,
+					as: 'author',
+					attributes:["email"]
+				}]
+			})
+			let [list,questions] = await Promise.all([listPromise, questionsPromise])
+			questions = await Promise.all(questions.map(async question=>{
+				const submissionsCount = await Submission.count({
+					where:{
+						question_id:question.id
+					},
+					
+				})
+				const submissionsCorrectsCount = await Submission.count({
+					where:{
+						question_id:question.id,
+						hitPercentage:100
+					},
+					
+				})
+
+				return {
+					...JSON.parse(JSON.stringify(question)),
+					submissionsCount,
+					submissionsCorrectsCount
+				};
+			}))
+			return res.status(200).json({
+				list,
+				questions
+			})
 		}
-		return res.status(200).json(questions)
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err);
+		}
 	}
 	async index_paginate(req,res){
 		const status = req.query.status || 'PÚBLICA'
@@ -140,7 +189,6 @@ class QuestionController{
 		try{
 			let questionDraftPromise = ""
 			let userDifficultyPromise = ""
-
 			const questionPromise = Question.findOne({
 				where:{
 					id:idQuestion
@@ -151,7 +199,8 @@ class QuestionController{
 					as:'tags'
 				},{
 					model:User,
-					as:'author'
+					as:'author',
+					attributes:["id","email"]
 				}]
 			})
 			if(draft && draft==="yes"){
@@ -258,9 +307,13 @@ class QuestionController{
 	}
 	async update(req,res){
 		try{
-			const id = req.params.id
+			const idQuestion = req.params.id
 			const {title,description,results,difficulty,status,katexDescription,solution,tags} = req.body
-			const question = await Question.findByPk(id)
+			const question = await Question.findByPk(idQuestion);
+			if(question.author_id !== req.userId){
+				console.log("Sem permissão")
+				return res.status(401).json({msg:"Sem permissão"})
+			}
 			await question.update({
 					title,
 					description,

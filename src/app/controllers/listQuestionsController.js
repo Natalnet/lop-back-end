@@ -132,6 +132,10 @@ class ListQuestionsController{
 			query.include = [{
 				model : Question,
 				as    : 'questions',
+			},{
+				model: User,
+				as: "author",
+				attributes:["email"]
 			}]
 			listQuestions.rows = await ListQuestions.findAll(query)
 
@@ -174,7 +178,9 @@ class ListQuestionsController{
 					attributes:['id','title','description']
 				}],
 			})
+			
 			const classHasListQuestionPromise =  ClassHasListQuestion.findOne({
+
 				where:{
 					list_id : idList,
 					class_id: idClass
@@ -200,7 +206,9 @@ class ListQuestionsController{
 						listQuestions_id : list.id,
 						class_id         : idClass
 					}
+
 				}
+
 				const submissionsCount = await Submission.count(query)
 				query.where.hitPercentage = 100
 				const correctSumissionsCount  = await Submission.count(query)
@@ -241,10 +249,54 @@ class ListQuestionsController{
 			const listQuestion = await ListQuestions.create({
 				title,
 				code,
+				author_id:req.userId
 			})
 			const bulkQuestions = await Promise.all([...questions].map(async qId =>Question.findByPk(qId) ))
 			if(bulkQuestions.length>0){
 				await listQuestion.addQuestions(bulkQuestions)
+			}
+			//await listQuestion.getQuestions()
+			return res.status(200).json({msg:'ok'})
+		}
+		catch(err){
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        field:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                //console.log(validationsErros)
+                return res.status(400).json(validationsErros)
+            }
+            else{
+                console.log(err);
+                return res.status(500).json(err)
+            }
+		}
+	}
+
+	async update(req,res){
+		try{
+			const {title,questions} = req.body
+			const {id} = req.params
+			const listQuestion = await ListQuestions.findByPk(id);
+			if(!listQuestion){
+				return res.status(404).json()
+			}
+			//console.log(listQuestion)
+			if(listQuestion.author_id !== req.userId){	
+				console.log("Sem permissão")
+				return res.status(401).json({msg:"Sem permissão"})
+			}
+			await listQuestion.update({
+				title,
+			})
+			const bulkQuestions = await Promise.all([...questions].map(async qId =>Question.findByPk(qId) ))
+			if(bulkQuestions.length>0){
+				await listQuestion.setQuestions(bulkQuestions);
 			}
 			//await listQuestion.getQuestions()
 			return res.status(200).json({msg:'ok'})
