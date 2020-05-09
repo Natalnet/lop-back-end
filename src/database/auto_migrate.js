@@ -3,7 +3,7 @@ const path = require('path')
 sequelize
 	.authenticate()
 	.then(async () => {
-		const {User,UserPending,Question,Test,ListQuestions,Class,Tag} = sequelize.import(path.resolve(__dirname,'..','app','models'))
+		const {User,UserPending,Question,Test,ListQuestions,Class,Tag,FeedBackTest} = sequelize.import(path.resolve(__dirname,'..','app','models'))
 		const {SolicitationToClass,ClassHasUser,ListHasQuestion,TestHasQuestion,ClassHasTest,ClassHasListQuestion,Submission,QuestionHasTag,Difficulty,Access,Draft} = sequelize.import(path.resolve(__dirname,'..','app','models'))
 		await Promise.all([
 			User.sync(),
@@ -20,6 +20,7 @@ sequelize
 			ClassHasTest.sync(),
 			Submission.sync(),
 			Tag.sync(),
+			FeedBackTest.sync(),
 			QuestionHasTag.sync(),
 			Difficulty.sync(),
 			Access.sync(),
