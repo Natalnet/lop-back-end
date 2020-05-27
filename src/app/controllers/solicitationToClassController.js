@@ -90,6 +90,7 @@ class SolicitationToClassController{
 			users.forEach(user => {
 				req.io.sockets.in(user.email).emit('RejectSolicitation',idClass);
 			});
+			
 			return res.status(200).json({msg:'ok'});
 		}
 		catch(err){
