@@ -235,7 +235,7 @@ class FeedBackTestController{
             class_id
         } = req.body
         try {
-            const [feedBackTest,created] = await FeedBackTest.findOrCreate({
+            const [feedBackTest, created] = await FeedBackTest.findOrCreate({
                 where: {
                     user_id,
                     test_id,

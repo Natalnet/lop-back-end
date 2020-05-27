@@ -7,6 +7,7 @@ router.use('/solicitation',AuthMiddleware.authentication)
 
 
 router.post('/classHasUser/store',ClassHasUserController.store)
+router.post('/classHasUser/storeall',ClassHasUserController.storeAll)
 router.delete('/classHasUser/delete',ClassHasUserController.delete)
 
 module.exports = app => app.use(router)
