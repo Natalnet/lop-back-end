@@ -41,6 +41,6 @@ recebe na query
 idClass -> id da turma da qual o usuário está querendo remover a solicitação
 ----------------------------------------------------------------------------------------------------------
 */
-router.delete('/solicitation/deleteall',SolicitationController.deleteAll)
+router.put('/solicitation/deleteall',SolicitationController.deleteAll)
 
 module.exports = app => app.use(router)

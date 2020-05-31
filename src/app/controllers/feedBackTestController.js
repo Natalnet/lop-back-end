@@ -118,13 +118,14 @@ class FeedBackTestController{
                     // })
                     
                     return {
+                        tried: submission || null,
                         hitPercentageSub:submission?submission.hitPercentage:0,
                         //correctSubmissions,
                         hitPercentageFeedBack:feedBackTest?feedBackTest.hitPercentage:null
                     };
                 }))
                 const userWithFeedBack = JSON.parse(JSON.stringify(user))
-                const triedQuestions = infoSubmissions.filter(t=>t.submission).length;
+                const triedQuestions = infoSubmissions.filter(t=>t.tried).length;
                 //const scoreSystem = infoSubmissions.filter(t=>t.correctSubmissions>0).length/test.questions.length
                 const scoreSystem = infoSubmissions.reduce((total,h)=>total+h.hitPercentageSub,0)/test.questions.length
                 const scoreTeacher = infoSubmissions.filter(h=>h.hitPercentageFeedBack===null).length > 0?
@@ -168,7 +169,7 @@ class FeedBackTestController{
         const idTest = req.query.idTest;
         const idUser = req.query.idUser;
         try{
-            const test = await Test.findOne({
+            const testPromise = Test.findOne({
                 where:{
                     id: idTest
                 },
@@ -182,6 +183,13 @@ class FeedBackTestController{
                     
                 }]
             })
+            const userPromise = User.findOne({
+                where:{
+                    id:idUser
+                },
+                attributes:['id','name']
+            })
+            const [test, user] = await Promise.all([testPromise,userPromise])
 
             const questions = await Promise.all(test.questions.map(async question=>{
                 const submission = await Submission.findOne({
@@ -212,7 +220,7 @@ class FeedBackTestController{
                 delete questionCopy.testHasQuestion;
                 return questionCopy;
             }))
-            return res.status(200).json(questions);
+            return res.status(200).json({questions,user});
         }
         catch(err){
 			console.log(err);

@@ -21,7 +21,8 @@ class ClassHasUserController{
         }
 	}
 	async storeAll(req, res){
-		const {idClass,users} = req.body;
+		const {idClass} = req.query;
+		const {users} = req.body;
 		try{
 			const classHasUsers = await Promise.all(users.map(user=>{
 				return ClassHasUser.create({
