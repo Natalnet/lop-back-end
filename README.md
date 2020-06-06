@@ -48,4 +48,8 @@ sudo npm install yarn –g
 
 ### 5. Instalação do mysql
 
+[Tutorial instalação mysql](https://www.digitalocean.com/community/tutorials/como-instalar-o-mysql-no-ubuntu-18-04-pt).
+
+
+
 
