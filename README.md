@@ -58,7 +58,7 @@ sudo npm install yarn –g
 Como você ja instalou o git agora  baixe o projeto ataves do git clone
 
 ```
-
+git clone https://github.com/Natalnet/lop-back-end.git
 
 ```
 
