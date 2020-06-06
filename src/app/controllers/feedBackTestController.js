@@ -53,26 +53,10 @@ class FeedBackTestController{
             })
             let [usersRows,test] = await Promise.all([usersRowsPromise, testPromise])
             users.rows = usersRows;
-            // users.rows = users.rows.map(user=>{
-			// 	return {
-			// 		id:user.id,
-			// 		name:user.name,
-			// 		email:user.email,
-			// 		enrollment:user.classes[0].classHasUser.enrollment
-			// 	}
-            // })
-            //return res.json(test.questions)
-            //console.log('length: ',test.questions.length)
+
             users.rows = await Promise.all(users.rows.map(async user=>{
                 const infoSubmissions = await Promise.all(test.questions.map(async question=>{
-                    // const submissionsCount = await Submission.count({
-                    //     where:{
-                    //         user_id: user.id,
-                    //         question_id: question.id,
-                    //         test_id: idTest,
-                    //         class_id: idClass
-                    //     }
-                    // })
+
                     const submission = await Submission.findOne({
                         where:{
                             user_id: user.id,
@@ -85,15 +69,6 @@ class FeedBackTestController{
                         ],
                         attributes:['hitPercentage','createdAt']
                     })
-                    // const correctSubmissions = await Submission.count({
-                    //     where:{
-                    //         user_id: user.id,
-                    //         question_id: question.id,
-                    //         test_id: idTest,
-                    //         class_id: idClass,
-                    //         hitPercentage : 100
-                    //     }
-                    // })
                     const feedBackTest = await FeedBackTest.findOne({
                         where:{
                             user_id: user.id,
@@ -107,15 +82,6 @@ class FeedBackTestController{
                         ],
                         attributes:['hitPercentage','createdAt']
                     })
-                    // const feedBackTest = await FeedBackTest.count({
-                    //     where:{
-                    //         user_id: user.id,
-                    //         question_id: question.id,
-                    //         test_id: idTest,
-                    //         class_id: idClass,
-                    //         hitPercentage : 100
-                    //     }
-                    // })
                     
                     return {
                         tried: submission || null,
@@ -215,7 +181,13 @@ class FeedBackTestController{
                     ],
                 })
                 const questionCopy = JSON.parse(JSON.stringify(question));
-                questionCopy.lastSubmission = submission;
+                questionCopy.lastSubmission = submission?submission:{
+                    class_id: idClass,
+                    test_id : idTest,
+                    question_id: question.id,
+                    user_id : idUser,
+                    hitPercentage: 0
+                };
                 questionCopy.feedBackTest = feedBackTest;
                 delete questionCopy.testHasQuestion;
                 return questionCopy;
@@ -240,31 +212,21 @@ class FeedBackTestController{
             user_id,
             test_id,
             question_id,
-            class_id
+            class_id,
+            submissions
         } = req.body
+        //console.log('antes: ',submissions.length);
+        //console.log(submissions)
         try {
-            const [feedBackTest, created] = await FeedBackTest.findOrCreate({
+            let feedBackTest = await FeedBackTest.findOne({
                 where: {
                     user_id,
                     test_id,
                     question_id,
                     class_id  
-                },
-                defaults:{
-                    comments: comments || '',
-                    compilation_error,
-                    runtime_error,
-                    presentation_error,
-                    wrong_answer,
-                    invalid_algorithm,
-                    hitPercentage,
-                    user_id,
-                    test_id,
-                    question_id,
-                    class_id   
-                }
+                },           
             })
-            if(!created){
+            if(feedBackTest){
                 await feedBackTest.update({
                     comments: comments || '',
                     compilation_error,
@@ -277,9 +239,45 @@ class FeedBackTestController{
                     test_id,
                     question_id,
                     class_id   
-                })
+                });
+                return res.status(200).json(feedBackTest);
             }
+            feedBackTest = await FeedBackTest.create({
+                comments: comments || '',
+                compilation_error,
+                runtime_error,
+                presentation_error,
+                wrong_answer,
+                invalid_algorithm,
+                hitPercentage,
+                user_id,
+                test_id,
+                question_id,
+                class_id  
+            })
             
+            const submissionsWithoutCurrentFeedBack = submissions.filter(submission=>(
+                submission.user_id !== user_id ||
+                submission.test_id !== test_id ||
+                submission.question_id !== question_id ||
+                submission.class_id !== class_id
+            ))
+            await Promise.all(submissionsWithoutCurrentFeedBack.map(submission=>(
+                FeedBackTest.create({
+                    comments: comments || '',
+                    compilation_error: false,
+                    runtime_error: false,
+                    presentation_error: false,
+                    wrong_answer: false,
+                    invalid_algorithm: false,
+                    hitPercentage: submission.hitPercentage ,
+                    user_id: submission.user_id,
+                    test_id: submission.test_id ,
+                    question_id : submission.question_id,
+                    class_id: submission.class_id
+                })
+            )))
+            //console.log('depois: ',submissionsWithoutCurrentFeedBack.length)
             return res.status(200).json(feedBackTest);
         } 
         catch(err){
