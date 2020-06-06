@@ -65,3 +65,23 @@ git clone https://github.com/Natalnet/lop-back-end.git
 ### Criar usuário e banco de dados no mysql 
 
 
+Logaremos no mysql com o usuário root e criaremos o usuário xxx
+
+```
+mysql -u root -p
+
+GRANT ALL PRIVILEGES ON *.* TO 'xxx'@'localhost' IDENTIFIED BY 'xxxx';
+
+```
+
+Saia do mysql. 
+
+E entre novamente, dessa vez utilizando o usuario criado: xxx
+Dessa vez, iremos criar o banco de dados xxxx
+```
+
+mysql -u xxx -p
+CREATE DATABASE xxxx;
+
+``` 
+
