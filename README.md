@@ -62,5 +62,6 @@ git clone https://github.com/Natalnet/lop-back-end.git
 
 ```
 
+### Criar usuário e banco de dados no mysql 
 
 
