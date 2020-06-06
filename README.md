@@ -61,6 +61,7 @@ Como você ja instalou o git agora  baixe o projeto ataves do git clone
 git clone https://github.com/Natalnet/lop-back-end.git
 
 ```
+Essse comando criará uma pasta com o projeto ( pasta: lop-back-end )
 
 ### Criar usuário e banco de dados no mysql 
 
@@ -78,10 +79,30 @@ Saia do mysql.
 
 E entre novamente, dessa vez utilizando o usuario criado: xxx
 Dessa vez, iremos criar o banco de dados xxxx
-```
 
+```
 mysql -u xxx -p
 CREATE DATABASE xxxx;
 
 ``` 
 
+### Executar o servidor
+
+Entre na pasta do projeto, pasta criada ao executar o comando git clone no passo anterior.
+
+```
+cd lop-back-end
+
+yarn install
+
+yarn start
+```
+
+Pronto, você deve ver o servidor em execução
+```
+root@DESKTOP-F5QS19P:/home/aquiles/nodeProjects/lop-back-end# yarn start
+yarn run v1.22.4
+$ node src/index.js
+Ativo em localhost:3001
+conexão com o banco de dados realizada com sucesso!
+```
