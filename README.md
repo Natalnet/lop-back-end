@@ -17,19 +17,19 @@ Para a correta configuração do ambiente de desenvolvimento do projeto lop-back
 
 Considerando que você esta utilizando o sistema operacional linux(utilizamos ubuntu para o exemplo a seguir), siga os seguintes passos:
 
-. Instalação do git
-. Instalação do node
+1. Instalação do git
+1. Instalação do node
 
 ``` javascript
 var x = 10;
 y = prompt("das");
 
 ``` 
-. Instalação do npm
+1. Instalação do npm
 
 
-. Instalação do yarn
+1. Instalação do yarn
 
-. Instalação do mysql
+1. Instalação do mysql
 
 
