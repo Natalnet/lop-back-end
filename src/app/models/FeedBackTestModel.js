@@ -40,15 +40,21 @@ module.exports = (sequelize,DataTypes)=>{
 			allowNull:false,
 		},
         comments:{
-            type:DataTypes.TEXT
+			type:DataTypes.TEXT,
+			defaultValue:'',
         },
         hitPercentage:{
             type:DataTypes.FLOAT(5),
             allowNull:false,
-        },
+		},
+		isEditedByTeacher:{
+            type:DataTypes.BOOLEAN,
+			defaultValue:false,
+			allowNull:false,	
+		},
         createdAt:{
             type:DataTypes.DATE,
-            defaultValue: DataTypes.NOW
+            defaultValue: DataTypes.NOW 
 		},
 	},{
 		freezeTableName:true,

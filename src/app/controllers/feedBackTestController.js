@@ -55,8 +55,8 @@ class FeedBackTestController{
             users.rows = usersRows;
 
             users.rows = await Promise.all(users.rows.map(async user=>{
-                const infoSubmissions = await Promise.all(test.questions.map(async question=>{
-
+                const infoSubmissionsAndFeedBacks = await Promise.all(test.questions.map(async question=>{
+                    //pega a última submissão na prova
                     const submission = await Submission.findOne({
                         where:{
                             user_id: user.id,
@@ -75,42 +75,34 @@ class FeedBackTestController{
                             question_id: question.id,
                             test_id: idTest,
                             class_id: idClass,
-                            //hitPercentage : 100
                         },
                         order:[
                             ['createdAt','DESC']
                         ],
-                        attributes:['hitPercentage','createdAt']
+                        attributes:['isEditedByTeacher','hitPercentage','createdAt']
                     })
                     
                     return {
                         tried: submission || null,
                         hitPercentageSub:submission?submission.hitPercentage:0,
-                        //correctSubmissions,
-                        hitPercentageFeedBack:feedBackTest?feedBackTest.hitPercentage:null
+                        hitPercentageFeedBack:feedBackTest?feedBackTest.hitPercentage:0,
+                        isEdited:feedBackTest?feedBackTest.isEditedByTeacher:false
                     };
                 }))
                 const userWithFeedBack = JSON.parse(JSON.stringify(user))
-                const triedQuestions = infoSubmissions.filter(t=>t.tried).length;
-                //const scoreSystem = infoSubmissions.filter(t=>t.correctSubmissions>0).length/test.questions.length
-                const scoreSystem = infoSubmissions.reduce((total,h)=>total+h.hitPercentageSub,0)/test.questions.length
-                const scoreTeacher = infoSubmissions.filter(h=>h.hitPercentageFeedBack===null).length > 0?
-                    null
-                    :
-                    infoSubmissions.reduce((total,t)=>total+t.hitPercentageFeedBack,0)/test.questions.length
-                //const scoreTeacher= infoSubmissions.filter(t=>t.feedBackTest>0).length/test.questions.length
-                //const feedBackTests = infoSubmissions.map(i=>i.feedBackTest?i.feedBackTest.hitPercentage:null)//infoSubmissions.filter(t=>t.correctSubmissions>0).length/test.questions.length
+                const triedQuestions = infoSubmissionsAndFeedBacks.filter(t=>t.tried).length;
+                const scoreSystem = infoSubmissionsAndFeedBacks.reduce((total,h)=>total+h.hitPercentageSub,0)/test.questions.length
+                const scoreTeacher = infoSubmissionsAndFeedBacks.reduce((total,h)=>total+h.hitPercentageFeedBack,0)/test.questions.length
+                const isEditedByTeacher = infoSubmissionsAndFeedBacks.filter(sub=>sub.isEdited).length > 0
                 return {
                     id: userWithFeedBack.id,
 					name: userWithFeedBack.name,
 					email: userWithFeedBack.email,
 					enrollment: userWithFeedBack.classes[0].classHasUser.enrollment,
                     triedQuestions,
-                    //scoreSystem: Number(scoreSystem.toFixed(2)),
                     scoreSystem: Number(scoreSystem.toFixed(2)),
                     scoreTeacher: scoreTeacher!==null?Number(scoreTeacher.toFixed(2)):null,
-                    //feedBackTests,
-
+                    isEditedByTeacher
                 }
             }))
 		
@@ -213,20 +205,31 @@ class FeedBackTestController{
             test_id,
             question_id,
             class_id,
-            submissions
         } = req.body
-        //console.log('antes: ',submissions.length);
-        //console.log(submissions)
         try {
-            let feedBackTest = await FeedBackTest.findOne({
+            const [feedBackTest, created] = await FeedBackTest.findOrCreate({
                 where: {
                     user_id,
                     test_id,
                     question_id,
                     class_id  
-                },           
+                }, 
+                defaults:{
+                    user_id,
+                    test_id,
+                    question_id,
+                    class_id,  
+                    hitPercentage,
+                    comments: comments || '',
+                    compilation_error,
+                    runtime_error,
+                    presentation_error,
+                    wrong_answer,
+                    invalid_algorithm,
+                    isEditedByTeacher: true
+                }		
             })
-            if(feedBackTest){
+            if(!created){
                 await feedBackTest.update({
                     comments: comments || '',
                     compilation_error,
@@ -235,50 +238,12 @@ class FeedBackTestController{
                     wrong_answer,
                     invalid_algorithm,
                     hitPercentage,
-                    user_id,
-                    test_id,
-                    question_id,
-                    class_id   
-                });
-                return res.status(200).json(feedBackTest);
-            }
-            feedBackTest = await FeedBackTest.create({
-                comments: comments || '',
-                compilation_error,
-                runtime_error,
-                presentation_error,
-                wrong_answer,
-                invalid_algorithm,
-                hitPercentage,
-                user_id,
-                test_id,
-                question_id,
-                class_id  
-            })
-            
-            const submissionsWithoutCurrentFeedBack = submissions.filter(submission=>(
-                submission.user_id !== user_id ||
-                submission.test_id !== test_id ||
-                submission.question_id !== question_id ||
-                submission.class_id !== class_id
-            ))
-            await Promise.all(submissionsWithoutCurrentFeedBack.map(submission=>(
-                FeedBackTest.create({
-                    comments: comments || '',
-                    compilation_error: false,
-                    runtime_error: false,
-                    presentation_error: false,
-                    wrong_answer: false,
-                    invalid_algorithm: false,
-                    hitPercentage: submission.hitPercentage ,
-                    user_id: submission.user_id,
-                    test_id: submission.test_id ,
-                    question_id : submission.question_id,
-                    class_id: submission.class_id
+                    isEditedByTeacher: true
                 })
-            )))
-            //console.log('depois: ',submissionsWithoutCurrentFeedBack.length)
-            return res.status(200).json(feedBackTest);
+            }
+            return res.status(200).json(feedBackTest); 
+            
+
         } 
         catch(err){
 			console.log(err);

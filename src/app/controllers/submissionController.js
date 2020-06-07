@@ -3,7 +3,7 @@ const path = require('path')
 const {Op} = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const {Submission,Class,User,Question,ListQuestions,ClassHasListQuestion,Test} = sequelize.import(path.resolve(__dirname,'..','models'))
+const {Submission,FeedBackTest,User,Question,ListQuestions,ClassHasListQuestion,Test} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 class SubmissionController{
 	async index_paginate(req,res){
@@ -144,11 +144,11 @@ class SubmissionController{
 				listQuestions_id : idList|| null,
 				test_id : idTest|| null,
 				hitPercentage,
+				environment,
+				timeConsuming,
 				language,
 				answer,
-				timeConsuming,
 				ip,
-				environment,
 				char_change_number,
 				createdAt:new Date()
 			}).then(async sub=>{
@@ -170,6 +170,34 @@ class SubmissionController{
 				submissionWhitUserAndQuestion.question = question
 				req.io.sockets.in(idClass).emit('SubmissionClass',submissionWhitUserAndQuestion)
 			})
+			if(idTest){
+				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
+					where: {
+						user_id : req.userId,
+						question_id : idQuestion,
+						class_id : idClass,
+						test_id : idTest, 
+					},
+					defaults:{
+						user_id : req.userId,
+						question_id : idQuestion,
+						class_id : idClass,
+						test_id : idTest,    
+						hitPercentage,
+
+					}		
+				})
+				if(!created){
+					await feedBackTest.update({
+						hitPercentage,
+						timeConsuming,
+						language,
+						answer,
+						ip,
+						char_change_number
+					})
+				}
+			}
 			return res.status(200).json(submission)
 		}
 		catch(err){
