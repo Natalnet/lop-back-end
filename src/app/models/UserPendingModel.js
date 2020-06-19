@@ -11,7 +11,7 @@ module.exports = (sequelize,DataTypes)=>{
 			defaultValue:DataTypes.UUIDV4
 		},
 		name:{
-			type:DataTypes.STRING(50),
+			type : DataTypes.STRING(200),
 			allowNull:false,
 		    set(name) {
 		      if (name) this.setDataValue('name', name.trim());
@@ -27,7 +27,7 @@ module.exports = (sequelize,DataTypes)=>{
 			}
 		},
 		email:{
-			type : DataTypes.STRING(30),
+			type : DataTypes.STRING(200),
 			allowNull : false, // default é true
 		    set(email) {
 		      this.setDataValue('email', email.toLowerCase().trim());
