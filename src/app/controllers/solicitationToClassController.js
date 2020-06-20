@@ -52,6 +52,7 @@ class SolicitationToClassController{
 			return res.status(500).json(err)
 		}
 	}
+	
 	async delete(req,res){
 		const idClass = req.query.idClass
 		const idUser = req.query.idUser || req.userId
@@ -73,6 +74,29 @@ class SolicitationToClassController{
 			return res.status(500).json(err)
 		}
 	}
+	async deleteAll(req,res){
+		const {idClass} = req.query;
+		const {users} = req.body
+		try{
+			await Promise.all(users.map(user=>{
+				return SolicitationToClass.destroy({
+					where:{
+						user_id: user.id,
+						class_id: idClass
+					}
+				})
+			}))
 
+			users.forEach(user => {
+				req.io.sockets.in(user.email).emit('RejectSolicitation',idClass);
+			});
+			
+			return res.status(200).json({msg:'ok'});
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
 }
 module.exports = new SolicitationToClassController()

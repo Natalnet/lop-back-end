@@ -91,27 +91,37 @@ class QuestionController{
 				order: [
 					sort==='DESC'?[sortBy,'DESC']:[sortBy]
 				],
-				include:[{
+				include: [{
 					model: Tag,
 					as:'tags',
-					attributes:["name"],
+					attributes:["name"],	
 				},{
 					model : User,
 					as    : 'author',
-					attributes:['email']
+					attributes:['email'],
 				}]
 			}
 			if(JSON.parse(tags).length>0){
-				query.include[0].where =  {
-					name:{
-						[Op.in]:JSON.parse(tags)
-					}
+
+				query.include[0] = {
+					...query.include[0],
+					where :  {
+						name: {
+							[Op.in]:JSON.parse(tags)
+						},
+					},
 				}
+				
 			}
+			//console.log(query.include);
 			
 			
 			let questions = await Question.findAll(query)
+			//let {count,rows} = await Question.findAndCountAll(query)
+			//let count= await Question.count(query)
 			const count = questions.length
+			//console.log('count: ', count)
+			//console.log('length: ', rows.length)
 			const totalPages = Math.ceil(count/limitDocsPerPage)
 			page = parseInt(page>totalPages?totalPages:page)
 			page = page<=0?1:page
@@ -119,8 +129,8 @@ class QuestionController{
 			query.offset = (page-1)*limitDocsPerPage
 			query.limit = limitDocsPerPage
 			
+			//let questions = await Question.findAll(query)
 			questions = questions.slice((page-1)*limitDocsPerPage,(page-1)*limitDocsPerPage+limitDocsPerPage)
-			
 
 			questions= await Promise.all(questions.map(async question=>{
 				const submissionsCount = await Submission.count({
@@ -223,6 +233,21 @@ class QuestionController{
 					}
 				})
 			}
+
+			const lastSubmissionPromise = Submission.findOne({
+				where : {
+					user_id     : req.userId,
+					question_id : idQuestion,
+					class_id : idClass || null,
+					listQuestions_id : idList || null,
+					test_id : idTest || null
+				},
+				attributes: ['timeConsuming','createdAt'],
+				order:[
+					['createdAt','DESC']
+				],
+			})
+			
 			const accessCountPromise = Access.count({
 				question_id:idQuestion
 			})
@@ -237,21 +262,23 @@ class QuestionController{
 					question_id:idQuestion,
 					hitPercentage:100
 				},
-				
 			})
 
-			let [question,questionDraft,userDifficulty,accessCount,submissionsCount,submissionsCorrectsCount] = await Promise.all([
+			let [question,questionDraft,userDifficulty,lastSubmission,accessCount,submissionsCount,submissionsCorrectsCount] = await Promise.all([
 				questionPromise,
 				questionDraftPromise,
 				userDifficultyPromise,
+				lastSubmissionPromise,
 				accessCountPromise,
 			    submissionsCountPromise,
-				submissionsCorrectsCountPromise
+				submissionsCorrectsCountPromise,
+				
 			])
 			
 			question = JSON.parse(JSON.stringify(question))
 			question.userDifficulty = userDifficulty?userDifficulty.difficulty || '':''
 			question.questionDraft =  questionDraft
+			question.lastSubmission =  lastSubmission
 			question.accessCount = accessCount
 			question.submissionsCount = submissionsCount
 			question.submissionsCorrectsCount = submissionsCorrectsCount

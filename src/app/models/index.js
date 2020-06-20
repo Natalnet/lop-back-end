@@ -58,6 +58,15 @@ module.exports = (sequelize) => {
 	//Submission N:1 Class
 	model['Submission'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
 
+	//FeedBackTest N:1 User
+	model['FeedBackTest'].belongsTo(model['User'], {as:'user', foreignKey: 'user_id'});
+	//FeedBackTest N:1 Question
+	model['FeedBackTest'].belongsTo(model['Question'], {as:'question', foreignKey: 'question_id'});
+	//FeedBackTest N:1 Test
+	model['FeedBackTest'].belongsTo(model['Test'], {as:'test', foreignKey: 'test_id'});
+	//FeedBackTest N:1 Class
+	model['FeedBackTest'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
+
 	//Draft N:1 User
 	model['Draft'].belongsTo(model['User'], {as:'user', foreignKey: 'user_id'});
 	//Draft N:1 Question
@@ -92,6 +101,7 @@ module.exports = (sequelize) => {
 		ClassHasListQuestion : model['ClassHasListQuestion'],
 		ClassHasTest         : model['ClassHasTest'],
 		Submission           : model['Submission'],
+		FeedBackTest         : model['FeedBackTest'],
 		QuestionHasTag       : model['QuestionHasTag'],
 		Difficulty           : model['Difficulty'],
 		Access               : model['Access'],

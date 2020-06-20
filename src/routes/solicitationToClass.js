@@ -37,9 +37,10 @@ router.post('/solicitation/store',SolicitationController.store)
 //----------------------------------------deleta uma solicitação------------------------------------------
 router.delete('/solicitation/delete',SolicitationController.delete)
 /*
-    recebe na query
-    idClass -> id da turma da qual o usuário está querendo remover a solicitação
+recebe na query
+idClass -> id da turma da qual o usuário está querendo remover a solicitação
 ----------------------------------------------------------------------------------------------------------
 */
+router.put('/solicitation/deleteall',SolicitationController.deleteAll)
 
 module.exports = app => app.use(router)
