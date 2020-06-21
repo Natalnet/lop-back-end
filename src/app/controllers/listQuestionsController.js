@@ -242,6 +242,80 @@ class ListQuestionsController{
 			return res.status(500).json(err)
 		}
 	}
+	async getUserSubmissionsByList(req, res){
+		try{
+			const { id, idClass, idQuestion} = req.params;
+			const classRoonPromise = Class.findByPk(idClass);
+			const listPromise = ListQuestions.findOne({
+				where:{
+					id
+				},
+				attributes:['id','title'],
+				order:[
+					['questions','createdAt']
+				],
+				include:[{
+					model:Question,
+					as:'questions',
+					attributes:['id','title']
+				}],
+			});
+			// const questionPromise = Question.findOne({
+			// 	where:{
+			// 		id: idQuestion
+			// 	},
+			// 	attributes: ['id','title']
+			// })
+			let [classRoon, list] = await Promise.all([classRoonPromise, listPromise])
+			let users = await classRoon.getUsers({
+				where:{
+					profile: 'ALUNO'
+				},
+				attributes: ['id','name','email'],
+				order:['name']
+			});
+
+			list.questions = list.questions.map(question=>{
+				const questionCopy = JSON.parse(JSON.stringify(question))
+				delete questionCopy.listHasQuestion
+				return questionCopy;
+			})
+			users = users.map(user=>{
+				const userCopy = JSON.parse(JSON.stringify(user))
+				userCopy.enrollment = userCopy.classHasUser.enrollment
+				delete userCopy.classHasUser
+				return userCopy;
+			})
+
+			users = await Promise.all(users.map(async user=>{
+				const lastSubmission = await Submission.findOne({
+					where:{
+						user_id: user.id,
+						question_id: idQuestion,
+						listQuestions_id : id,
+						class_id: idClass,
+						hitPercentage: 100
+					},
+					order:[
+						['createdAt','DESC']
+					],
+				})
+				const userCopy = JSON.parse(JSON.stringify(user));
+				return {
+					...userCopy,
+					lastSubmission
+				}
+
+			}))
+			users = users.filter(user=>user.lastSubmission);
+
+			return res.status(200).json({users, list});
+		}
+		catch(err){
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
 	async store(req,res){
 		try{
 			const {title,questions} = req.body

@@ -28,6 +28,7 @@ router.get('/listQuestion',ListQuestionsMiddleware.index, ListQuestionsControlle
         submissionDeadline -> data limite das submissõe da lista nessa turma (caso não tenha, devolve null)
 ----------------------------------------------------------------------------------------------------------
 */
+router.get('/listQuestion/:id/class/:idClass/question/:idQuestion', ListQuestionsController.getUserSubmissionsByList)
 
 //---------------------------obtem uma lista com o id enviado na rota---------------------------
 router.get('/listQuestion/:id',ListQuestionsMiddleware.show, ListQuestionsController.show)
