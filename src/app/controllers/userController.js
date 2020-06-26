@@ -130,6 +130,32 @@ class UserController{
 			return res.status(500).json(err)
 		}
 	}
+	async getUsersByClass(req, res){
+		const { id } = req.params;
+
+		try{
+			const classRoon = await Class.findByPk(id);
+
+			let users = await classRoon.getUsers({
+				where:{
+					profile: 'ALUNO'
+				},
+				attributes: ['id','name','email'],
+				order:['name']
+			});
+			users = users.map(user=>{
+				const userCopy = JSON.parse(JSON.stringify(user))
+				userCopy.enrollment = userCopy.classHasUser.enrollment
+				delete userCopy.classHasUser
+				return userCopy;
+			})
+			return res.status(200).json(users);
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
 	async show(req,res){
 
 	}

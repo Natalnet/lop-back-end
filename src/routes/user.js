@@ -12,6 +12,7 @@ router.use('/user',AuthMiddleware.authentication)
 router.get('/user',UserMiddleware.index,UserController.index)
 router.get('/user/page/:page',UserMiddleware.index_paginate,UserController.index_paginate)
 router.get('/user/:id',UserController.show)
+router.get('/user/class/:id',UserController.getUsersByClass)
 router.put('/user/:id/update',UserController.update)
 
 
