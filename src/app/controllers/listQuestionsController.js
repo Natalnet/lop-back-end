@@ -1,6 +1,6 @@
 const crypto = require('crypto');
 
-const {Op} = require('sequelize')
+const {Op, fn, col} = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
@@ -257,16 +257,17 @@ class ListQuestionsController{
 				include:[{
 					model:Question,
 					as:'questions',
-					attributes:['id','title']
+					attributes:['id','title','description','katexDescription']
 				}],
 			});
-			// const questionPromise = Question.findOne({
-			// 	where:{
-			// 		id: idQuestion
-			// 	},
-			// 	attributes: ['id','title']
-			// })
-			let [classRoon, list] = await Promise.all([classRoonPromise, listPromise])
+			const classHasListQuestionPromise =  ClassHasListQuestion.findOne({
+				where:{
+					list_id : id,
+					class_id: idClass
+				},
+				attributes:['createdAt','submissionDeadline']
+			})
+			let [classRoon, list ,classHasListQuestion] = await Promise.all([classRoonPromise, listPromise, classHasListQuestionPromise])
 			let users = await classRoon.getUsers({
 				where:{
 					profile: 'ALUNO'
@@ -275,6 +276,7 @@ class ListQuestionsController{
 				order:['name']
 			});
 
+			
 			list.questions = list.questions.map(question=>{
 				const questionCopy = JSON.parse(JSON.stringify(question))
 				delete questionCopy.listHasQuestion
@@ -287,9 +289,12 @@ class ListQuestionsController{
 				return userCopy;
 			})
 
+			let submissionDeadline = classHasListQuestion.submissionDeadline
+			submissionDeadline = submissionDeadline?new Date(submissionDeadline):null
+
 			users = await Promise.all(users.map(async user=>{
-				const lastSubmission = await Submission.findOne({
-					where:{
+				const query = {
+					where: {
 						user_id: user.id,
 						question_id: idQuestion,
 						listQuestions_id : id,
@@ -299,13 +304,23 @@ class ListQuestionsController{
 					order:[
 						['createdAt','DESC']
 					],
-				})
+				}
+				if(submissionDeadline){
+					query.where.createdAt = {
+						[Op.lte] : submissionDeadline
+					}
+				}
+				let lastSubmission = await Submission.findOne(query);
+				if(!lastSubmission){
+					delete query.where.hitPercentage;
+					lastSubmission = await Submission.findOne(query);
+				}
+
 				const userCopy = JSON.parse(JSON.stringify(user));
 				return {
 					...userCopy,
 					lastSubmission
 				}
-
 			}))
 			users = users.filter(user=>user.lastSubmission);
 
