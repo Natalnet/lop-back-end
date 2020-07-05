@@ -69,18 +69,7 @@ class ClassHasListQuestionController{
 	async update(req,res){
 		const idClass= req.query.idClass
 		const idList = req.params.id
-		let {submissionDeadline} = req.body
-
-		const [year,month,day,hours,minutes] = submissionDeadline.split('-')
-		submissionDeadline = new Date()
-		submissionDeadline.setFullYear(year)
-		submissionDeadline.setMonth(month-1)
-		submissionDeadline.setDate(day)
-		submissionDeadline.setHours(hours);
-		submissionDeadline.setMinutes(minutes)
-		submissionDeadline.setSeconds(59)
-		//console.log(submissionDeadline);
-
+		let {submissionDeadline} = req.body;
 		try{
 			const classHasListQuestion = await ClassHasListQuestion.findOne({
 				where:{
