@@ -70,7 +70,7 @@ class QuestionController{
 		const sort = req.query.sort || "DESC"
 		const tagId = req.query.tag;
 		
-		const limitDocsPerPage = 3//parseInt(req.query.docsPerPage || 15);
+		const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
 		let page = parseInt(req.params.page || 1);
 
 		try{
