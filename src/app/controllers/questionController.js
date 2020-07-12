@@ -106,7 +106,7 @@ class QuestionController{
 				]
 			}
 			if(tagId){
-				console.log('idTag: ',tagId)
+				//console.log('idTag: ',tagId)
 				query.include[0] = {
 					...query.include[0],
 					where :  {
@@ -337,7 +337,7 @@ class QuestionController{
 			const {title,description,results,difficulty,status,katexDescription,solution,tags} = req.body
 			const question = await Question.findByPk(idQuestion);
 			if(question.author_id !== req.userId){
-				console.log("Sem permissão")
+				//console.log("Sem permissão")
 				return res.status(401).json({msg:"Sem permissão"})
 			}
 			await question.update({

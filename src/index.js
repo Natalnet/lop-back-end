@@ -21,7 +21,7 @@ require('./database/auto_migrate')
 require('./routes')(app);  
 
 server.listen(PORT,(req,res) => {
-    console.log(`Ativo em localhost:${PORT}`)
+    console.log(`Listening in localhost:${PORT}`)
 })
 
 

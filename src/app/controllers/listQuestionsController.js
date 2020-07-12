@@ -377,7 +377,7 @@ class ListQuestionsController{
 			}
 			//console.log(listQuestion)
 			if(listQuestion.author_id !== req.userId){	
-				console.log("Sem permissão")
+				//console.log("Sem permissão")
 				return res.status(401).json({msg:"Sem permissão"})
 			}
 			await listQuestion.update({
