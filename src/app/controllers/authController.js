@@ -179,9 +179,15 @@ class AuthController {
                 
             });
             //-----envia email-----
-            const info = sendEmail('forgot_password',key,email)
-            //console.log(info)
-            return res.status(200).json({msg:`Foi enviado um email de recuperação de senha para ${email}`});
+            const { success } = await sendEmail('forgot_password',key,email);
+            let msg;
+            if(success){
+                msg = `Foi enviado um email de recuperação de senha para ${email}`;
+            }
+            else{
+                msg = "Não foi possível enviar email de recuperação de senha :( n Por favor, tende mais tarde";
+            }
+            return res.status(200).json({msg});
         }catch(err){
             console.log(err);
             return res.status(500).json({msg:'erro ao tentar solicitar recuperação de senha, tente novamente :('});

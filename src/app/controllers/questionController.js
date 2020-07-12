@@ -68,7 +68,8 @@ class QuestionController{
 		const field = req.query.field || 'title'
 		const sortBy = req.query.sortBy || 'createdAt'
 		const sort = req.query.sort || "DESC"
-		const tags = req.query.tags || JSON.stringify([])
+		const tagId = req.query.tag;
+		
 		const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
 		let page = parseInt(req.params.page || 1);
 
@@ -91,34 +92,33 @@ class QuestionController{
 				order: [
 					sort==='DESC'?[sortBy,'DESC']:[sortBy]
 				],
-				include: [{
-					model: Tag,
-					as:'tags',
-					attributes:["name"],	
-				},{
-					model : User,
-					as    : 'author',
-					attributes:['email'],
-				}]
+				include: [
+					{
+						model: Tag,
+						as:'tags',
+						attributes:["name"],
+					},
+					{
+						model : User,
+						as    : 'author',
+						attributes:['email'],
+					}
+				]
 			}
-			if(JSON.parse(tags).length>0){
-
+			if(tagId){
+				//console.log('idTag: ',tagId)
 				query.include[0] = {
 					...query.include[0],
 					where :  {
-						name: {
-							[Op.in]:JSON.parse(tags)
-						},
+						id: tagId,
 					},
 				}
-				
 			}
-			//console.log(query.include);
 			
-			
+
 			let questions = await Question.findAll(query)
 			//let {count,rows} = await Question.findAndCountAll(query)
-			//let count= await Question.count(query)
+			//let count = await Question.count(query)
 			const count = questions.length
 			//console.log('count: ', count)
 			//console.log('length: ', rows.length)
@@ -183,7 +183,6 @@ class QuestionController{
 				total       : parseInt(count),
 				totalPages  : parseInt(totalPages)
 			}
-			//console.log(questionsPaginate);
 			return res.status(200).json(questionsPaginate)
 		}
 		catch(err){
@@ -338,7 +337,7 @@ class QuestionController{
 			const {title,description,results,difficulty,status,katexDescription,solution,tags} = req.body
 			const question = await Question.findByPk(idQuestion);
 			if(question.author_id !== req.userId){
-				console.log("Sem permissão")
+				//console.log("Sem permissão")
 				return res.status(401).json({msg:"Sem permissão"})
 			}
 			await question.update({

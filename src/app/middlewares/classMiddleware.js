@@ -43,6 +43,12 @@ class ClassMiddleware{
 
 		
 	}	
+	async getCsv(req,res,next){
+        if(req.userProfile!=="PROFESSOR"){
+            return res.status(401).json({msg:"Sem permissão"})
+        }
+		return next()
+	}
 	async store(req,res,next){
         if(req.userProfile!=="PROFESSOR"){
             return res.status(401).json({msg:"Sem permissão"})
