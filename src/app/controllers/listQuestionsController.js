@@ -1,10 +1,9 @@
 const crypto = require('crypto');
 
 const {Op, fn, col} = require('sequelize')
-
-const path = require('path')
-const sequelize = require('../../database/connection')
-const {ListQuestions,Question,Class,Submission,User,ClassHasListQuestion} = sequelize.import(path.resolve(__dirname,'..','models'))
+const sequelize = require('../../database/connection');
+const { resolve } = require('path');
+const {ListQuestions,Question,Class,Submission,User,ClassHasListQuestion} = sequelize.import(resolve(__dirname,'..','models'))
 
 class ListQuestionsController{
 	async index(req,res){
@@ -323,14 +322,15 @@ class ListQuestionsController{
 				}
 			}))
 			users = users.filter(user=>user.lastSubmission);
-
 			return res.status(200).json({users, list});
+			
 		}
 		catch(err){
 			console.log(err)
 			return res.status(500).json(err)
 		}
 	}
+
 	async store(req,res){
 		try{
 			const {title,questions} = req.body
@@ -353,7 +353,7 @@ class ListQuestionsController{
                     let erroType = {
                         field:erro.path,
                         message:erro.message,
-                        
+
                     }
                     return erroType
                 }));
@@ -370,7 +370,7 @@ class ListQuestionsController{
 	async update(req,res){
 		try{
 			const {title,questions} = req.body
-			const {id} = req.params
+			const {id} = req.params;
 			const listQuestion = await ListQuestions.findByPk(id);
 			if(!listQuestion){
 				return res.status(404).json()
@@ -383,8 +383,8 @@ class ListQuestionsController{
 			await listQuestion.update({
 				title,
 			})
-			const bulkQuestions = await Promise.all([...questions].map(async qId =>Question.findByPk(qId) ))
-			if(bulkQuestions.length>0){
+			const bulkQuestions = await Promise.all([...questions].map(async qId => Question.findByPk(qId) ))
+			if(bulkQuestions.length > 0){
 				await listQuestion.setQuestions(bulkQuestions);
 			}
 			//await listQuestion.getQuestions()
@@ -401,11 +401,11 @@ class ListQuestionsController{
                     return erroType
                 }));
                 //console.log(validationsErros)
-                return res.status(400).json(validationsErros)
+                return res.status(400).json(validationsErros);
             }
             else{
                 console.log(err);
-                return res.status(500).json(err)
+                return res.status(500).json(err);
             }
 		}
 	}
