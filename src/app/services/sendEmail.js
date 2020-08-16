@@ -11,7 +11,7 @@ module.exports = async (action,key,email)=>{
     const html =  tamplate({key})
 
     const mailOptions = {
-        from: NODE_MAILER.SENDER_EMAIL, //email remetente (do sistema)
+        from: process.env.SENDER_EMAIL, //email remetente (do sistema)
         to: email, //email do destinatário
         subject: action === 'confirm_registration'?'Confirmação de cadastro':action==='forgot_password'?'Recuperação de senha':'', //Assunto: 'Confirmação de cadastro' ou 'Recuperação de senha'
         html: html // tamplate de email: 'confirm_registration.html' ou 'forgot_password.html'
@@ -19,11 +19,11 @@ module.exports = async (action,key,email)=>{
 
     const transport = nodemailer.createTransport({
         service: 'gmail',
-        port: 465,
-	secure: true,
-	auth: {
-			user: "projetosect@gmail.com",
-			pass: "xxxxxxxx"
+        port: process.env.PORT_MAILER,
+        secure: true,
+        auth: {
+			user: process.env.USER_MAILER,
+			pass: process.env.PASS_MAILER
 		}
 	})
     const info = await transport.sendMail(mailOptions)
