@@ -20,5 +20,7 @@ module.exports =
         db: process.env.DB || 'xxxx',
         user:process.env.DB_USER || 'xxx',
         password:process.env.DB_PASSWORD || 'xxxx'
+        //NODE_MAILER.SENDER_EMAIL
+        //465
     }
 }
