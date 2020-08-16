@@ -9,7 +9,7 @@ const {Class,User,ListQuestions,Test,Question,ClassHasListQuestion,Submission} =
 class ClassController{
 	async index(req,res){
 		const code= req.query.code
-		const state = req.query.state?[req.query.state]:["ATIVA","INATIVA"]
+		const state = req.query.state?[req.query.state.split(" ")]:["ATIVA","INATIVA"]
 		const myClasses = req.query.myClasses
 		const idNotIn = req.query.idNotIn || ""
 		 

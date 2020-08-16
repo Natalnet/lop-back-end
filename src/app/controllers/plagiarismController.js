@@ -100,7 +100,7 @@ class PlagiarismController{
 
 				for (const user of users) {
                     const name = user.name.split(' ').join('_');
-                    const enrollment = user.enrollment.replace(/[^a-z0-9]/gi, "")
+                    const enrollment = user.enrollment.replace(/[^a-z0-9]/gi, "");
                     
                     const filePath = join(classPath,`${name}-${enrollment}.cpp`);
 					try{
@@ -114,12 +114,12 @@ class PlagiarismController{
 						console.log('--------------------------------------------------------')
 					}
 					// Add files to compare
-				}
+                }
 				// Call process(), a async/promise that returns the moss url
 				client.process()
 					.then(async url =>{
                         existsSync(classPath) && rmdirSync(classPath, {recursive: true});
-                        console.log('url-> ',url)
+                        console.log('url-> ',url);
                         const plagiarism = await Plagiarism.create({
                             moss_url: url,
                             question_id: idQuestion,
@@ -127,22 +127,25 @@ class PlagiarismController{
                             class_id: idClass,
                             createdAt : new Date()
                         })
-                        req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                            moss_url: plagiarism.moss_url,
-                            createdAt: plagiarism.createdAt,
-                            err: false
-                        })
-
+                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
+                        //     moss_url: plagiarism.moss_url,
+                        //     createdAt: plagiarism.createdAt,
+                        //     err: false
+                        // })
 					})
 					.catch(err=>{
 						console.log('catch');
 						console.log(err);
                         existsSync(classPath) && rmdirSync(classPath, {recursive: true});
-                        req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                            url: null,
-                            err: true
-                        })
+                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
+                        //     url: null,
+                        //     err: true
+                        // })
                     })
+                setTimeout(() => {
+                    //console.log('deleted-->>');
+                    existsSync(classPath) && rmdirSync(classPath, {recursive: true});
+                }, 1000 * 60 * 20);// 20 min
                 return res.status(200).json({msg: "Em alguns minutos o link estará pronto!"});
 				// try{
 				// 	const url = await client.process();
@@ -157,7 +160,7 @@ class PlagiarismController{
 				// }
 			}
 			else{
-				return res.status(200).json({ msg: 'Não há submissões para essa questão'});
+				return res.status(200).json({ msg: 'Ainda não há submissões para essa questão'});
 			}
         }
         catch(err){
