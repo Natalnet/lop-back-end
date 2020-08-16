@@ -1,9 +1,8 @@
 const MossClient = require('moss-node-client')
-const { mkdirSync, existsSync, rmdirSync, writeFileSync } = require('fs');
+const { mkdirSync, existsSync, rmdirSync, writeFileSync, unlinkSync } = require('fs');
 const { resolve, join } = require('path');
 const {Op} = require('sequelize')
 const sequelize = require('../../database/connection');
-
 const {ListQuestions,Question,Class,Submission,ClassHasListQuestion,Plagiarism} = sequelize.import(resolve(__dirname,'..','models'))
 
 class PlagiarismController{
@@ -94,8 +93,14 @@ class PlagiarismController{
 			if(users.length){
 				//const languages = classRoon.
 				// Create a client and specify language and moss user id
-				const client = new MossClient(language, "235246769");
-				const classPath = resolve(__dirname,'..','..','tmp',`${idList}-${idClass}-${idQuestion}`); 
+                const client = new MossClient(language, "235246769");
+                let classPath;
+                if(process.env.NODE_ENV==='production'){
+                    classPath = `/tmp/${idList}-${idClass}-${idQuestion}`;
+                }
+                else{
+                    classPath = resolve(__dirname,'..','..','tmp',`${idList}-${idClass}-${idQuestion}`); 
+                }
                 !existsSync(classPath) && mkdirSync(classPath);
 
 				for (const user of users) {
@@ -118,8 +123,6 @@ class PlagiarismController{
 				// Call process(), a async/promise that returns the moss url
 				client.process()
 					.then(async url =>{
-                        existsSync(classPath) && rmdirSync(classPath, {recursive: true});
-                        console.log('url-> ',url);
                         const plagiarism = await Plagiarism.create({
                             moss_url: url,
                             question_id: idQuestion,
@@ -127,6 +130,17 @@ class PlagiarismController{
                             class_id: idClass,
                             createdAt : new Date()
                         })
+                        if(existsSync(classPath)){
+                            for (const user of users) {
+                                const name = user.name.split(' ').join('_');
+                                const enrollment = user.enrollment.replace(/[^a-z0-9]/gi, "");
+                                const filePath = join(classPath,`${name}-${enrollment}.cpp`);
+                                existsSync(filePath) && unlinkSync(filePath);
+                            }
+                            rmdirSync(classPath, {recursive: true});
+                        }
+                        //console.log('url-> ',url);
+
                         // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
                         //     moss_url: plagiarism.moss_url,
                         //     createdAt: plagiarism.createdAt,
@@ -136,16 +150,30 @@ class PlagiarismController{
 					.catch(err=>{
 						console.log('catch');
 						console.log(err);
-                        existsSync(classPath) && rmdirSync(classPath, {recursive: true});
-                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
+                        if(existsSync(classPath)){
+                            for (const user of users) {
+                                const name = user.name.split(' ').join('_');
+                                const enrollment = user.enrollment.replace(/[^a-z0-9]/gi, "");
+                                const filePath = join(classPath,`${name}-${enrollment}.cpp`);
+                                existsSync(filePath) && unlinkSync(filePath);
+                            }
+                            rmdirSync(classPath, {recursive: true});
+                        }                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
                         //     url: null,
                         //     err: true
                         // })
                     })
                 setTimeout(() => {
                     //console.log('deleted-->>');
-                    existsSync(classPath) && rmdirSync(classPath, {recursive: true});
-                }, 1000 * 60 * 20);// 20 min
+                    if(existsSync(classPath)){
+                        for (const user of users) {
+                            const name = user.name.split(' ').join('_');
+                            const enrollment = user.enrollment.replace(/[^a-z0-9]/gi, "");
+                            const filePath = join(classPath,`${name}-${enrollment}.cpp`);
+                            existsSync(filePath) && unlinkSync(filePath);
+                        }
+                        rmdirSync(classPath, {recursive: true});
+                    }                }, 1000 * 60 * 20);// 20 min
                 return res.status(200).json({msg: "Em alguns minutos o link estará pronto!"});
 				// try{
 				// 	const url = await client.process();
