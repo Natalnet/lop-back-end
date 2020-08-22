@@ -40,7 +40,6 @@ class PlagiarismController{
             order:['name']
         });
 
-        
         list.questions = list.questions.map(question=>{
             const questionCopy = JSON.parse(JSON.stringify(question))
             delete questionCopy.listHasQuestion

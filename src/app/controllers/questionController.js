@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const {Op} = require('sequelize')
+const {Op, fn} = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
@@ -63,17 +63,19 @@ class QuestionController{
 		}
 	}
 	async index_paginate(req,res){
-		const status = req.query.status || 'PÚBLICA'
-		const include = req.query.include || ''
-		const field = req.query.field || 'title'
-		const sortBy = req.query.sortBy || 'createdAt'
-		const sort = req.query.sort || "DESC"
+		const status = req.query.status || 'PÚBLICA';
+		const include = req.query.include || '';
+		const field = req.query.field || 'title';
+		// const sortBy = req.query.sortBy || 'createdAt';
+		const sortBy = req.query.sortBy;// || 'createdAt';
+		const sort = req.query.sort || "DESC";
 		const tagId = req.query.tag;
 		
 		const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
 		let page = parseInt(req.params.page || 1);
 
 		try{
+			const begin = Date.now();
 			const query = {
 				where : { 
 					title: { 
@@ -89,9 +91,7 @@ class QuestionController{
 				attributes:{
 					exclude:['solution','author_id','updatedAt']
 				},
-				order: [
-					sort==='DESC'?[sortBy,'DESC']:[sortBy]
-				],
+		
 				include: [
 					{
 						model: Tag,
@@ -105,6 +105,17 @@ class QuestionController{
 					}
 				]
 			}
+			console.log('orderBy', sortBy);
+			if(!sortBy){
+				query.order = [
+					fn('RAND')
+				]
+			}else{
+				query.order = [
+					sort==='DESC'?[sortBy,'DESC']:[sortBy]
+				]
+			}
+			
 			if(tagId){
 				//console.log('idTag: ',tagId)
 				query.include[0] = {
@@ -116,10 +127,10 @@ class QuestionController{
 			}
 			
 
-			let questions = await Question.findAll(query)
+			let questions = await Question.findAll(query);
 			//let {count,rows} = await Question.findAndCountAll(query)
 			//let count = await Question.count(query)
-			const count = questions.length
+			const count = questions.length;
 			//console.log('count: ', count)
 			//console.log('length: ', rows.length)
 			const totalPages = Math.ceil(count/limitDocsPerPage)
@@ -183,7 +194,9 @@ class QuestionController{
 				total       : parseInt(count),
 				totalPages  : parseInt(totalPages)
 			}
-			return res.status(200).json(questionsPaginate)
+			const end = Date.now();
+			console.log(`${((end-begin)/1000).toFixed(2)} s`)
+			return res.status(200).json(questionsPaginate);
 		}
 		catch(err){
 			console.log(err);
