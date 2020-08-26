@@ -25,7 +25,7 @@ module.exports = (sequelize,DataTypes)=>{
 			allowNull:false,
 		},
 		language:{
-			type:DataTypes.ENUM('javascript','cpp','python','java'),
+			type:DataTypes.ENUM('javascript','cpp','c','python','java'),
 			allowNull:false,
 		},
 		answer:{
