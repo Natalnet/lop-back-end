@@ -75,7 +75,6 @@ class QuestionController{
 		let page = parseInt(req.params.page || 1);
 
 		try{
-			const begin = Date.now();
 			const query = {
 				where : { 
 					title: { 
@@ -195,7 +194,6 @@ class QuestionController{
 				totalPages  : parseInt(totalPages)
 			}
 			const end = Date.now();
-			console.log(`${((end-begin)/1000).toFixed(2)} s`)
 			return res.status(200).json(questionsPaginate);
 		}
 		catch(err){
