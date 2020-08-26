@@ -105,7 +105,7 @@ class QuestionController{
 					}
 				]
 			}
-			console.log('orderBy', sortBy);
+			//console.log('orderBy', sortBy);
 			if(!sortBy){
 				query.order = [
 					fn('RAND')
