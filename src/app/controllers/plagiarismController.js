@@ -91,7 +91,8 @@ class PlagiarismController{
         try{
 			if(users.length){
 				//const languages = classRoon.
-				// Create a client and specify language and moss user id
+                // Create a client and specify language and moss user id
+                if (language == 'cpp') language = 'cc';
                 const client = new MossClient(language, "235246769");
                 let classPath;
                 if(process.env.NODE_ENV==='production'){
