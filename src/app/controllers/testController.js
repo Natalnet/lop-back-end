@@ -137,6 +137,89 @@ class TestController{
 			return res.status(500).json(err)
 		}
 	}
+	async getUserSubmissionsByTest(req, res){
+		try{
+			const { id, idClass, idQuestion} = req.params;
+			//console.log({ id, idClass, idQuestion})
+			const classRoonPromise = Class.findByPk(idClass);
+			const testPromise = Test.findOne({
+				where:{
+					id
+				},
+				attributes:['id','title'],
+				order:[
+					['questions','createdAt']
+				],
+				include:[{
+					model:Question,
+					as:'questions',
+					attributes:['id','title','description','katexDescription']
+				}],
+			});
+			const classHasTestQuestionPromise =  ClassHasTest.findOne({
+				where:{
+					test_id : id,
+					class_id: idClass
+				},
+				attributes:['createdAt']
+			})
+			let [classRoon, test ,classHasListQuestion] = await Promise.all([classRoonPromise, testPromise, classHasTestQuestionPromise])
+			let users = await classRoon.getUsers({
+				where:{
+					profile: 'ALUNO'
+				},
+				attributes: ['id','name','email'],
+				order:['name']
+			});
+
+			
+			test.questions = test.questions.map(question=>{
+				const questionCopy = JSON.parse(JSON.stringify(question))
+				delete questionCopy.testHasQuestion
+				return questionCopy;
+			})
+			users = users.map(user=>{
+				const userCopy = JSON.parse(JSON.stringify(user))
+				userCopy.enrollment = userCopy.classHasUser.enrollment
+				delete userCopy.classHasUser
+				return userCopy;
+			})
+
+			users = await Promise.all(users.map(async user=>{
+				const query = {
+					where: {
+						user_id: user.id,
+						question_id: idQuestion,
+						test_id : id,
+						class_id: idClass,
+						hitPercentage: 100
+					},
+					order:[
+						['createdAt','DESC']
+					],
+				}
+	
+				let lastSubmission = await Submission.findOne(query);
+				if(!lastSubmission){
+					delete query.where.hitPercentage;
+					lastSubmission = await Submission.findOne(query);
+				}
+
+				const userCopy = JSON.parse(JSON.stringify(user));
+				return {
+					...userCopy,
+					lastSubmission
+				}
+			}))
+			users = users.filter(user=>user.lastSubmission);
+			return res.status(200).json({users, test});
+			
+		}
+		catch(err){
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
 
 	async show(req,res){
 		const idTest = req.params.id

@@ -10,7 +10,7 @@ class SubmissionController{
 		const field = req.query.field || 'name'
 		const includeString = req.query.include || ''
 		const limitDocsPerPage= parseInt(req.query.docsPerPage || 15);
-		const {idClass,idUser,idList,idTest,idQuestion,profile} = req.query
+		const {idClass,idUser,idList,idTest,idQuestion,profile} = req.query;
 		let page = parseInt(req.params.page || 1);
 		try{
 			let submissions = {}
@@ -48,7 +48,11 @@ class SubmissionController{
 			if(idTest) query.where.test_id = idTest
 			if(idQuestion) query.where.question_id = idQuestion
 			//console.log("query: ",query)
+			console.log('aqui 1')
+
 			submissions.count = await Submission.count(query)
+			console.log('count submissions: ',submissions.count)
+			console.log('aqui 2')
 
 			const totalPages = Math.ceil(submissions.count/limitDocsPerPage)
 			page = parseInt(page>totalPages?totalPages:page)
@@ -57,7 +61,6 @@ class SubmissionController{
 			query.offset=(page-1)*limitDocsPerPage
 
 			const submissionsPromise =  Submission.findAll(query)
-			
 			let userPromise = ""
 			let listPromise = ""
 			let testPromise = ""
@@ -96,6 +99,7 @@ class SubmissionController{
 			}
 			
 			let [rows,user,list,test,question] = await Promise.all([submissionsPromise,userPromise,listPromise,testPromise,questionPromise])
+			//console.log('aqui 3')
 			if(idList && list){
 				rows = await Promise.all(rows.map(async submission=>{
 					const classHasListQuestion = await ClassHasListQuestion.findOne({
@@ -110,6 +114,7 @@ class SubmissionController{
 					return submissionCopy
 				}))
 			}
+			//console.log('aqui 4')
 			
 
 			const submissionsPaginate = {
@@ -123,6 +128,7 @@ class SubmissionController{
 				test,
 				question
 			}
+			console.log('aqui 5')
 
 			return res.status(200).json(submissionsPaginate)
 		}

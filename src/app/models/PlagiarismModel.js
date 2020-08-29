@@ -16,6 +16,9 @@ module.exports = (sequelize,DataTypes)=>{
 		moss_url:{
 			type:DataTypes.TEXT,
 		},
+		language:{
+			type:DataTypes.ENUM('javascript','cpp','c','python','java'),
+		},
 		createdAt:{
 			type:DataTypes.DATE,
 			allowNull:false,
