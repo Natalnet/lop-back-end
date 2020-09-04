@@ -12,19 +12,19 @@ const cors = require('cors')
 
 const app = express();
 
+const server = require('https').createServer(credentials, app)
+const io = require('socket.io')(server)
+
 app.use(cors())
+app.use(require('./sockets')(io))
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.urlencoded({extended: false}));
 
 //Verifica a conexão com o bacno de dados e cria as tabelas caso não foram criadas
 require('./database/auto_migrate');
 
 //importa rotas
 require('./routes')(app);
-
-const server = https.createServer(credentials, app);
-const io = require('socket.io')(server)
-app.use(require('./sockets')(io))
 
 server.listen(3001,() => console.log('https on 3001'));
 
