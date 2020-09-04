@@ -1296,6 +1296,11 @@ mongoose@^5.4.22:
     sift "7.0.1"
     sliced "1.0.1"
 
+moss-node-client@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/moss-node-client/-/moss-node-client-1.0.2.tgz#c0b587334113ed9e6c17e374fef1873a08b2ffe5"
+  integrity sha512-y57H57N+vOu6aM7k6cCN9/vi0bOBHXXbjx9aP+7OjLlsLbVYQhVU69KFaXrAHcYkyCpVF9wSmwDW6r1ElchEdQ==
+
 mpath@0.6.0:
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/mpath/-/mpath-0.6.0.tgz#aa922029fca4f0f641f360e74c5c1b6a4c47078e"
