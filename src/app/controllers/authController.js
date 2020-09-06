@@ -42,7 +42,7 @@ class AuthController {
                 await userPending.save()
             }
             //-----envia email-----
-            sendEmail('confirm_registration',key,email)
+            await sendEmail('confirm_registration',key,email)
             return res.status(200).json({msg:"ok"})
             
         }catch(err){
@@ -179,7 +179,7 @@ class AuthController {
                 
             });
             //-----envia email-----
-            sendEmail('forgot_password',key,email);
+            await sendEmail('forgot_password',key,email);
 
             return res.status(200).json({msg: `Foi enviado um email de recuperação de senha para ${email}`});
         }catch(err){
