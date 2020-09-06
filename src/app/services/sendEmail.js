@@ -8,7 +8,8 @@ const {NODE_MAILER} = require('../../config/env');
 module.exports = async (action,key,email)=>{
     const content = fs.readFileSync(path.resolve(__dirname,'..','..','tamplates','mail',`${action}.html`))
     const tamplate =  handlebars.compile(content.toString()) 
-    const html =  tamplate({key})
+    //console.log('process.env.URL_FRONTEND: ',)
+    const html =  tamplate({key/*, url_frontend: process.env.URL_FRONTEND*/})
 
     const mailOptions = {
         from: process.env.SENDER_EMAIL, //email remetente (do sistema)
@@ -16,7 +17,7 @@ module.exports = async (action,key,email)=>{
         subject: action === 'confirm_registration'?'Confirmação de cadastro':action==='forgot_password'?'Recuperação de senha':'', //Assunto: 'Confirmação de cadastro' ou 'Recuperação de senha'
         html: html // tamplate de email: 'confirm_registration.html' ou 'forgot_password.html'
     }
-
+    console.log(process.env.PORT_MAILER,process.env.USER_MAILER,process.env.PASS_MAILER);
     const transport = nodemailer.createTransport({
         service: 'gmail',
         port: process.env.PORT_MAILER,
@@ -27,5 +28,6 @@ module.exports = async (action,key,email)=>{
 		}
 	})
     const info = await transport.sendMail(mailOptions)
+    console.log('info: ',info)
     return info
 }

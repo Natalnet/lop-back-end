@@ -179,7 +179,7 @@ class AuthController {
                 
             });
             //-----envia email-----
-            sendEmail('forgot_password',key,email);
+            await sendEmail('forgot_password',key,email);
 
             return res.status(200).json({msg: `Foi enviado um email de recuperação de senha para ${email}`});
         }catch(err){
