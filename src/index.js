@@ -22,7 +22,6 @@ require('./routes')(app);
 server.listen(PORT,(req,res) => {
     console.log(`Listening in localhost:${PORT}`)
 })
-
 // var exec = require('child_process').exec;
 // var child = exec('mysqldump -u root -p 3306 lop > dumpfilename.sql',err=>{
 //     console.log('erro ao gerar backup\n');
