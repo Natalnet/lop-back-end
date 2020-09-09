@@ -351,6 +351,9 @@ class TestController{
 
 		}
 	}
+	async getApiStatus(req, res) {
+		return res.status(200).send("LOP API OK");
+	}
 
 }
 module.exports = new TestController()

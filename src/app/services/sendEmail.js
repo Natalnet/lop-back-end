@@ -8,8 +8,7 @@ const {NODE_MAILER} = require('../../config/env');
 module.exports = async (action,key,email)=>{
     const content = fs.readFileSync(path.resolve(__dirname,'..','..','tamplates','mail',`${action}.html`))
     const tamplate =  handlebars.compile(content.toString()) 
-    //console.log('process.env.URL_FRONTEND: ',)
-    const html =  tamplate({key/*, url_frontend: process.env.URL_FRONTEND*/})
+    const html =  tamplate({key, url_frontend: process.env.URL_FRONTEND})
 
     const mailOptions = {
         from: process.env.SENDER_EMAIL, //email remetente (do sistema)
@@ -27,7 +26,7 @@ module.exports = async (action,key,email)=>{
 			pass: process.env.PASS_MAILER
 		}
 	})
-    const info = await transport.sendMail(mailOptions)
-    console.log('info: ',info)
+    const info = await transport.sendMail(mailOptions);
+    //console.log('info: ',info)
     return info
 }

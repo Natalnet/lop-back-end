@@ -42,7 +42,7 @@ class AuthController {
                 await userPending.save()
             }
             //-----envia email-----
-            sendEmail('confirm_registration',key,email)
+            await sendEmail('confirm_registration',key,email)
             return res.status(200).json({msg:"ok"})
             
         }catch(err){
