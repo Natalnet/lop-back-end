@@ -49,7 +49,7 @@ class QuestionController {
 					model: Test,
 					as: "tests",
 					where: {
-						id: '976e0273-437b-42c4-8baf-5dda38501cfb',
+						id: idTest,
 					},
 					attributes: ["id"]
 				}]
