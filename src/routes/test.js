@@ -15,5 +15,6 @@ router.get('/apistatus', TestController.getApiStatus)
 
 router.post('/test/store',TestMiddleware.store,TestController.store)
 router.put('/test/:id/update',TestMiddleware.update,TestController.update)
+router.put('/test/:id/update/questions',TestMiddleware.update,TestController.updateQuestions)
 
 module.exports = (app) => app.use(router) 

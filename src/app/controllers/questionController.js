@@ -1,49 +1,80 @@
 const crypto = require('crypto');
-const {Op, fn} = require('sequelize')
+const { Op, fn } = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const  {User,Question,Difficulty,Tag,Draft,Submission,Access,ListQuestions}= sequelize.import(path.resolve(__dirname,'..','models'))
+const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
-class QuestionController{
-	
-	async index(req,res){
-		const {idList} = req.query;
-		try{ 
-			const listPromise = ListQuestions.findOne({
-				where:{
-					id: idList
-				},
-				attributes:["title"]
-			})
-			const questionsPromise = Question.findAll({
-				include:[{
-					model:ListQuestions,
-					as:"lists",
-					where:{
-						id: idList,
+class QuestionController {
+
+	async index(req, res) {
+		const { idList, idTest } = req.query;
+		try {
+			let listPromise, testPromise;
+			if(idList){
+				listPromise = ListQuestions.findOne({
+					where: {
+						id: idList
 					},
-					attributes:["id"]
-				},{
+					attributes: ["title"]
+				})
+			}
+			else if(idTest){
+				testPromise = Test.findOne({
+					where: {
+						id: idTest
+					},
+					attributes: ["title","password","showAllTestCases"]
+				})
+			}
+			const query = {
+				include: [{
 					model: User,
 					as: 'author',
-					attributes:["email"]
+					attributes: ["email"]
 				}]
-			})
-			let [list,questions] = await Promise.all([listPromise, questionsPromise])
-			questions = await Promise.all(questions.map(async question=>{
-				const submissionsCount = await Submission.count({
-					where:{
-						question_id:question.id
+			}
+			if (idList) {
+				query.include = [...query.include, {
+					model: ListQuestions,
+					as: "lists",
+					where: {
+						id: idList,
 					},
-					
+					attributes: ["id"]
+				}]
+			}
+			else if (idTest) {
+				query.include = [...query.include, {
+					model: Test,
+					as: "tests",
+					where: {
+						id: '976e0273-437b-42c4-8baf-5dda38501cfb',
+					},
+					attributes: ["id"]
+				}]
+			}			
+			const questionsPromise = Question.findAll(query)
+			let list, test, questions;
+			if(idList){
+				[list, questions] = await Promise.all([listPromise, questionsPromise])
+			}
+			else if(idTest){
+				[test, questions] = await Promise.all([testPromise, questionsPromise])
+			}
+			questions = await Promise.all(questions.map(async question => {
+				const submissionsCount = await Submission.count({
+					where: {
+						question_id: question.id
+					},
+
 				})
 				const submissionsCorrectsCount = await Submission.count({
-					where:{
-						question_id:question.id,
-						hitPercentage:100
+					where: {
+						question_id: question.id,
+						hitPercentage: 100
 					},
-					
+
 				})
 
 				return {
@@ -52,17 +83,23 @@ class QuestionController{
 					submissionsCorrectsCount
 				};
 			}))
-			return res.status(200).json({
-				list,
+			const response = {
 				questions
-			})
+			}
+			if(idList){
+				response.list = list
+			}
+			else if(idTest){
+				response.test = test
+			}
+			return res.status(200).json(response)
 		}
-		catch(err){
+		catch (err) {
 			console.log(err);
 			return res.status(500).json(err);
 		}
 	}
-	async index_paginate(req,res){
+	async index_paginate(req, res) {
 		const status = req.query.status || 'PÚBLICA';
 		const include = req.query.include || '';
 		const field = req.query.field || 'title';
@@ -70,61 +107,61 @@ class QuestionController{
 		const sortBy = req.query.sortBy;// || 'createdAt';
 		const sort = req.query.sort || "DESC";
 		const tagId = req.query.tag;
-		
+
 		const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
 		let page = parseInt(req.params.page || 1);
 
-		try{
+		try {
 			const query = {
-				where : { 
-					title: { 
-						[Op.like]: `%${field==='title'?include:''}%` 
+				where: {
+					title: {
+						[Op.like]: `%${field === 'title' ? include : ''}%`
 					},
-					code: { 
-						[Op.like]: `%${field==='code'?include:''}%` 
+					code: {
+						[Op.like]: `%${field === 'code' ? include : ''}%`
 					},
-					status:{
-						[Op.in]:status.split(' ')
+					status: {
+						[Op.in]: status.split(' ')
 					}
 				},
-				attributes:{
-					exclude:['solution','author_id','updatedAt']
+				attributes: {
+					exclude: ['solution', 'author_id', 'updatedAt']
 				},
-		
+
 				include: [
 					{
 						model: Tag,
-						as:'tags',
-						attributes:["name"],
+						as: 'tags',
+						attributes: ["name"],
 					},
 					{
-						model : User,
-						as    : 'author',
-						attributes:['email'],
+						model: User,
+						as: 'author',
+						attributes: ['email'],
 					}
 				]
 			}
 			//console.log('orderBy', sortBy);
-			if(!sortBy){
+			if (!sortBy) {
 				query.order = [
 					fn('RAND')
 				]
-			}else{
+			} else {
 				query.order = [
-					sort==='DESC'?[sortBy,'DESC']:[sortBy]
+					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
 				]
 			}
-			
-			if(tagId){
+
+			if (tagId) {
 				//console.log('idTag: ',tagId)
 				query.include[0] = {
 					...query.include[0],
-					where :  {
+					where: {
 						id: tagId,
 					},
 				}
 			}
-			
+
 
 			let questions = await Question.findAll(query);
 			//let {count,rows} = await Question.findAndCountAll(query)
@@ -132,177 +169,177 @@ class QuestionController{
 			const count = questions.length;
 			//console.log('count: ', count)
 			//console.log('length: ', rows.length)
-			const totalPages = Math.ceil(count/limitDocsPerPage)
-			page = parseInt(page>totalPages?totalPages:page)
-			page = page<=0?1:page
+			const totalPages = Math.ceil(count / limitDocsPerPage)
+			page = parseInt(page > totalPages ? totalPages : page)
+			page = page <= 0 ? 1 : page
 
-			query.offset = (page-1)*limitDocsPerPage
+			query.offset = (page - 1) * limitDocsPerPage
 			query.limit = limitDocsPerPage
-			
-			//let questions = await Question.findAll(query)
-			questions = questions.slice((page-1)*limitDocsPerPage,(page-1)*limitDocsPerPage+limitDocsPerPage)
 
-			questions= await Promise.all(questions.map(async question=>{
+			//let questions = await Question.findAll(query)
+			questions = questions.slice((page - 1) * limitDocsPerPage, (page - 1) * limitDocsPerPage + limitDocsPerPage)
+
+			questions = await Promise.all(questions.map(async question => {
 				const submissionsCount = await Submission.count({
-					where:{
-						question_id:question.id
+					where: {
+						question_id: question.id
 					},
-					
+
 				})
 				const submissionsCorrectsCount = await Submission.count({
-					where:{
-						question_id:question.id,
-						hitPercentage:100
+					where: {
+						question_id: question.id,
+						hitPercentage: 100
 					},
-					
+
 				})
 				const mySubmissionsCount = await Submission.count({
-					where:{
-						user_id : req.userId,
-						question_id : question.id,
+					where: {
+						user_id: req.userId,
+						question_id: question.id,
 					},
 				})
 				const mySubmissionsCorrectCount = await Submission.count({
-					where:{
-						user_id : req.userId,
-						question_id : question.id,
-						hitPercentage:100
+					where: {
+						user_id: req.userId,
+						question_id: question.id,
+						hitPercentage: 100
 					},
 				})
 
 				const accessCount = await Access.count({
-					where:{
-						question_id:question.id
+					where: {
+						question_id: question.id
 					},
 				})
-				
+
 				const questionWithSubmissions = JSON.parse(JSON.stringify(question))
-				questionWithSubmissions.tags = questionWithSubmissions.tags.map(tag=>tag.name)
+				questionWithSubmissions.tags = questionWithSubmissions.tags.map(tag => tag.name)
 				questionWithSubmissions.submissionsCount = submissionsCount
 				questionWithSubmissions.submissionsCorrectsCount = submissionsCorrectsCount
 				questionWithSubmissions.accessCount = accessCount
 
-				questionWithSubmissions.isCorrect = mySubmissionsCorrectCount>0
-				questionWithSubmissions.wasTried = mySubmissionsCount>0
+				questionWithSubmissions.isCorrect = mySubmissionsCorrectCount > 0
+				questionWithSubmissions.wasTried = mySubmissionsCount > 0
 				return questionWithSubmissions
 			}))
 			const questionsPaginate = {
-				docs        : questions,
-				currentPage : page,
-				perPage     : parseInt(limitDocsPerPage),
-				total       : parseInt(count),
-				totalPages  : parseInt(totalPages)
+				docs: questions,
+				currentPage: page,
+				perPage: parseInt(limitDocsPerPage),
+				total: parseInt(count),
+				totalPages: parseInt(totalPages)
 			}
 			const end = Date.now();
 			return res.status(200).json(questionsPaginate);
 		}
-		catch(err){
+		catch (err) {
 			console.log(err);
 			return res.status(500).json(err)
 		}
 	}
 
-	async show(req,res){
-		const {idList,idTest,idClass,draft,difficulty} = req.query
+	async show(req, res) {
+		const { idList, idTest, idClass, draft, difficulty } = req.query
 		const idQuestion = req.params.id
-		const excludeFieldes = req.query.exclude?req.query.exclude.split(' '):[]
-		try{
+		const excludeFieldes = req.query.exclude ? req.query.exclude.split(' ') : []
+		try {
 			let questionDraftPromise = ""
 			let userDifficultyPromise = ""
 			const questionPromise = Question.findOne({
-				where:{
-					id:idQuestion
+				where: {
+					id: idQuestion
 				},
 				attributes: { exclude: excludeFieldes },
-				include:[{
-					model:Tag,
-					as:'tags'
-				},{
-					model:User,
-					as:'author',
-					attributes:["id","email"]
+				include: [{
+					model: Tag,
+					as: 'tags'
+				}, {
+					model: User,
+					as: 'author',
+					attributes: ["id", "email"]
 				}]
 			})
-			if(draft && draft==="yes"){
+			if (draft && draft === "yes") {
 				questionDraftPromise = Draft.findOne({
-					where : {
-						user_id     : req.userId,
-						question_id : idQuestion,
-						class_id : idClass || null,
-						listQuestions_id : idList || null,
-						test_id : idTest || null
+					where: {
+						user_id: req.userId,
+						question_id: idQuestion,
+						class_id: idClass || null,
+						listQuestions_id: idList || null,
+						test_id: idTest || null
 					},
-					attributes:['answer','char_change_number']
+					attributes: ['answer', 'char_change_number']
 				})
 			}
-			if(difficulty && difficulty==="yes"){
+			if (difficulty && difficulty === "yes") {
 				userDifficultyPromise = Difficulty.findOne({
-					where : {
-						user_id     : req.userId,
-						question_id : idQuestion
+					where: {
+						user_id: req.userId,
+						question_id: idQuestion
 					}
 				})
 			}
 
 			const lastSubmissionPromise = Submission.findOne({
-				where : {
-					user_id     : req.userId,
-					question_id : idQuestion,
-					class_id : idClass || null,
-					listQuestions_id : idList || null,
-					test_id : idTest || null
+				where: {
+					user_id: req.userId,
+					question_id: idQuestion,
+					class_id: idClass || null,
+					listQuestions_id: idList || null,
+					test_id: idTest || null
 				},
-				attributes: ['timeConsuming','createdAt'],
-				order:[
-					['createdAt','DESC']
+				attributes: ['timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
 				],
 			})
-			
+
 			const accessCountPromise = Access.count({
-				question_id:idQuestion
+				question_id: idQuestion
 			})
 			const submissionsCountPromise = Submission.count({
-				where:{
-					question_id:idQuestion
+				where: {
+					question_id: idQuestion
 				},
-				
+
 			})
 			const submissionsCorrectsCountPromise = Submission.count({
-				where:{
-					question_id:idQuestion,
-					hitPercentage:100
+				where: {
+					question_id: idQuestion,
+					hitPercentage: 100
 				},
 			})
 
-			let [question,questionDraft,userDifficulty,lastSubmission,accessCount,submissionsCount,submissionsCorrectsCount] = await Promise.all([
+			let [question, questionDraft, userDifficulty, lastSubmission, accessCount, submissionsCount, submissionsCorrectsCount] = await Promise.all([
 				questionPromise,
 				questionDraftPromise,
 				userDifficultyPromise,
 				lastSubmissionPromise,
 				accessCountPromise,
-			    submissionsCountPromise,
+				submissionsCountPromise,
 				submissionsCorrectsCountPromise,
-				
+
 			])
-			
+
 			question = JSON.parse(JSON.stringify(question))
-			question.userDifficulty = userDifficulty?userDifficulty.difficulty || '':''
-			question.questionDraft =  questionDraft
-			question.lastSubmission =  lastSubmission
+			question.userDifficulty = userDifficulty ? userDifficulty.difficulty || '' : ''
+			question.questionDraft = questionDraft
+			question.lastSubmission = lastSubmission
 			question.accessCount = accessCount
 			question.submissionsCount = submissionsCount
 			question.submissionsCorrectsCount = submissionsCorrectsCount
 			return res.status(200).json(question)
 		}
-		catch(err){
+		catch (err) {
 			console.log(err);
 			return res.status(500).json(err)
 		}
 	}
-	async store(req,res){
-		
-		try{
-			const {title,description,results,difficulty,tags,status,katexDescription,solution} = req.body
+	async store(req, res) {
+
+		try {
+			const { title, description, results, difficulty, tags, status, katexDescription, solution } = req.body
 			const code = crypto.randomBytes(5).toString('hex')
 			const question = await Question.create({
 				title,
@@ -313,75 +350,75 @@ class QuestionController{
 				difficulty,
 				katexDescription,
 				solution,
-				author_id:req.userId
+				author_id: req.userId
 			})
 			const bulkTags = await Promise.all([...tags].map(idTag => Tag.findByPk(idTag)))
 
 			//console.log(bulkProfessores);
-			if(bulkTags && bulkTags.length>0){
+			if (bulkTags && bulkTags.length > 0) {
 				await question.setTags(bulkTags)
 			}
 			return res.status(200).json(question)
 		}
-		catch(err){
-            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
-                const validationsErros = ([...err.errors].map(erro=>{
-                    let erroType = {
-                        field:erro.path,
-                        msg:erro.message,
-                        
-                    }
-                    return erroType
-                }));
-                //console.log(validationsErros)
-                return res.status(400).json(validationsErros)
-            }
-            else{
-                console.log(err);
-                return res.status(500).json(err)
-            }
+		catch (err) {
+			if (err.name === 'SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError') {
+				const validationsErros = ([...err.errors].map(erro => {
+					let erroType = {
+						field: erro.path,
+						msg: erro.message,
+
+					}
+					return erroType
+				}));
+				//console.log(validationsErros)
+				return res.status(400).json(validationsErros)
+			}
+			else {
+				console.log(err);
+				return res.status(500).json(err)
+			}
 		}
 	}
-	async update(req,res){
-		try{
+	async update(req, res) {
+		try {
 			const idQuestion = req.params.id
-			const {title,description,results,difficulty,status,katexDescription,solution,tags} = req.body
+			const { title, description, results, difficulty, status, katexDescription, solution, tags } = req.body
 			const question = await Question.findByPk(idQuestion);
-			if(question.author_id !== req.userId){
+			if (question.author_id !== req.userId) {
 				//console.log("Sem permissão")
-				return res.status(401).json({msg:"Sem permissão"})
+				return res.status(401).json({ msg: "Sem permissão" })
 			}
 			await question.update({
-					title,
-					description,
-					results:results,
-					status:status,
-					difficulty,
-					katexDescription,
-					solution,
+				title,
+				description,
+				results: results,
+				status: status,
+				difficulty,
+				katexDescription,
+				solution,
 			})
 			const bulkTags = await Promise.all([...tags].map(async idTag => Tag.findByPk(idTag)))
-			if(bulkTags){
+			if (bulkTags) {
 				await question.setTags(bulkTags)
 			}
-			return res.status(200).json({msg:'ok'})
+			return res.status(200).json({ msg: 'ok' })
 		}
-		catch(err){
-            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
-                const validationsErros = ([...err.errors].map(erro=>{
-                    let erroType = {
-                        field:erro.path,
-                        message:erro.message,
-                    }
-                    return erroType
-                }));
-                //console.log(validationsErros)
-                return res.status(400).json(validationsErros)
-            }
-            else{
-                console.log(err);
-                return res.status(500).json(err)
-            }
+		catch (err) {
+			if (err.name === 'SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError') {
+				const validationsErros = ([...err.errors].map(erro => {
+					let erroType = {
+						field: erro.path,
+						message: erro.message,
+					}
+					return erroType
+				}));
+				//console.log(validationsErros)
+				return res.status(400).json(validationsErros)
+			}
+			else {
+				console.log(err);
+				return res.status(500).json(err)
+			}
 		}
 	}
 }

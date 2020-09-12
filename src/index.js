@@ -9,6 +9,7 @@ const {PORT} = require('./config/env')
 const app = express();
 let server;
 if(process.env.NODE_ENV==='production'){
+    console.log('https in Production')
     const privateKey  = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/privkey.pem', 'utf8');
     const certificate = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/fullchain.pem', 'utf8');
     const chain = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/chain.pem', 'utf8');

@@ -119,6 +119,10 @@ class TestController{
 			query.include = [{
 				model : Question,
 				as    : 'questions',
+			},{
+				model: User,
+				as: "author",
+				attributes:["email"]
 			}]
 
 			tests.rows = await Test.findAll(query)
@@ -307,6 +311,7 @@ class TestController{
 				password,
 				showAllTestCases,
 				code,
+				author_id: req.userId
 			})
 			const bulkQuestions = await Promise.all([...questions].map(async qId => Question.findByPk(qId) ))
 			if(bulkQuestions.length>0){
@@ -349,6 +354,50 @@ class TestController{
 		}
 		catch(err){
 
+		}
+	}
+	async updateQuestions(req,res){
+		try{
+			const {title,questions, password, showAllTestCases} = req.body
+			const {id} = req.params;
+			const test = await Test.findByPk(id);
+			if(!test){
+				return res.status(404).json()
+			}
+			//console.log(test)
+			if(test.author_id !== req.userId){	
+				//console.log("Sem permissão")
+				return res.status(401).json({msg:"Sem permissão"})
+			}
+			await test.update({
+				title,
+				password,
+				showAllTestCases,
+			})
+			const bulkQuestions = await Promise.all([...questions].map(qId => Question.findByPk(qId) ))
+			if(bulkQuestions.length > 0){
+				await test.setQuestions(bulkQuestions);
+			}
+			//await test.getQuestions()
+			return res.status(200).json({msg:'ok'})
+		}
+		catch(err){
+            if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
+                const validationsErros = ([...err.errors].map(erro=>{
+                    let erroType = {
+                        field:erro.path,
+                        message:erro.message,
+                        
+                    }
+                    return erroType
+                }));
+                //console.log(validationsErros)
+                return res.status(400).json(validationsErros);
+            }
+            else{
+                console.log(err);
+                return res.status(500).json(err);
+            }
 		}
 	}
 	async getApiStatus(req, res) {

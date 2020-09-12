@@ -16,7 +16,7 @@ module.exports = async (action,key,email)=>{
         subject: action === 'confirm_registration'?'Confirmação de cadastro':action==='forgot_password'?'Recuperação de senha':'', //Assunto: 'Confirmação de cadastro' ou 'Recuperação de senha'
         html: html // tamplate de email: 'confirm_registration.html' ou 'forgot_password.html'
     }
-
+    console.log(process.env.PORT_MAILER,process.env.USER_MAILER,process.env.PASS_MAILER);
     const transport = nodemailer.createTransport({
         service: 'gmail',
         port: process.env.PORT_MAILER,
@@ -26,7 +26,7 @@ module.exports = async (action,key,email)=>{
 			pass: process.env.PASS_MAILER
 		}
 	})
-    const info = await transport.sendMail(mailOptions)
+    const info = await transport.sendMail(mailOptions);
     //console.log('info: ',info)
     return info
 }
