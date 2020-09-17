@@ -13,6 +13,34 @@ module.exports = (sequelize,DataTypes)=>{
 			primaryKey: true,
 			defaultValue:DataTypes.UUIDV4
 		},
+		status:{
+			type:DataTypes.ENUM('ABERTA','FECHADA'),
+			defaultValue:"FECHADA",
+			allowNull:false,
+			validate:{
+				isIn:{
+					args:[['ABERTA','FECHADA']],
+					msg: "Status só pode ser 'ABERTA' ou 'FECHADA'"
+				}
+			}
+		},
+		showAllTestCases:{
+			type:DataTypes.BOOLEAN,
+			defaultValue:false,
+			//allowNull:false,
+		},
+		password:{
+			type : DataTypes.STRING,
+			allowNull : false, // default é true
+			// validate:{
+			// 	notNull:{
+			// 		msg:"Senha é obrigatório"
+			// 	},
+			// 	notEmpty:{
+			// 		msg:"Senha é obrigatório"
+			// 	}
+			// }
+		},
 	},{
 		freezeTableName:true,
 	})

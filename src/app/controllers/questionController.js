@@ -24,7 +24,7 @@ class QuestionController {
 					where: {
 						id: idTest
 					},
-					attributes: ["title","password","showAllTestCases"]
+					attributes: ["title"/*,"password","showAllTestCases"*/]
 				})
 			}
 			const query = {
