@@ -8,11 +8,11 @@ const {Test,Question,Class,Submission,User,ClassHasTest} = sequelize.import(path
 
 class TestController{
 	async index(req,res){
-		const idUser = req.query.idUser || req.userId
-		const idClass = req.query.idClass
+		const idUser = req.query.idUser || req.userId;
+		const idClass = req.query.idClass;
 		try{
 			const queryTest= {
-				attributes:['id','title','status','password'],
+				attributes:['id','title'],
 				include:[{
 					model:Question,
 					as:'questions',
@@ -34,11 +34,10 @@ class TestController{
 				},
 				attributes:['id','name']
 			})
-			
 			let [tests,user] = await Promise.all([testsPromise,userPromise])
 
 			tests = await Promise.all(tests.map(async test=>{
-				const {createdAt} = test.classes[0].classHasTest
+				const {createdAt, password, status, showAllTestCases, id} = test.classes[0].classHasTest
 				const questions = await Promise.all(test.questions.map(async question=>{
 					const query = {
 						where:{
@@ -63,7 +62,7 @@ class TestController{
 				delete testCopy.questions
 				testCopy.questionsCount = questions.length
 				testCopy.questionsCompletedSumissionsCount = questions.filter(q=>q.completedSumissionsCount>0).length
-				testCopy.classHasTest = {createdAt}
+				testCopy.classHasTest = {createdAt, password, status, showAllTestCases, id}
 				return testCopy
 			}))
 	
@@ -240,7 +239,7 @@ class TestController{
 				where:{
 					id:idTest
 				},
-				attributes:['id','title','status','password','showAlltestCases'],
+				attributes:['id','title'],
 				order:[
 					['questions','createdAt']
 				],
@@ -255,7 +254,7 @@ class TestController{
 					test_id : idTest,
 					class_id: idClass
 				},
-				attributes:['createdAt']
+				attributes:['createdAt','password','showAllTestCases','status']
 			})
 
 			let [test,classHasTest,user] = await Promise.all([
@@ -304,12 +303,12 @@ class TestController{
 
 	async store(req,res){
 		try{
-			const {title,questions,password,showAllTestCases} = req.body
+			const {title,questions/*,password,showAllTestCases*/} = req.body
 			const code = crypto.randomBytes(5).toString('hex')
 			const test = await Test.create({
 				title,
-				password,
-				showAllTestCases,
+				// password,
+				// showAllTestCases,
 				code,
 				author_id: req.userId
 			})
@@ -339,26 +338,10 @@ class TestController{
             }
 		}
 	}
-	async update(req,res){
-		const idTest = req.params.id
-		const {status} = req.body
-		const {idClass} = req.query
-		try{
-			const test = await Test.findByPk(idTest)
-			await test.update({
-				status,
-			})
-			req.io.sockets.in(idClass).emit('changeStatusTest',{status,idTest})
-			return res.status(200).json({msg:"ok"})
 
-		}
-		catch(err){
-
-		}
-	}
 	async updateQuestions(req,res){
 		try{
-			const {title,questions, password, showAllTestCases} = req.body
+			const {title,questions/*, password, showAllTestCases*/} = req.body
 			const {id} = req.params;
 			const test = await Test.findByPk(id);
 			if(!test){
@@ -371,15 +354,15 @@ class TestController{
 			}
 			await test.update({
 				title,
-				password,
-				showAllTestCases,
+				// password,
+				// showAllTestCases,
 			})
 			const bulkQuestions = await Promise.all([...questions].map(qId => Question.findByPk(qId) ))
 			if(bulkQuestions.length > 0){
 				await test.setQuestions(bulkQuestions);
 			}
 			//await test.getQuestions()
-			return res.status(200).json({msg:'ok'})
+			return res.status(200).json({msg:'ok'});
 		}
 		catch(err){
             if(err.name==='SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError'){
