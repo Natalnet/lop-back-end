@@ -8,7 +8,6 @@ router.use('/class',AuthMiddleware.authentication)
 router.get('/class',ClassController.index);
 router.get('/class/page/:page',ClassController.index_paginate);
 router.get('/class/:id',ClassMiddleware.show,ClassController.show);
-router.get('/class/:id/csv',ClassMiddleware.getCsv,ClassController.getCsv);
 router.post('/class/store',ClassMiddleware.store,ClassController.store);
 router.put('/class/:id/update',ClassController.update);
 
