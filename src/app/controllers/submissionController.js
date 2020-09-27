@@ -48,11 +48,11 @@ class SubmissionController{
 			if(idTest) query.where.test_id = idTest
 			if(idQuestion) query.where.question_id = idQuestion
 			//console.log("query: ",query)
-			console.log('aqui 1')
+			// console.log('aqui 1')
 
 			submissions.count = await Submission.count(query)
-			console.log('count submissions: ',submissions.count)
-			console.log('aqui 2')
+			// console.log('count submissions: ',submissions.count)
+			// console.log('aqui 2')
 
 			const totalPages = Math.ceil(submissions.count/limitDocsPerPage)
 			page = parseInt(page>totalPages?totalPages:page)
@@ -128,7 +128,7 @@ class SubmissionController{
 				test,
 				question
 			}
-			console.log('aqui 5')
+			//console.log('aqui 5')
 
 			return res.status(200).json(submissionsPaginate)
 		}
