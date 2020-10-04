@@ -5,8 +5,8 @@ const { Op } = require('sequelize')
 const sequelize = require('../../database/connection')
 const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
-class CSVController {
-	async getCsvListClass(req, res) {
+class DataScienceController {
+	async getDataScienceListClass(req, res) {
 		const { idClass } = req.params;
 		try {
 			const classRoon = await Class.findByPk(idClass);
@@ -94,17 +94,31 @@ class CSVController {
 		}
 	}
 
-	async getCsvSubmissionClass(req, res) {
+	async getDataScienceSubmissionClass(req, res) {
 		const { idClass } = req.params;
 		try {
-			let submissions = await Submission.findAll({
+			const  classRoomPromise = Class.findOne({
+				where: {
+					id: idClass
+				},
+				attributes: ['name','year','semester'],
+				include:[{
+					model: User,
+					as: 'users',
+					where:{
+						profile: 'PROFESSOR'
+					},
+					attributes:['name','email']
+				}]
+			}) 
+			const submissionsPromise = Submission.findAll({
 				where: {
 					class_id: idClass
 				},
 				order: [
 					['createdAt', 'DESC']
 				],
-				attributes: ['id', 'ip', 'environment', 'hitPercentage', 'language', 'char_change_number', 'timeConsuming', 'createdAt', 'listQuestions_id', 'test_id', 'question_id'],
+				attributes: ['environment', 'hitPercentage', 'language', 'char_change_number', 'timeConsuming', 'createdAt', 'listQuestions_id', 'test_id', 'question_id'],
 				include: [{
 					model: User,
 					as: 'user',
@@ -132,14 +146,43 @@ class CSVController {
 					model: Test,
 					as: 'test',
 					attributes: ['title']
+				// }
+				// ,{
+				// 	model: Class,
+				// 	as: 'class',
+				// 	attributes: ['name','year','semester'],
+				// 	include:[{
+				// 		model: User,
+				// 		as: 'users',
+				// 		where:{
+				// 			profile: 'PROFESSOR'
+				// 		},
+				// 		attributes:['name']
+				// 	}]
 				}]
 			})
+			let [classRoom, submissions] = await Promise.all([
+				classRoomPromise,
+				submissionsPromise
+			])
+			classRoom = JSON.parse(JSON.stringify(classRoom))
+			classRoom.teachers = classRoom.users.map(({name, email})=>({
+				name, 
+				email
+			}))
+			delete classRoom.users;
 			submissions = submissions.map(submission => {
 				const submissionCopy = JSON.parse(JSON.stringify(submission))
-				submissionCopy.user = submission.user.classes[0].classHasUser.enrollment;
+				submissionCopy.user = `${submission.user.name} - ${submission.user.classes[0].classHasUser.enrollment}`;
 				submissionCopy.question = submission.question.title;
 				submissionCopy.list = submission.list && submission.list.title;
 				submissionCopy.test = submission.test && submission.test.title;
+
+				// const {name, year,semester, users } = submissionCopy.class;
+				// delete submissionCopy.class;
+				// submissionCopy.class = {};
+				// submissionCopy.class.info = `${name} - ${year}.${semester}`;
+				// submissionCopy.class.users = users.map(({name})=>name);
 				delete submissionCopy.question_id;
 				delete submissionCopy.listQuestions_id;
 				delete submissionCopy.user.classes;
@@ -147,7 +190,7 @@ class CSVController {
 				return submissionCopy;
 			})
 
-			return res.status(200).json(submissions);
+			return res.status(200).json({classRoom , submissions});
 		}
 		catch (err) {
 			console.log(err);
@@ -155,4 +198,4 @@ class CSVController {
 		}
 	}
 }
-module.exports = new CSVController();
+module.exports = new DataScienceController();
