@@ -1,14 +1,22 @@
 const router = require('express').Router()
-//const AuthMiddleware = require('../app/middlewares/authMiddleware')
-const {getDataScienceTeachers,getDataScienceClassByTeacher,getDataScienceSubmissionClass} = require('../app/controllers/dataScienceController')
+const {authentication} = require('../app/middlewares/authMiddleware')
 const {validate} = require('../app/middlewares/dataScienceMiddleware')
+const {
+    getDataScienceTeachers,
+    getDataScienceClassByTeacher,
+    getDataScienceSubmissionClass,
+    getDataScienceListClass,
+    getDataScienceTestClass
+} = require('../app/controllers/dataScienceController')
+
 //middleware de autenticação
-router.use('/dataScience',validate)
+//router.use('/dataScience',validate)
 
 
-router.get('/dataScience/teacher',getDataScienceTeachers);
-router.get('/dataScience/class/teacher/:teacher_id',getDataScienceClassByTeacher);
-router.get('/dataScience/class/:idClass/submission',getDataScienceSubmissionClass);
-//router.get('/dataScience/class/:idClass/list',DataScienceController.getDataScienceListClass);
+router.get('/dataScience/teacher',validate, getDataScienceTeachers);
+router.get('/dataScience/class/teacher/:teacher_id',validate, getDataScienceClassByTeacher);
+router.get('/dataScience/class/:idClass/submission',validate, getDataScienceSubmissionClass);
+router.get('/dataScience/class/:idClass/list',authentication, getDataScienceListClass);
+router.get('/dataScience/class/:idClass/test',authentication, getDataScienceTestClass);
 
 module.exports = app => app.use(router);
