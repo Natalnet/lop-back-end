@@ -144,6 +144,84 @@ class DataScienceController {
 		}
 	}
 
+	async getDataScienceTestClass(req, res) {
+		const { idClass } = req.params;
+		try {
+			const classRoom = await Class.findByPk(idClass);
+			if(!classRoom){
+				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			}
+			let users = await classRoom.getUsers({
+				where: {
+					profile: 'ALUNO',
+				},
+				order: ['name'],
+				attributes: ['id', 'name', 'email'],
+
+			});
+			let tests = await classRoom.getTests({
+				attributes: ['id', 'title'],
+				order: [
+					['questions', 'createdAt']
+				],
+				include: [{
+					model: Question,
+					as: 'questions',
+					attributes: ['id']
+				}],
+			});
+			users = users.map(user => {
+				const userCopy = JSON.parse(JSON.stringify(user));
+				userCopy.enrollment = userCopy.classHasUser.enrollment;
+				delete userCopy.classHasUser;
+				return userCopy;
+			})
+			users = await Promise.all(users.map(async user => {
+				tests = await Promise.all(tests.map(async test => {
+	
+					const questions = await Promise.all(test.questions.map(async question => {
+						const query = {
+							where: {
+								user_id: user.id,
+								question_id: question.id,
+								test_id: test.id,
+								class_id: idClass
+							}
+						}
+
+						const submissionsCount = await Submission.count(query)
+						query.where.hitPercentage = 100
+						const correctSumissionsCount = await Submission.count(query)
+
+						const completedSumissionsCount = await Submission.count(query)
+						const questionCopy = JSON.parse(JSON.stringify(question))
+						questionCopy.completedSumissionsCount = completedSumissionsCount
+						questionCopy.submissionsCount = submissionsCount
+						questionCopy.isCorrect = correctSumissionsCount > 0
+						return questionCopy
+					}))
+					const testCopy = JSON.parse(JSON.stringify(test))
+
+					testCopy.questionsCount = questions.length;
+					testCopy.questionsCompletedSumissionsCount = questions.filter(q => q.completedSumissionsCount > 0).length
+					delete testCopy.questions;
+					delete testCopy.classHasTest
+					return testCopy;
+				}))
+				const userCopy = JSON.parse(JSON.stringify(user));
+				userCopy.tests = tests;
+				return userCopy;
+			}))
+
+
+			return res.status(200).json(users)
+		}
+		catch (err) {
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
+
 	async getDataScienceSubmissionClass(req, res) {
 		const { idClass } = req.params;
 		try {
