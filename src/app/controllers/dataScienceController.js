@@ -6,11 +6,61 @@ const sequelize = require('../../database/connection')
 const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DataScienceController {
+	async getDataScienceTeachers(req, res){
+		try{
+			const teachers = await User.findAll({
+				where: {
+					profile: "PROFESSOR"
+				},
+				attributes: ['id','email','name'],
+				order:['name']
+			})
+			return res.status(200).json(teachers);
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err);
+		}
+	}
+
+	async getDataScienceClassByTeacher(req, res){
+		const { teacher_id } = req.params;
+		const { semester, year } = req.query;
+		try{
+			if(!(semester && year)){
+				return res.status(400).json({msg: 'year e semester devem ser passados'});
+			}
+			const teacher = await User.findByPk(teacher_id);
+			if(!teacher){
+				return res.status(404).json({msg: 'Não foi encontrado nenhum usuário com o id informado'});
+			}
+			let classes = await teacher.getClasses({
+				where: {
+					semester,
+					year
+				},
+				attributes: ['id','name','code','year','semester']
+			})
+			classes = JSON.parse(JSON.stringify(classes))
+			classes = classes.map(classRoom =>{
+				delete classRoom.classHasUser;
+				return classRoom;
+			})
+			return res.status(200).json(classes);
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err);
+		}
+	}
 	async getDataScienceListClass(req, res) {
 		const { idClass } = req.params;
 		try {
-			const classRoon = await Class.findByPk(idClass);
-			let users = await classRoon.getUsers({
+			const classRoom = await Class.findByPk(idClass);
+			if(!classRoom){
+				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			}
+			let users = await classRoom.getUsers({
 				where: {
 					profile: 'ALUNO',
 				},
@@ -18,7 +68,7 @@ class DataScienceController {
 				attributes: ['id', 'name', 'email'],
 
 			});
-			let lists = await classRoon.getLists({
+			let lists = await classRoom.getLists({
 				attributes: ['id', 'title'],
 				order: [
 					['questions', 'createdAt']
@@ -97,21 +147,11 @@ class DataScienceController {
 	async getDataScienceSubmissionClass(req, res) {
 		const { idClass } = req.params;
 		try {
-			const  classRoomPromise = Class.findOne({
-				where: {
-					id: idClass
-				},
-				attributes: ['name','year','semester'],
-				include:[{
-					model: User,
-					as: 'users',
-					where:{
-						profile: 'PROFESSOR'
-					},
-					attributes:['name','email']
-				}]
-			}) 
-			const submissionsPromise = Submission.findAll({
+			const  classRoom = await Class.findByPk(idClass) 
+			if(!classRoom){
+				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			}
+			let submissions = await Submission.findAll({
 				where: {
 					class_id: idClass
 				},
@@ -161,36 +201,26 @@ class DataScienceController {
 				// 	}]
 				}]
 			})
-			let [classRoom, submissions] = await Promise.all([
-				classRoomPromise,
-				submissionsPromise
-			])
-			classRoom = JSON.parse(JSON.stringify(classRoom))
-			classRoom.teachers = classRoom.users.map(({name, email})=>({
-				name, 
-				email
-			}))
-			delete classRoom.users;
+			submissions = JSON.parse(JSON.stringify(submissions))
 			submissions = submissions.map(submission => {
-				const submissionCopy = JSON.parse(JSON.stringify(submission))
-				submissionCopy.user = `${submission.user.name} - ${submission.user.classes[0].classHasUser.enrollment}`;
-				submissionCopy.question = submission.question.title;
-				submissionCopy.list = submission.list && submission.list.title;
-				submissionCopy.test = submission.test && submission.test.title;
+				submission.user = `${submission.user.name} - ${submission.user.classes[0].classHasUser.enrollment}`;
+				submission.question = submission.question.title;
+				submission.list = submission.list && submission.list.title;
+				submission.test = submission.test && submission.test.title;
 
-				// const {name, year,semester, users } = submissionCopy.class;
-				// delete submissionCopy.class;
-				// submissionCopy.class = {};
-				// submissionCopy.class.info = `${name} - ${year}.${semester}`;
-				// submissionCopy.class.users = users.map(({name})=>name);
-				delete submissionCopy.question_id;
-				delete submissionCopy.listQuestions_id;
-				delete submissionCopy.user.classes;
-				delete submissionCopy.test_id;
-				return submissionCopy;
+				// const {name, year,semester, users } = submission.class;
+				// delete submission.class;
+				// submission.class = {};
+				// submission.class.info = `${name} - ${year}.${semester}`;
+				// submission.class.users = users.map(({name})=>name);
+				delete submission.question_id;
+				delete submission.listQuestions_id;
+				delete submission.user.classes;
+				delete submission.test_id;
+				return submission;
 			})
 
-			return res.status(200).json({classRoom , submissions});
+			return res.status(200).json(submissions);
 		}
 		catch (err) {
 			console.log(err);
