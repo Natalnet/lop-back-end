@@ -134,8 +134,6 @@ class DataScienceController {
 				userCopy.lists = lists;
 				return userCopy;
 			}))
-
-
 			return res.status(200).json(users)
 		}
 		catch (err) {

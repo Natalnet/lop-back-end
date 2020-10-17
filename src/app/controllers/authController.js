@@ -1,9 +1,9 @@
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const path = require('path')
-const generateToken = require('../services/generateToken')
+const generateToken = require('../services/generateTokenService')
 
-const sendEmail = require('../services/sendEmail')
+const sendEmail = require('../services/sendEmailSerice')
 const sequelize = require('../../database/connection')
 const {User,UserPending}= sequelize.import(path.resolve(__dirname,'..','models'))
 

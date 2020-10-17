@@ -27,14 +27,7 @@ class TestController{
 				}],
 			}
 
-			let testsPromise=  Test.findAll(queryTest)
-			const userPromise = User.findOne({
-				where:{
-					id:idUser
-				},
-				attributes:['id','name']
-			})
-			let [tests,user] = await Promise.all([testsPromise,userPromise])
+			let tests = await Test.findAll(queryTest)
 
 			tests = await Promise.all(tests.map(async test=>{
 				const {createdAt, password, status, showAllTestCases, id} = test.classes[0].classHasTest
@@ -72,8 +65,7 @@ class TestController{
 				const date2 = t2.classHasTest.createdAt
 				return date1>=date2?1:-1
 			})
-			const response = req.query.idUser?{tests,user}:tests
-			return res.status(200).json(response)
+			return res.status(200).json(tests)
 		}
 		catch(err){
 			console.log(err)

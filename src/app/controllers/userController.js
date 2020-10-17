@@ -3,7 +3,7 @@ const {Op} = require('sequelize')
 const path = require('path')
 
 const sequelize = require('../../database/connection')
-const {User,Class,SolicitationToClass,ClassHasUser} = sequelize.import(path.resolve(__dirname,'..','models'))
+const {User,Class,ClassHasListQuestion,Submission} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 class UserController{
 	// Get a paginated list of all Users
@@ -119,9 +119,10 @@ class UserController{
 	}
 
 	async update(req,res){
-		const idUser = req.params.id
+		const {id} = req.params
 		try{
-			const user = await User.findByPk(idUser)
+			const user = await User.findByPk(id)
+			await user.setClasses(null);
 			await user.update(req.body.user)
 			return res.status(200).json(user)
 		}
@@ -132,7 +133,6 @@ class UserController{
 	}
 	async getUsersByClass(req, res){
 		const { id } = req.params;
-
 		try{
 			const classRoon = await Class.findByPk(id);
 
@@ -156,11 +156,77 @@ class UserController{
 			return res.status(500).json(err)
 		}
 	}
-	async show(req,res){
+	async getUsersWithLastSubmissionByQuestionByListByClass(req, res){
+		try{
+			const { idList, idClass, idQuestion} = req.params;
+			const classRoonPromise = Class.findByPk(idClass);
 
-	}
-	async delete(req,res){
+			const classHasListQuestionPromise =  ClassHasListQuestion.findOne({
+				where:{
+					list_id : idList,
+					class_id: idClass
+				},
+				attributes:['createdAt','submissionDeadline']
+			})
 
+			let [classRoon ,classHasListQuestion] = await Promise.all([classRoonPromise, classHasListQuestionPromise])
+			let users = await classRoon.getUsers({
+				where:{
+					profile: 'ALUNO'
+				},
+				attributes: ['id','name','email'],
+				order:['name']
+			});
+
+
+			users = users.map(user=>{
+				const userCopy = JSON.parse(JSON.stringify(user))
+				userCopy.enrollment = userCopy.classHasUser.enrollment
+				delete userCopy.classHasUser
+				return userCopy;
+			})
+
+			let submissionDeadline = classHasListQuestion.submissionDeadline
+			submissionDeadline = submissionDeadline? new Date(submissionDeadline):null
+
+			users = await Promise.all(users.map(async user=>{
+				const query = {
+					where: {
+						user_id: user.id,
+						question_id: idQuestion,
+						listQuestions_id : idList,
+						class_id: idClass,
+						hitPercentage: 100
+					},
+					order:[
+						['createdAt','DESC']
+					],
+				}
+				if(submissionDeadline){
+					query.where.createdAt = {
+						[Op.lte] : submissionDeadline
+					}
+				}
+				let lastSubmission = await Submission.findOne(query);
+				if(!lastSubmission){
+					delete query.where.hitPercentage;
+					lastSubmission = await Submission.findOne(query);
+				}
+
+				const userCopy = JSON.parse(JSON.stringify(user));
+				return {
+					...userCopy,
+					lastSubmission
+				}
+			}))
+			users = users.filter(user=>user.lastSubmission);
+			return res.status(200).json(users);
+			
+		}
+		catch(err){
+			console.log(err)
+			return res.status(500).json(err)
+		}
 	}
 
 
