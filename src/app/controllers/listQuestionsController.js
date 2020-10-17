@@ -1,6 +1,6 @@
 const crypto = require('crypto');
-
 const {Op, fn, col} = require('sequelize')
+const ListQuestionsService = require('../services/listQuestionsService');
 const sequelize = require('../../database/connection');
 const { resolve } = require('path');
 const {ListQuestions,Question,Class,Submission,User,ClassHasListQuestion} = sequelize.import(resolve(__dirname,'..','models'))
@@ -10,80 +10,13 @@ class ListQuestionsController{
 		const idUser = req.query.idUser || req.userId
 		const idClass = req.query.idClass
 		try{
-			const queryList = {
-				attributes:['id','title'],
-				include:[{
-					model:Question,
-					as:'questions',
-					attributes:['id']
-				},{
-					model:Class,
-					as:'classes',
-					attributes:['id'],
-					where : {
-						id:idClass
-					}
-				}],
+
+			let lists = await ListQuestionsService.getListsFromClassWithQuestionsAndUserInfos(idClass, idUser)
+	
+			if(!lists){
+				return res.status(500).json(err)
 			}
-
-			let listsPromise=  ListQuestions.findAll(queryList)
-			const userPromise = User.findOne({
-				where:{
-					id:idUser
-				},
-				attributes:['id','name']
-			})
-			
-			let [lists,user] = await Promise.all([listsPromise,userPromise])
-
-			lists = await Promise.all(lists.map(async list=>{
-				let {createdAt,submissionDeadline} = list.classes[0].classHasListQuestion
-				const classHasListQuestion =  {createdAt,submissionDeadline}
-				submissionDeadline = submissionDeadline?new Date(submissionDeadline):null
-
-				const questions = await Promise.all(list.questions.map(async question=>{
-					const query = {
-						where:{
-							user_id          : idUser,
-							question_id      : question.id,
-							listQuestions_id : list.id,
-							class_id         : idClass
-						},
-					}
-					const submissionsCount = await Submission.count(query)
-					query.where.hitPercentage = 100
-					if(submissionDeadline){
-						query.where.createdAt = {
-							[Op.lte] : submissionDeadline
-						}
-					}
-					const completedSumissionsCount = await Submission.count(query)
-	
-					const questionCopy = JSON.parse(JSON.stringify(question))
-					delete questionCopy.listHasQuestion
-					delete questionCopy.id
-					questionCopy.submissionsCount = submissionsCount
-					questionCopy.completedSumissionsCount = completedSumissionsCount
-					//questionCopy.
-					return questionCopy
-				}))
-				const listCopy = JSON.parse(JSON.stringify(list))
-				delete listCopy.classes
-				delete listCopy.questions
-				listCopy.questionsCount = questions.length
-				listCopy.questionsCompletedSumissionsCount = questions.filter(q=>q.completedSumissionsCount>0).length
-				listCopy.classHasListQuestion = classHasListQuestion
-				return listCopy
-			}))
-	
-			
-			lists = lists.sort((l1,l2)=>{
-				const date1 = l1.classHasListQuestion.createdAt
-				const date2 = l2.classHasListQuestion.createdAt
-				return date1>=date2?1:-1
-			})
-			const response = req.query.idUser?{lists,user}:lists
-			return res.status(200).json(response)
+			return res.status(200).json(lists)
 		}
 		catch(err){
 			console.log(err)
@@ -153,9 +86,9 @@ class ListQuestionsController{
 		}
 	}
 	async show(req,res){
-		const idList = req.params.id
-		const idClass = req.query.idClass 
-		const idUser = req.query.idUser || req.userId
+		const idList = req.params.id;
+		const idClass = req.query.idClass;
+		const idUser = req.query.idUser || req.userId;
 		try{
 			const userPromise = User.findOne({
 				where:{
@@ -163,167 +96,17 @@ class ListQuestionsController{
 				},
 				attributes:['id','name'],
 			})
-			let listPromise =  ListQuestions.findOne({
-				where:{
-					id:idList,
-				},
-				attributes:['id','title'],
-				order:[
-					['questions','createdAt']
-				],
-				include:[{
-					model:Question,
-					as:'questions',
-					attributes:['id','title','description']
-				}],
-			})
-			
-			const classHasListQuestionPromise =  ClassHasListQuestion.findOne({
-
-				where:{
-					list_id : idList,
-					class_id: idClass
-				},
-				attributes:['createdAt','submissionDeadline']
-			})
-
-			let [list,classHasListQuestion,user] = await Promise.all([
+			let listPromise = ListQuestionsService.getListFromClassWithQuestionsAndUserInfos(idList, idClass, idUser);
+			let [list,user] = await Promise.all([
 				listPromise,
-				classHasListQuestionPromise,
 				userPromise
 			])
-			
-			
-			let submissionDeadline = classHasListQuestion.submissionDeadline
-			submissionDeadline = submissionDeadline?new Date(submissionDeadline):null
-
-			let questions = await Promise.all(list.questions.map(async question=>{
-				const query = {
-					where:{
-						user_id     : idUser,
-						question_id : question.id,
-						listQuestions_id : list.id,
-						class_id         : idClass
-					}
-
-				}
-
-				const submissionsCount = await Submission.count(query)
-				query.where.hitPercentage = 100
-				const correctSumissionsCount  = await Submission.count(query)
-				if(submissionDeadline){
-					query.where.createdAt = {
-						[Op.lte] : submissionDeadline
-					}
-				}
-				const completedSumissionsCount = await Submission.count(query)
-
-				const questionCopy = JSON.parse(JSON.stringify(question))
-				delete questionCopy.listHasQuestion
-				questionCopy.completedSumissionsCount = completedSumissionsCount
-				questionCopy.submissionsCount = submissionsCount
-				questionCopy.isCorrect = correctSumissionsCount>0
-				return questionCopy
-			}))
-			list = JSON.parse(JSON.stringify(list))
-			
-			list.questionsCount = questions.length
-			list.questionsCompletedSumissionsCount = questions.filter(q=>q.completedSumissionsCount>0).length
-			questions.forEach(q=> delete q.completedSumissionsCount)
-			list.questions = questions
-			list.classHasListQuestion = classHasListQuestion
+			if(!list){
+				return res.status(500).json(err)
+			}
 			const response = req.query.idUser?{list,user}:list
 			
 			return res.status(200).json(response)
-		}
-		catch(err){
-			console.log(err)
-			return res.status(500).json(err)
-		}
-	}
-	async getUserSubmissionsByList(req, res){
-		try{
-			const { id, idClass, idQuestion} = req.params;
-			const classRoonPromise = Class.findByPk(idClass);
-			const listPromise = ListQuestions.findOne({
-				where:{
-					id
-				},
-				attributes:['id','title'],
-				order:[
-					['questions','createdAt']
-				],
-				include:[{
-					model:Question,
-					as:'questions',
-					attributes:['id','title','description','katexDescription']
-				}],
-			});
-			const classHasListQuestionPromise =  ClassHasListQuestion.findOne({
-				where:{
-					list_id : id,
-					class_id: idClass
-				},
-				attributes:['createdAt','submissionDeadline']
-			})
-			let [classRoon, list ,classHasListQuestion] = await Promise.all([classRoonPromise, listPromise, classHasListQuestionPromise])
-			let users = await classRoon.getUsers({
-				where:{
-					profile: 'ALUNO'
-				},
-				attributes: ['id','name','email'],
-				order:['name']
-			});
-
-			
-			list.questions = list.questions.map(question=>{
-				const questionCopy = JSON.parse(JSON.stringify(question))
-				delete questionCopy.listHasQuestion
-				return questionCopy;
-			})
-			users = users.map(user=>{
-				const userCopy = JSON.parse(JSON.stringify(user))
-				userCopy.enrollment = userCopy.classHasUser.enrollment
-				delete userCopy.classHasUser
-				return userCopy;
-			})
-
-			let submissionDeadline = classHasListQuestion.submissionDeadline
-			submissionDeadline = submissionDeadline?new Date(submissionDeadline):null
-
-			users = await Promise.all(users.map(async user=>{
-				const query = {
-					where: {
-						user_id: user.id,
-						question_id: idQuestion,
-						listQuestions_id : id,
-						class_id: idClass,
-						hitPercentage: 100
-					},
-					order:[
-						['createdAt','DESC']
-					],
-				}
-				if(submissionDeadline){
-					query.where.createdAt = {
-						[Op.lte] : submissionDeadline
-					}
-				}
-				let lastSubmission = await Submission.findOne(query);
-				if(!lastSubmission){
-					delete query.where.hitPercentage;
-					lastSubmission = await Submission.findOne(query);
-				}
-
-				const userCopy = JSON.parse(JSON.stringify(user));
-				return {
-					...userCopy,
-					lastSubmission
-				}
-			}))
-			users = users.filter(user=>user.lastSubmission);
-			return res.status(200).json({users, list});
-			
 		}
 		catch(err){
 			console.log(err)
