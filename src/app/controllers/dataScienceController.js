@@ -3,7 +3,7 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User,Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DataScienceController {
 	async getDataScienceTeachers(req, res){
@@ -299,6 +299,46 @@ class DataScienceController {
 			return res.status(200).json(submissions);
 		}
 		catch (err) {
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
+	async getDataScienceQeustions(req, res){
+		try{
+			let  questions = await Question.findAll({
+				attributes:['id','title','difficulty'],
+				order:['title'],
+
+				include:[{
+					model: Tag,
+					as: 'tags',
+					attributes:['name']
+				},{
+					model: ListQuestions,
+					as: 'lists',
+					attributes:['id','title']
+				},{
+					model: Test,
+					as: 'tests',
+					attributes:['id','title']
+				}]
+			})
+			questions = JSON.parse(JSON.stringify(questions))
+			questions.forEach(question => {
+				question.tags.forEach(tag=>{
+					delete tag.questionHasTag;
+				})
+				question.lists.forEach(list=>{
+					delete list.listHasQuestion;
+				})
+				question.tests.forEach(test=>{
+					delete test.testHasQuestion;
+				})
+			});
+			return res.status(200).json(questions);
+		}
+		catch(err){
 			console.log(err);
 			return res.status(500).json(err)
 		}

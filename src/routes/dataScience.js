@@ -6,7 +6,8 @@ const {
     getDataScienceClassByTeacher,
     getDataScienceSubmissionClass,
     getDataScienceListClass,
-    getDataScienceTestClass
+    getDataScienceTestClass,
+    getDataScienceQeustions
 } = require('../app/controllers/dataScienceController')
 
 //middleware de autenticação
@@ -16,6 +17,7 @@ const {
 router.get('/dataScience/teacher',validate, getDataScienceTeachers);
 router.get('/dataScience/class/teacher/:teacher_id',validate, getDataScienceClassByTeacher);
 router.get('/dataScience/class/:idClass/submission',validate, getDataScienceSubmissionClass);
+router.get('/dataScience/question',validate, getDataScienceQeustions);
 router.get('/dataScience/class/:idClass/list',authentication, getDataScienceListClass);
 router.get('/dataScience/class/:idClass/test',authentication, getDataScienceTestClass);
 
