@@ -178,32 +178,26 @@ class DataScienceController {
 				tests = await Promise.all(tests.map(async test => {
 	
 					const questions = await Promise.all(test.questions.map(async question => {
-						const query = {
-							where: {
+						const submission = await Submission.findOne({
+							where:{
 								user_id: user.id,
 								question_id: question.id,
 								test_id: test.id,
 								class_id: idClass
-							}
-						}
-
-						const submissionsCount = await Submission.count(query)
-						query.where.hitPercentage = 100
-						const correctSumissionsCount = await Submission.count(query)
-
-						const completedSumissionsCount = await Submission.count(query)
+							},
+							order:[
+								['createdAt','DESC']
+							],
+							attributes:['hitPercentage','createdAt']
+						})
 						const questionCopy = JSON.parse(JSON.stringify(question))
-						questionCopy.completedSumissionsCount = completedSumissionsCount
-						questionCopy.submissionsCount = submissionsCount
-						questionCopy.isCorrect = correctSumissionsCount > 0
+						questionCopy.hitPercentage = submission? submission.hitPercentage:0
 						return questionCopy
 					}))
 					const testCopy = JSON.parse(JSON.stringify(test))
-
-					testCopy.questionsCount = questions.length;
-					testCopy.questionsCompletedSumissionsCount = questions.filter(q => q.completedSumissionsCount > 0).length
-					delete testCopy.questions;
+					const scoreSystem = questions.reduce((total,h)=>total+h.hitPercentage,0)/test.questions.length
 					delete testCopy.classHasTest
+					testCopy.scoreSystem = Number(scoreSystem.toFixed(2))
 					return testCopy;
 				}))
 				const userCopy = JSON.parse(JSON.stringify(user));
