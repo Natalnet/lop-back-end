@@ -27,7 +27,7 @@ class DraftController{
 					char_change_number
 				})
 			}
-			return res.status(200).json(draft)
+			return res.status(200).json({msg: 'ok'})
 		}
 		catch(err){
 			console.log(err);
