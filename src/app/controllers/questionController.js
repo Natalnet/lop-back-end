@@ -296,8 +296,12 @@ class QuestionController {
 			})
 
 			const accessCountPromise = Access.count({
-				question_id: idQuestion
+				where:{
+					question_id: idQuestion
+				}
+				
 			})
+		
 			const submissionsCountPromise = Submission.count({
 				where: {
 					question_id: idQuestion
@@ -310,6 +314,7 @@ class QuestionController {
 					hitPercentage: 100
 				},
 			})
+			
 
 			let [question, questionDraft, userDifficulty, lastSubmission, accessCount, submissionsCount, submissionsCorrectsCount] = await Promise.all([
 				questionPromise,

@@ -14,7 +14,7 @@ class AccessController{
 				environment,
 				createdAt:new Date()
 			})
-			return res.status(200).json(access)
+			return res.status(200).json({msg:'ok'})
 		}
 		catch(err){
 			console.log(err);
