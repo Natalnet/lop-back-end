@@ -39,13 +39,42 @@ class DataScienceController {
 					semester,
 					year
 				},
+				order:[
+					['createdAt','DESC']
+				],
 				attributes: ['id','name','code','year','semester']
 			})
 			classes = JSON.parse(JSON.stringify(classes))
-			classes = classes.map(classRoom =>{
+			classes = await Promise.all(classes.map(async classRoom =>{
+				const studentsCount = await User.count({
+					where:{
+						profile: 'ALUNO',
+					},
+					include:[{
+						model:Class,
+						as:'classes',
+						where:{
+							id:classRoom.id
+						}
+					}]
+				})
+				const teachersCount = await User.count({
+					where:{
+						profile: 'PROFESSOR',
+					},
+					include:[{
+						model:Class,
+						as:'classes',
+						where:{
+							id:classRoom.id
+						}
+					}]
+				})
 				delete classRoom.classHasUser;
+				classRoom.studentsCount = studentsCount
+				classRoom.teachersCount = teachersCount
 				return classRoom;
-			})
+			}))
 			return res.status(200).json(classes);
 		}
 		catch (err) {
