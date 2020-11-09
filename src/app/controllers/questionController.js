@@ -101,10 +101,8 @@ class QuestionController {
 	}
 	async index_paginate(req, res) {
 		const status = req.query.status || 'PÚBLICA';
-		const include = req.query.include || '';
-		const field = req.query.field || 'title';
-		// const sortBy = req.query.sortBy || 'createdAt';
-		const sortBy = req.query.sortBy;// || 'createdAt';
+		const titleOrCode = req.query.titleOrCode || '';
+		const sortBy = req.query.sortBy || 'createdAt';
 		const sort = req.query.sort || "DESC";
 		const tagId = req.query.tag;
 
@@ -114,16 +112,21 @@ class QuestionController {
 		try {
 			const query = {
 				where: {
-					title: {
-						[Op.like]: `%${field === 'title' ? include : ''}%`
-					},
-					code: {
-						[Op.like]: `%${field === 'code' ? include : ''}%`
+					[Op.or] :{
+						title: {
+							[Op.like]: `%${titleOrCode}%`
+						},
+						code: {
+							[Op.eq]: titleOrCode
+						},
 					},
 					status: {
 						[Op.in]: status.split(' ')
 					}
 				},
+				order: [
+					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
+				],
 				attributes: {
 					exclude: ['solution', 'author_id', 'updatedAt']
 				},
@@ -142,15 +145,15 @@ class QuestionController {
 				]
 			}
 			//console.log('orderBy', sortBy);
-			if (!sortBy) {
-				query.order = [
-					fn('RAND')
-				]
-			} else {
-				query.order = [
-					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
-				]
-			}
+			// if (!sortBy) {
+			// 	query.order = [
+			// 		fn('RAND')
+			// 	]
+			// } else {
+			// 	query.order = [
+			// 		sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
+			// 	]
+			// }
 
 			if (tagId) {
 				//console.log('idTag: ',tagId)
@@ -161,7 +164,6 @@ class QuestionController {
 					},
 				}
 			}
-
 
 			let questions = await Question.findAll(query);
 			//let {count,rows} = await Question.findAndCountAll(query)
