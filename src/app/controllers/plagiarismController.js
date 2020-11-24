@@ -308,13 +308,19 @@ class PlagiarismController {
                     //const languages = classRoon.
                     // Create a client and specify language and moss user id
                     const client = new MossClient(moss_language, process.env.MOSS_KEY);
+                    let mossFilesDir = process.env.MOSS_FILES_DIR;
                     let classPath;
+
+                    classPath = `${mossFilesDir}/${idList}-${idClass}-${idQuestion}`;
+
+                    /*
                     if (process.env.NODE_ENV === 'production') {
                         classPath = `/tmp/${idTest}-${idClass}-${idQuestion}`;
                     }
                     else {
                         classPath = resolve(__dirname, '..', '..', 'tmp', `${idTest}-${idClass}-${idQuestion}`);
                     }
+                    */
                     !existsSync(classPath) && mkdirSync(classPath);
 
                     for (const user of users) {
