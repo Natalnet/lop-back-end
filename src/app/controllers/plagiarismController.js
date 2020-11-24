@@ -311,7 +311,7 @@ class PlagiarismController {
                     let mossFilesDir = process.env.MOSS_FILES_DIR;
                     let classPath;
 
-                    classPath = `${mossFilesDir}/${idList}-${idClass}-${idQuestion}`;
+                    classPath = `${mossFilesDir}/${idTest}-${idClass}-${idQuestion}`;
 
                     /*
                     if (process.env.NODE_ENV === 'production') {
