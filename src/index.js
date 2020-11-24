@@ -8,17 +8,22 @@ const cors = require('cors')
 const {PORT} = require('./config/env')
 const app = express();
 let server;
-if(process.env.NODE_ENV==='production'){
-    console.log('https in Production')
-    const privateKey  = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/privkey.pem', 'utf8');
-    const certificate = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/fullchain.pem', 'utf8');
-    const chain = fs.readFileSync('/etc/letsencrypt/live/api.lop.natalnet.br/chain.pem', 'utf8');
+
+var PRIVATEKEY = process.env.PRIVATEKEY || '<local_da_chave>';
+var FULLCHAIN = process.env.FULLCHAIN || '<local_da_chave>';
+var CHAIN = process.env.CHAIN || '<local_da_chave>';
+
+//if(process.env.NODE_ENV==='production'){
+//    console.log('https in Production')
+    const privateKey  = fs.readFileSync(PRIVATEKEY, 'utf8');
+    const certificate = fs.readFileSync(FULLCHAIN, 'utf8');
+    const chain = fs.readFileSync(CHAIN, 'utf8');
     const credentials = {key: privateKey, cert: certificate, ca: chain};
     server = require('https').createServer(credentials, app)
-}
-else{
-    server = require('http').Server(app)
-}
+//}
+//else{
+//    server = require('http').Server(app)
+//}
 
 const io = require('socket.io')(server)
 
