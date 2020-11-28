@@ -2,8 +2,6 @@ const nodemailer = require('nodemailer')
 const handlebars = require('handlebars')
 const fs = require('fs')
 const path = require('path')
-const {NODE_MAILER} = require('../../config/env');
-
 
 module.exports = async (action,key,email)=>{
     const content = fs.readFileSync(path.resolve(__dirname,'..','..','tamplates','mail',`${action}.html`))
