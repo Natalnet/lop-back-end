@@ -6,17 +6,26 @@ Para criar campos virtuais:
 https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
 */ 
 module.exports = (sequelize,DataTypes)=>{
-	const ClassHasListQuestion = sequelize.define('classHasListQuestion',{
-		id:{
+	const ClassHasCourse = sequelize.define('classHasCourse',{
+        
+		id: {
 			type:DataTypes.UUID,
 			allowNull:false,
 			primaryKey: true,
 			defaultValue:DataTypes.UUIDV4
-		},
-		submissionDeadline:{
+        },
+        
+		startDate: {
 			type:DataTypes.DATE,
-		},
-		createdAt:{
+        },
+        
+		isVisible: {
+            type:DataTypes.BOOLEAN,
+			defaultValue:false,
+			allowNull:false,
+        },
+
+		createdAt: {
 			type:DataTypes.DATE,
 			allowNull:false,
 		},
@@ -24,7 +33,5 @@ module.exports = (sequelize,DataTypes)=>{
 		timestamps: false,
 		freezeTableName:true,
 	})
-
-
-	return ClassHasListQuestion;
+	return ClassHasCourse;
 }
