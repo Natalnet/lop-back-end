@@ -12,12 +12,18 @@ const PORT = process.env.PORT;
 const PRIVATEKEY = process.env.PRIVATEKEY || '<local_da_chave>';
 const FULLCHAIN = process.env.FULLCHAIN || '<local_da_chave>';
 const CHAIN = process.env.CHAIN || '<local_da_chave>';
+const NODE_ENV = process.env.NODE_ENV;
 
-const privateKey  = fs.readFileSync(PRIVATEKEY, 'utf8');
-const certificate = fs.readFileSync(FULLCHAIN, 'utf8');
-const chain = fs.readFileSync(CHAIN, 'utf8');
-const credentials = {key: privateKey, cert: certificate, ca: chain};
-server = require('https').createServer(credentials, app)
+if(NODE_ENV === 'develop'){
+    server = require('http').createServer(app)
+}
+else{
+    const privateKey  = fs.readFileSync(PRIVATEKEY, 'utf8');
+    const certificate = fs.readFileSync(FULLCHAIN, 'utf8');
+    const chain = fs.readFileSync(CHAIN, 'utf8');
+    const credentials = {key: privateKey, cert: certificate, ca: chain};
+    server = require('https').createServer(credentials, app)
+}
 
 const io = require('socket.io')(server)
 
