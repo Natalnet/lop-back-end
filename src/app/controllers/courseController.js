@@ -1,8 +1,8 @@
 const path = require('path');
 const sequelize = require('../../database/connection');
-const { Op } = require('sequelize')
+const { Op, ConnectionRefusedError } = require('sequelize')
 
-const { Course, User } = sequelize.import(path.resolve(__dirname, '..', 'models'));
+const { Course, User, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'));
 const crypto = require('crypto');
 
 class CourseController {
@@ -10,7 +10,7 @@ class CourseController {
     async getCourses(req, res) {
         const titleOrCode = req.query.titleOrCode || ''
         //const sort = req.query.sort || '-createdAt'
-        const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
+        const limitDocsPerPage = parseInt(req.query.docsPerPage || 10);
         let page = parseInt(req.params.page || 1);
 
         try {
@@ -34,7 +34,7 @@ class CourseController {
                     {
                         model: User,
                         as: 'author',
-                        attributes: ['id', 'email'],
+                        attributes: ['id', 'email','name'],
                     }
                 ]
             }
@@ -47,6 +47,20 @@ class CourseController {
             query.offset = (page - 1) * limitDocsPerPage
 
             courses.rows = await Course.findAll(query);
+            courses.rows = JSON.parse(JSON.stringify(courses.rows));
+            courses.rows = await Promise.all(courses.rows.map(async course=>{
+                const query = {
+                    where:{
+                        course_id: course.id
+                    }
+                }
+                if(course.author.id !== req.userId){
+                    query.where.isVisible =  true
+                }
+                const lessonsCount = await Lesson.count(query)
+                course.lessonsCount = lessonsCount;
+                return course;
+            }))
 
             const coursesPagined = {
                 docs: courses.rows,
@@ -59,6 +73,27 @@ class CourseController {
         }
         catch (err) {
             console.log(err);
+            return res.status(500).json(err);
+        }
+    }
+
+    async getCourse(req, res){
+        const { id } = req.params;
+        try{
+            const course = await Course.findByPk(id,{
+                attributes: ['id', 'title', 'description', 'code', 'createdAt'],
+                include: [
+                    {
+                        model: User,
+                        as: 'author',
+                        attributes: ['id', 'email','name'],
+                    }
+                ]
+            });
+            return res.status(200).json(course);
+        }
+        catch(err){
+            console.log(err)
             return res.status(500).json(err);
         }
     }
