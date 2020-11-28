@@ -29,7 +29,8 @@ class CourseController {
                 order: [
                     ['createdAt', 'DESC']
                 ],
-                attributes: ['id', 'title', 'description', 'code', 'createdAt'],
+                
+                //attributes: ['id', 'title', 'description', 'code', 'createdAt'],
                 include: [
                     {
                         model: User,
