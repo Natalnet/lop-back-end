@@ -1,7 +1,8 @@
 const jwt = require('jsonwebtoken')
-const {TOKEN_SECRET} = require('../../config/env')
 const path = require('path')
 const sequelize = require('../../database/connection')
+
+const TOKEN_SECRET = process.env.TOKEN_SECRET;
 
 const User = sequelize.import(path.resolve(__dirname,'..','models','UserModel'))
 
