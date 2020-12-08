@@ -1,5 +1,5 @@
-const path = require('path')
-const fs = require('fs')
+const path = require('path');
+const fs = require('fs');
 
 module.exports = (sequelize) => {
 	const model = {}
@@ -22,6 +22,12 @@ module.exports = (sequelize) => {
 	//Test N:1 User
 	model['Test'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
 
+	//Course N:1 User
+	model['Course'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
+
+	//Lesson N:1 Course
+	model['Lesson'].belongsTo(model['Course'],{as: 'course', foreignKey : 'course_id'})
+
 	//User N:N Class
 	model['User'].belongsToMany(model['Class'], { as: {singular: 'class', plural: 'classes'}, foreignKey : 'user_id',through: model['ClassHasUser'] })
 	model['Class'].belongsToMany(model['User'], { as: {singular: 'user', plural: 'users'}, foreignKey : 'class_id',through: model['ClassHasUser'] })
@@ -37,6 +43,10 @@ module.exports = (sequelize) => {
 	//Class N:N Test
 	model['Test'].belongsToMany(model['Class'], { as: {singular: 'class', plural: 'classes'}, foreignKey : 'test_id',through: model['ClassHasTest'] })
 	model['Class'].belongsToMany(model['Test'], { as: {singular: 'test', plural: 'tests'}, foreignKey : 'class_id',through: model['ClassHasTest'] })
+	
+	//Class N:N Course
+	model['Course'].belongsToMany(model['Class'], { as: {singular: 'class', plural: 'classes'}, foreignKey : 'course_id',through: model['ClassHasCourse'] })
+	model['Class'].belongsToMany(model['Course'], { as: {singular: 'course', plural: 'courses'}, foreignKey : 'class_id',through: model['ClassHasCourse'] })
 	
 	//Question N:N ListQuestions
 	model['Question'].belongsToMany(model['ListQuestions'], { as: {singular: 'list', plural: 'lists'}, foreignKey : 'question_id',through: model['ListHasQuestion'] })
@@ -112,6 +122,7 @@ module.exports = (sequelize) => {
 		ClassHasUser         : model['ClassHasUser'],
 		ClassHasListQuestion : model['ClassHasListQuestion'],
 		ClassHasTest         : model['ClassHasTest'],
+		ClassHasCourse       : model['ClassHasCourse'],
 		Submission           : model['Submission'],
 		Plagiarism           : model['Plagiarism'],
 		FeedBackTest         : model['FeedBackTest'],
@@ -119,5 +130,7 @@ module.exports = (sequelize) => {
 		Difficulty           : model['Difficulty'],
 		Access               : model['Access'],
 		Draft                : model['Draft'],
+		Course               : model['Course'],
+		Lesson                : model['Lesson'],
 	}
 }
