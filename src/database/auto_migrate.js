@@ -26,9 +26,9 @@ sequelize
 			Difficulty.sync(),
 			Access.sync(),
 			Draft.sync(),
-			// Course.sync(),
-			// Lesson.sync(),
-			// ClassHasCourse.sync(),
+			Course.sync(),
+			Lesson.sync(),
+			ClassHasCourse.sync(),
 		])
 		console.log('conexão com o banco de dados realizada com sucesso!');
 	})
