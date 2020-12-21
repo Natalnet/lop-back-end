@@ -3,17 +3,17 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User,Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DataScienceController {
-	async getDataScienceTeachers(req, res){
-		try{
+	async getDataScienceTeachers(req, res) {
+		try {
 			const teachers = await User.findAll({
 				where: {
 					profile: "PROFESSOR"
 				},
-				attributes: ['id','email','name'],
-				order:['name']
+				attributes: ['id', 'email', 'name'],
+				order: ['name']
 			})
 			return res.status(200).json(teachers);
 		}
@@ -23,50 +23,50 @@ class DataScienceController {
 		}
 	}
 
-	async getDataScienceClassByTeacher(req, res){
+	async getDataScienceClassByTeacher(req, res) {
 		const { teacher_id } = req.params;
 		const { semester, year } = req.query;
-		try{
-			if(!(semester && year)){
-				return res.status(400).json({msg: 'year e semester devem ser passados'});
+		try {
+			if (!(semester && year)) {
+				return res.status(400).json({ msg: 'year e semester devem ser passados' });
 			}
 			const teacher = await User.findByPk(teacher_id);
-			if(!teacher){
-				return res.status(404).json({msg: 'Não foi encontrado nenhum usuário com o id informado'});
+			if (!teacher) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhum usuário com o id informado' });
 			}
 			let classes = await teacher.getClasses({
 				where: {
 					semester,
 					year
 				},
-				order:[
-					['createdAt','DESC']
+				order: [
+					['createdAt', 'DESC']
 				],
-				attributes: ['id','name','code','year','semester']
+				attributes: ['id', 'name', 'code', 'year', 'semester']
 			})
 			classes = JSON.parse(JSON.stringify(classes))
-			classes = await Promise.all(classes.map(async classRoom =>{
+			classes = await Promise.all(classes.map(async classRoom => {
 				const studentsCount = await User.count({
-					where:{
+					where: {
 						profile: 'ALUNO',
 					},
-					include:[{
-						model:Class,
-						as:'classes',
-						where:{
-							id:classRoom.id
+					include: [{
+						model: Class,
+						as: 'classes',
+						where: {
+							id: classRoom.id
 						}
 					}]
 				})
 				const teachersCount = await User.count({
-					where:{
+					where: {
 						profile: 'PROFESSOR',
 					},
-					include:[{
-						model:Class,
-						as:'classes',
-						where:{
-							id:classRoom.id
+					include: [{
+						model: Class,
+						as: 'classes',
+						where: {
+							id: classRoom.id
 						}
 					}]
 				})
@@ -86,8 +86,8 @@ class DataScienceController {
 		const { idClass } = req.params;
 		try {
 			const classRoom = await Class.findByPk(idClass);
-			if(!classRoom){
-				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			if (!classRoom) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
 			}
 			let users = await classRoom.getUsers({
 				where: {
@@ -170,13 +170,53 @@ class DataScienceController {
 			return res.status(500).json(err)
 		}
 	}
+	async getDataScienceListByClass(req, res) {
+		const { idClass } = req.params;
+		try {
+			const classRoom = await Class.findByPk(idClass);
+			if (!classRoom) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
+			}
+			let lists = await classRoom.getLists({
+				attributes: ['id', 'title', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+				include: [{
+					model: User,
+					as: 'author',
+					attributes: ['name', 'email']
+				}]
+			});
+			lists = JSON.parse(JSON.stringify(lists))
+			lists.forEach(list => {
+				delete list.classHasListQuestion;
+				let shortTitle = '';
+				list.title.split(' ').forEach(word => {
+					const code = word.charCodeAt(0);
+	
+					if ((code > 47 && code < 58) || // numeric (0-9)
+						(code > 64 && code < 91) || // upper alpha (A-Z)
+						(code > 96 && code < 123)) { // lower alpha (a-z)
+						shortTitle += word[0].toUpperCase()
+					}
+				})
+				list.shortTitle = shortTitle;
+			})
+			return res.status(200).json(lists)
+		}
+		catch (err) {
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
 
 	async getDataScienceTestClass(req, res) {
 		const { idClass } = req.params;
 		try {
 			const classRoom = await Class.findByPk(idClass);
-			if(!classRoom){
-				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			if (!classRoom) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
 			}
 			let users = await classRoom.getUsers({
 				where: {
@@ -205,26 +245,26 @@ class DataScienceController {
 			})
 			users = await Promise.all(users.map(async user => {
 				tests = await Promise.all(tests.map(async test => {
-	
+
 					const questions = await Promise.all(test.questions.map(async question => {
 						const submission = await Submission.findOne({
-							where:{
+							where: {
 								user_id: user.id,
 								question_id: question.id,
 								test_id: test.id,
 								class_id: idClass
 							},
-							order:[
-								['createdAt','DESC']
+							order: [
+								['createdAt', 'DESC']
 							],
-							attributes:['hitPercentage','createdAt']
+							attributes: ['hitPercentage', 'createdAt']
 						})
 						const questionCopy = JSON.parse(JSON.stringify(question))
-						questionCopy.hitPercentage = submission? submission.hitPercentage:0
+						questionCopy.hitPercentage = submission ? submission.hitPercentage : 0
 						return questionCopy
 					}))
 					const testCopy = JSON.parse(JSON.stringify(test))
-					const scoreSystem = questions.reduce((total,h)=>total+h.hitPercentage,0)/test.questions.length
+					const scoreSystem = questions.reduce((total, h) => total + h.hitPercentage, 0) / test.questions.length
 					delete testCopy.classHasTest
 					testCopy.scoreSystem = Number(scoreSystem.toFixed(2))
 					return testCopy;
@@ -246,9 +286,9 @@ class DataScienceController {
 	async getDataScienceSubmissionClass(req, res) {
 		const { idClass } = req.params;
 		try {
-			const  classRoom = await Class.findByPk(idClass) 
-			if(!classRoom){
-				return res.status(404).json({msg: 'Não foi encontrado nenhuma turma com o id informado'});
+			const classRoom = await Class.findByPk(idClass)
+			if (!classRoom) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
 			}
 			let submissions = await Submission.findAll({
 				where: {
@@ -281,23 +321,23 @@ class DataScienceController {
 					model: ListQuestions,
 					as: 'list',
 					attributes: ['title']
-				},{
+				}, {
 					model: Test,
 					as: 'test',
 					attributes: ['title']
-				// }
-				// ,{
-				// 	model: Class,
-				// 	as: 'class',
-				// 	attributes: ['name','year','semester'],
-				// 	include:[{
-				// 		model: User,
-				// 		as: 'users',
-				// 		where:{
-				// 			profile: 'PROFESSOR'
-				// 		},
-				// 		attributes:['name']
-				// 	}]
+					// }
+					// ,{
+					// 	model: Class,
+					// 	as: 'class',
+					// 	attributes: ['name','year','semester'],
+					// 	include:[{
+					// 		model: User,
+					// 		as: 'users',
+					// 		where:{
+					// 			profile: 'PROFESSOR'
+					// 		},
+					// 		attributes:['name']
+					// 	}]
 				}]
 			})
 			submissions = JSON.parse(JSON.stringify(submissions))
@@ -327,41 +367,41 @@ class DataScienceController {
 		}
 	}
 
-	async getDataScienceQeustions(req, res){
-		try{
-			let  questions = await Question.findAll({
-				attributes:['id','title','difficulty'],
-				order:['title'],
+	async getDataScienceQeustions(req, res) {
+		try {
+			let questions = await Question.findAll({
+				attributes: ['id', 'title', 'difficulty'],
+				order: ['title'],
 
-				include:[{
+				include: [{
 					model: Tag,
 					as: 'tags',
-					attributes:['name']
-				},{
+					attributes: ['name']
+				}, {
 					model: ListQuestions,
 					as: 'lists',
-					attributes:['id','title']
-				},{
+					attributes: ['id', 'title']
+				}, {
 					model: Test,
 					as: 'tests',
-					attributes:['id','title']
+					attributes: ['id', 'title']
 				}]
 			})
 			questions = JSON.parse(JSON.stringify(questions))
 			questions.forEach(question => {
-				question.tags.forEach(tag=>{
+				question.tags.forEach(tag => {
 					delete tag.questionHasTag;
 				})
-				question.lists.forEach(list=>{
+				question.lists.forEach(list => {
 					delete list.listHasQuestion;
 				})
-				question.tests.forEach(test=>{
+				question.tests.forEach(test => {
 					delete test.testHasQuestion;
 				})
 			});
 			return res.status(200).json(questions);
 		}
-		catch(err){
+		catch (err) {
 			console.log(err);
 			return res.status(500).json(err)
 		}
