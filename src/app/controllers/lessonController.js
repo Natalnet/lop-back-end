@@ -61,6 +61,13 @@ class LessonController {
     async createLesson(req, res) {
         const { title, description, course_id } = req.body;
         try {
+            const course = await Course.findByPk(course_id);
+            if (!course) {
+                return res.status(404).json()
+            }
+            if (course.author_id !== req.userId) {
+                return res.status(401).json({ msg: "Sem permissão" });
+            }
             await Lesson.create({
                 title,
                 description,
