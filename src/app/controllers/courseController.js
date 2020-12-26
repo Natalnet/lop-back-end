@@ -198,6 +198,9 @@ class CourseController {
     async createCourse(req, res) {
         const { title, description } = req.body;
         const code = crypto.randomBytes(5).toString('hex');
+        if(req.userProfile !== 'PROFESSOR'){
+            return res.status(401).json({ msg: "Sem permissão" })
+        }
         try {
             await Course.create({
                 title,
