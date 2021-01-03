@@ -48,7 +48,10 @@ class FeedBackTestController{
                 include:[{
                     model:Question,
 					as:'questions',
-                    attributes:['id','title']
+                    attributes:['id','title'],
+                    where: {
+                        type: 'PROGRAMAÇÃO'
+                    }
                 }]
             })
             let [usersRows,test] = await Promise.all([usersRowsPromise, testPromise])

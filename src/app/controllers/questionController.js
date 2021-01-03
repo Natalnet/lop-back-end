@@ -122,7 +122,8 @@ class QuestionController {
 					},
 					status: {
 						[Op.in]: status.split(' ')
-					}
+					},
+					type: 'PROGRAMAÇÃO',
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
@@ -349,6 +350,7 @@ class QuestionController {
 			const { title, description, results, difficulty, tags, status, katexDescription, solution } = req.body
 			const code = crypto.randomBytes(5).toString('hex')
 			const question = await Question.create({
+				type: 'PROGRAMAÇÃO',
 				title,
 				description,
 				results,

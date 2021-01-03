@@ -37,6 +37,7 @@ class SubmissionController{
 						title: { 
 							[Op.like]: `%${field==='title'?includeString:''}%` 
 						},
+						type: 'PROGRAMAÇÃO'
 					}
 				}]
 			}

@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { Op, fn } = require('sequelize')
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { ObjectiveQuestion, Tag, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Question, Tag, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class ObjectiveQuestionController {
 	async getInfoObjectiveQuestion(req, res) {
@@ -11,14 +11,12 @@ class ObjectiveQuestionController {
 			if (req.userProfile !== 'PROFESSOR') {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
-			const objectiveQuestion = await ObjectiveQuestion.findByPk(id,{
-
+			let objectiveQuestion = await Question.findByPk(id,{
 				attributes: ['id', 'title', 'code','description','alternatives', 'status', 'difficulty', 'createdAt'],
 				include: [
 					{
 						model: Tag,
 						as: 'tags',
-						attributes: ["name"],
 					},
 					{
 						model: User,
@@ -27,6 +25,8 @@ class ObjectiveQuestionController {
 					}
 				]
 			})
+			objectiveQuestion = JSON.parse(JSON.stringify(objectiveQuestion))// copy
+			objectiveQuestion.tags.forEach(tag => delete tag.objectiveQuestionHasTag);
 			
 			return res.status(200).json(objectiveQuestion);
 		}
@@ -47,7 +47,8 @@ class ObjectiveQuestionController {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
 			const code = crypto.randomBytes(5).toString('hex');
-			const objectiveQuestions = await ObjectiveQuestion.create({
+			const objectiveQuestions = await Question.create({
+				type: 'OBJETIVA',
 				title,
 				description,
 				code,
@@ -61,6 +62,40 @@ class ObjectiveQuestionController {
 			//console.log(bulkProfessores);
 			if (bulkTags && bulkTags.length > 0) {
 				await objectiveQuestions.setTags(bulkTags);
+			}
+			return res.status(200).json({ msg: 'ok' });
+		}
+		catch (err) {
+			console.log(err);
+			if (err.name === 'SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError') {
+				return res.status(400).json({ msg: 'erro de validação' });
+			}
+			else {
+				console.log(err);
+				return res.status(500).json(err);
+			}
+		}
+	}
+	async updateObjectveQuestion(req, res) {
+		const { id } = req.params;
+		const { title, description, status, difficulty, alternatives, tags } = req.body;
+		try {
+			const objectiveQuestion = await Question.findByPk(id);
+			if (objectiveQuestion.author_id !== req.userId) {
+                return res.status(401).json({ msg: "Sem permissão" })
+            }
+			await objectiveQuestion.update({
+				title,
+				description,
+				status,
+				difficulty,
+				alternatives
+			});
+			const bulkTags = await Promise.all([...tags].map(idTag => Tag.findByPk(idTag)))
+
+			//console.log(bulkProfessores);
+			if (bulkTags && bulkTags.length > 0) {
+				await objectiveQuestion.setTags(bulkTags);
 			}
 			return res.status(200).json({ msg: 'ok' });
 		}
@@ -98,7 +133,8 @@ class ObjectiveQuestionController {
 					},
 					status: {
 						[Op.in]: status.split(' ')
-					}
+					},
+					type: 'OBJETIVA'
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
@@ -127,7 +163,7 @@ class ObjectiveQuestionController {
 				}
 			}
 
-			let objectiveQuestion = await ObjectiveQuestion.findAll(query);
+			let objectiveQuestion = await Question.findAll(query);
 			const count = objectiveQuestion.length;
 			const totalPages = Math.ceil(count / limitDocsPerPage)
 			page = parseInt(page > totalPages ? totalPages : page)

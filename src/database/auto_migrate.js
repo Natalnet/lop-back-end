@@ -3,8 +3,8 @@ const path = require('path')
 sequelize
 	.authenticate()
 	.then(async () => {
-		const {User,UserPending,Question,Test,ListQuestions,Class,Tag,FeedBackTest,Plagiarism, Course, Lesson, ObjectiveQuestion, ObjectiveQuestionHasTag} = sequelize.import(path.resolve(__dirname,'..','app','models'))
-		const {SolicitationToClass,ClassHasUser,ListHasQuestion,TestHasQuestion,ClassHasTest,ClassHasListQuestion,ClassHasCourse,Submission,QuestionHasTag,Difficulty,Access,Draft} = sequelize.import(path.resolve(__dirname,'..','app','models'))
+		const { User, UserPending, Question, Test, ListQuestions, Class, Tag, FeedBackTest, Plagiarism, Course, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'app', 'models'))
+		const { SolicitationToClass, ClassHasUser, ListHasQuestion, TestHasQuestion, ClassHasTest, ClassHasListQuestion, ClassHasCourse, Submission, QuestionHasTag, Difficulty, Access, Draft } = sequelize.import(path.resolve(__dirname, '..', 'app', 'models'))
 		await Promise.all([
 			User.sync(),
 			UserPending.sync(),
@@ -29,8 +29,6 @@ sequelize
 			Course.sync(),
 			Lesson.sync(),
 			ClassHasCourse.sync(),
-			ObjectiveQuestion.sync(),
-			ObjectiveQuestionHasTag.sync()
 		])
 		console.log('conexão com o banco de dados realizada com sucesso!');
 	})
