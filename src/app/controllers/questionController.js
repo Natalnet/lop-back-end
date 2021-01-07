@@ -245,10 +245,10 @@ class QuestionController {
 	async show(req, res) {
 		const { idList, idTest, idClass, draft, difficulty } = req.query
 		const idQuestion = req.params.id
-		const excludeFieldes = req.query.exclude ? req.query.exclude.split(' ') : []
+		const excludeFieldes = req.query.exclude ? req.query.exclude.split(' ') : [];
 		try {
-			let questionDraftPromise = ""
-			let userDifficultyPromise = ""
+			let questionDraftPromise = "";
+			let userDifficultyPromise = "";
 			const questionPromise = Question.findOne({
 				where: {
 					id: idQuestion
