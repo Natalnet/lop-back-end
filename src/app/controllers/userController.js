@@ -118,6 +118,19 @@ class UserController{
 		}
 	}
 
+	async getUser(req, res){
+		const { id } = req.params;
+		try{
+			const user = await User.findByPk(id, {
+				attributes: ['id','name','email']
+			})
+			return res.status(200).json(user);
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)	
+		}
+	}
 	async update(req,res){
 		const {id} = req.params
 		try{

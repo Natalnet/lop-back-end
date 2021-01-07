@@ -4,15 +4,15 @@ const path = require('path')
 const sequelize = require('../../database/connection')
 const { Question, Tag, User } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
-class ObjectiveQuestionController {
-	async getInfoObjectiveQuestion(req, res) {
+class DiscursiveQuestionController {
+	async getInfoDiscursiveQuestion(req, res) {
 		const { id } = req.params;
 		try {
 			if (req.userProfile !== 'PROFESSOR') {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
-			let objectiveQuestion = await Question.findByPk(id,{
-				attributes: ['id', 'title', 'code','description','alternatives', 'status', 'difficulty', 'createdAt'],
+			let discursiveQuestion = await Question.findByPk(id,{
+				attributes: ['id', 'title', 'code','description', 'status', 'difficulty', 'createdAt'],
 				include: [
 					{
 						model: Tag,
@@ -25,10 +25,10 @@ class ObjectiveQuestionController {
 					}
 				]
 			})
-			objectiveQuestion = JSON.parse(JSON.stringify(objectiveQuestion))// copy
-			objectiveQuestion.tags.forEach(tag => delete tag.objectiveQuestionHasTag);
+			discursiveQuestion = JSON.parse(JSON.stringify(discursiveQuestion))// copy
+			discursiveQuestion.tags.forEach(tag => delete tag.discursiveQuestionHasTag);
 			
-			return res.status(200).json(objectiveQuestion);
+			return res.status(200).json(discursiveQuestion);
 		}
 		catch (err) {
 			if (err.name === 'SequelizeUniqueConstraintError' || err.name === 'SequelizeValidationError') {
@@ -40,28 +40,28 @@ class ObjectiveQuestionController {
 			}
 		}
 	}
-	async createObjectveQuestion(req, res) {
-		const { title, description, status, difficulty, alternatives, tags } = req.body;
+
+    async createDiscursiveQuestion(req, res) {
+		const { title, description, status, difficulty, tags } = req.body;
 		try {
 			if (req.userProfile !== 'PROFESSOR') {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
 			const code = crypto.randomBytes(5).toString('hex');
-			const objectiveQuestions = await Question.create({
-				type: 'OBJETIVA',
+			const discursiveQuestion = await Question.create({
+				type: 'DISCURSIVA',
 				title,
 				description,
 				code,
 				status,
 				difficulty,
-				alternatives,
 				author_id: req.userId
 			});
 			const bulkTags = await Promise.all([...tags].map(idTag => Tag.findByPk(idTag)))
 
 			//console.log(bulkProfessores);
 			if (bulkTags && bulkTags.length > 0) {
-				await objectiveQuestions.setTags(bulkTags);
+				await discursiveQuestion.setTags(bulkTags);
 			}
 			return res.status(200).json({ msg: 'ok' });
 		}
@@ -76,26 +76,26 @@ class ObjectiveQuestionController {
 			}
 		}
 	}
-	async updateObjectveQuestion(req, res) {
+	
+	async updateDiscursiveQuestion(req, res) {
 		const { id } = req.params;
-		const { title, description, status, difficulty, alternatives, tags } = req.body;
+		const { title, description, status, difficulty, tags } = req.body;
 		try {
-			const objectiveQuestion = await Question.findByPk(id);
-			if (objectiveQuestion.author_id !== req.userId) {
+			const discursiveQuestion = await Question.findByPk(id);
+			if (discursiveQuestion.author_id !== req.userId) {
                 return res.status(401).json({ msg: "Sem permissão" })
             }
-			await objectiveQuestion.update({
+			await discursiveQuestion.update({
 				title,
 				description,
 				status,
 				difficulty,
-				alternatives
 			});
 			const bulkTags = await Promise.all([...tags].map(idTag => Tag.findByPk(idTag)))
 
 			//console.log(bulkProfessores);
 			if (bulkTags && bulkTags.length > 0) {
-				await objectiveQuestion.setTags(bulkTags);
+				await discursiveQuestion.setTags(bulkTags);
 			}
 			return res.status(200).json({ msg: 'ok' });
 		}
@@ -110,7 +110,7 @@ class ObjectiveQuestionController {
 		}
 	}
 
-	async getObjectiveQuestionsPagined(req, res) {
+	async getDiscursiveQuestionsPagined(req, res) {
 		const status = req.query.status || 'PÚBLICA';
 		const titleOrCode = req.query.titleOrCode || '';
 		const sortBy = req.query.sortBy || 'createdAt';
@@ -134,7 +134,7 @@ class ObjectiveQuestionController {
 					status: {
 						[Op.in]: status.split(' ')
 					},
-					type: 'OBJETIVA'
+					type: 'DISCURSIVA'
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
@@ -163,8 +163,8 @@ class ObjectiveQuestionController {
 				}
 			}
 
-			let objectiveQuestion = await Question.findAll(query);
-			const count = objectiveQuestion.length;
+			let discursiveQuestion = await Question.findAll(query);
+			const count = discursiveQuestion.length;
 			const totalPages = Math.ceil(count / limitDocsPerPage)
 			page = parseInt(page > totalPages ? totalPages : page)
 			page = page <= 0 ? 1 : page
@@ -172,9 +172,9 @@ class ObjectiveQuestionController {
 			query.offset = (page - 1) * limitDocsPerPage
 			query.limit = limitDocsPerPage
 
-			objectiveQuestion = objectiveQuestion.slice((page - 1) * limitDocsPerPage, (page - 1) * limitDocsPerPage + limitDocsPerPage)
+			discursiveQuestion = discursiveQuestion.slice((page - 1) * limitDocsPerPage, (page - 1) * limitDocsPerPage + limitDocsPerPage)
 
-			// objectiveQuestion = await Promise.all(objectiveQuestion.map(async question => {
+			// discursiveQuestion = await Promise.all(discursiveQuestion.map(async question => {
 			// 	const submissionsCount = await Submission.count({
 			// 		where: {
 			// 			question_id: question.id
@@ -218,21 +218,21 @@ class ObjectiveQuestionController {
 			// 	questionWithSubmissions.wasTried = mySubmissionsCount > 0
 			// 	return questionWithSubmissions
 			// }))
-			const objectiveQuestionPaginate = {
-				docs: objectiveQuestion,
+			const discursiveQuestionPaginate = {
+				docs: discursiveQuestion,
 				currentPage: page,
 				perPage: parseInt(limitDocsPerPage),
 				total: parseInt(count),
 				totalPages: parseInt(totalPages)
 			}
 			const end = Date.now();
-			return res.status(200).json(objectiveQuestionPaginate);
+			return res.status(200).json(discursiveQuestionPaginate);
 		}
 		catch (err) {
 			console.log(err);
-			return res.status(500).json(err)
+			return res.status(500).json(err);
 		}
 	}
 }
 
-module.exports = new ObjectiveQuestionController();
+module.exports = new DiscursiveQuestionController();

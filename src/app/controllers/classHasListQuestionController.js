@@ -67,9 +67,8 @@ class ClassHasListQuestionController{
 		}
 	}
 	async update(req,res){
-		const idClass= req.query.idClass
 		const idList = req.params.id
-		let {submissionDeadline} = req.body;
+		let {submissionDeadline, idClass} = req.body;
 		try{
 			const classHasListQuestion = await ClassHasListQuestion.findOne({
 				where:{

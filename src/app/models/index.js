@@ -14,7 +14,7 @@ module.exports = (sequelize) => {
 	model['Question'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
 
 	//ObjectiveQuestion N:1 User
-	model['ObjectiveQuestion'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
+	//model['ObjectiveQuestion'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
 
 	//Class N:1 User
 	model['Class'].belongsTo(model['User'],{as: 'author', foreignKey : 'author_id'})
@@ -112,14 +112,14 @@ module.exports = (sequelize) => {
 	model['Tag'].belongsToMany(model['Question'], { as: {singular: 'question', plural: 'questions'}, foreignKey : 'tag_id',through: model['QuestionHasTag'] })
 	
 	//ObjectveQuestion N:N Tag
-	model['ObjectiveQuestion'].belongsToMany(model['Tag'], { as: {singular: 'tag', plural: 'tags'}, foreignKey : 'objective_question_id',through: model['ObjectiveQuestionHasTag'] })
-	model['Tag'].belongsToMany(model['ObjectiveQuestion'], { as: {singular: 'objectiveQuestion', plural: 'objectiveQuestions'}, foreignKey : 'tag_id',through: model['ObjectiveQuestionHasTag'] })
+	// model['ObjectiveQuestion'].belongsToMany(model['Tag'], { as: {singular: 'tag', plural: 'tags'}, foreignKey : 'objective_question_id',through: model['ObjectiveQuestionHasTag'] })
+	// model['Tag'].belongsToMany(model['ObjectiveQuestion'], { as: {singular: 'objectiveQuestion', plural: 'objectiveQuestions'}, foreignKey : 'tag_id',through: model['ObjectiveQuestionHasTag'] })
 
 	return {
 		User 				     : model['User'],
 		UserPending 		     : model['UserPending'],
 		Question 			     : model['Question'],
-		ObjectiveQuestion        : model['ObjectiveQuestion'],
+		//ObjectiveQuestion        : model['ObjectiveQuestion'],
 		ListQuestions 		     : model['ListQuestions'],
 		Class 				     : model['Class'],
 		Tag                      : model['Tag'],
@@ -135,7 +135,7 @@ module.exports = (sequelize) => {
 		Plagiarism               : model['Plagiarism'],
 		FeedBackTest             : model['FeedBackTest'],
 		QuestionHasTag           : model['QuestionHasTag'],
-		ObjectiveQuestionHasTag  : model['ObjectiveQuestionHasTag'],
+		//ObjectiveQuestionHasTag  : model['ObjectiveQuestionHasTag'],
 		Difficulty               : model['Difficulty'],
 		Access                   : model['Access'],
 		Draft                    : model['Draft'],
