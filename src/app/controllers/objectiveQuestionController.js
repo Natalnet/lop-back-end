@@ -47,6 +47,9 @@ class ObjectiveQuestionController {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
 			const code = crypto.randomBytes(5).toString('hex');
+			alternatives.forEach(alternative=>{
+				alternative.code = crypto.randomBytes(2).toString('hex');
+			})
 			const objectiveQuestions = await Question.create({
 				type: 'OBJETIVA',
 				title,
@@ -83,7 +86,12 @@ class ObjectiveQuestionController {
 			const objectiveQuestion = await Question.findByPk(id);
 			if (objectiveQuestion.author_id !== req.userId) {
                 return res.status(401).json({ msg: "Sem permissão" })
-            }
+			}
+			alternatives.forEach(alternative=>{
+				if(!alternative.code){
+					alternative.code = crypto.randomBytes(2).toString('hex');
+				}
+			})
 			await objectiveQuestion.update({
 				title,
 				description,

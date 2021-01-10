@@ -292,7 +292,7 @@ class QuestionController {
 					listQuestions_id: idList || null,
 					test_id: idTest || null
 				},
-				attributes: ['timeConsuming', 'createdAt'],
+				attributes: ['id', 'type', 'hitPercentage','answer', 'timeConsuming', 'createdAt'],
 				order: [
 					['createdAt', 'DESC']
 				],
@@ -329,8 +329,14 @@ class QuestionController {
 				submissionsCorrectsCountPromise,
 
 			])
+			question = JSON.parse(JSON.stringify(question));
 
-			question = JSON.parse(JSON.stringify(question))
+			//se o tipo da questão é objetiva e não há submissões, não retornar o gabarito
+			if(question.type === 'OBJETIVA' && !lastSubmissionPromise){
+				question.alternatives.forEach(alternative => {
+					delete alternative.isCorrect;
+				});
+			}
 			question.userDifficulty = userDifficulty ? userDifficulty.difficulty || '' : ''
 			question.questionDraft = questionDraft
 			question.lastSubmission = lastSubmission

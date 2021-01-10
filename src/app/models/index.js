@@ -73,6 +73,8 @@ module.exports = (sequelize) => {
 	model['Submission'].belongsTo(model['Test'], {as:'test', foreignKey: 'test_id'});
 	//Submission N:1 Class
 	model['Submission'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
+	//Submission N:1 Lesson
+	model['Submission'].belongsTo(model['Lesson'], {as:'lesson', foreignKey: 'lesson_id'});
 
 	//Plagiarism N:1 Question
 	model['Plagiarism'].belongsTo(model['Question'], {as:'question', foreignKey: 'question_id'});
