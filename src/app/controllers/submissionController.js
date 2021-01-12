@@ -32,12 +32,12 @@ class SubmissionController {
 				}, {
 					model: Question,
 					as: 'question',
-					attributes: ['id', 'title', 'description'],
+					attributes: ['id', 'title', 'description','type', 'alternatives'],
 					where: {
 						title: {
 							[Op.like]: `%${field === 'title' ? includeString : ''}%`
 						},
-						type: 'PROGRAMAÇÃO'
+						//type: 'PROGRAMAÇÃO'
 					}
 				}]
 			}
@@ -95,7 +95,7 @@ class SubmissionController {
 					where: {
 						id: idQuestion
 					},
-					attributes: ['title']
+					attributes: ['title', 'type']
 				})
 			}
 
@@ -196,11 +196,6 @@ class SubmissionController {
 				if (!created) {
 					await feedBackTest.update({
 						hitPercentage,
-						timeConsuming,
-						language,
-						answer,
-						ip,
-						char_change_number
 					})
 				}
 			}
@@ -237,25 +232,6 @@ class SubmissionController {
 				char_change_number: 0,
 				createdAt: new Date()
 			})
-			// .then(async sub=>{
-			// 	const userPromise = User.findOne({
-			// 		where:{
-			// 			id:sub.user_id,
-			// 		},
-			// 		attributes:['name']
-			// 	})
-			// 	const QuestionPromise = Question.findOne({
-			// 		where:{
-			// 			id:sub.question_id,
-			// 		},
-			// 		attributes:['title','description']
-			// 	})
-			// 	const [user,question] = await Promise.all([userPromise,QuestionPromise])
-			// 	const submissionWhitUserAndQuestion = JSON.parse(JSON.stringify(sub))
-			// 	submissionWhitUserAndQuestion.user = user
-			// 	submissionWhitUserAndQuestion.question = question
-			// 	req.io.sockets.in(idClass).emit('SubmissionClass',submissionWhitUserAndQuestion)
-			// })
 			if (idTest) {
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
 					where: {
@@ -275,14 +251,84 @@ class SubmissionController {
 				if (!created) {
 					await feedBackTest.update({
 						hitPercentage,
-						timeConsuming,
-						ip,
-						char_change_number: 0,
-						answer
 					})
 				}
 			}
 			return res.status(200).json(submission)
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
+	async saveSubmissionByDiscursiveQuestion(req, res) {
+		const { answer, timeConsuming, ip, char_change_number,  environment, idQuestion, idList, idTest, idClass } = req.body
+		try {
+			const submission = await Submission.create({
+				user_id: req.userId,
+				question_id: idQuestion,
+				class_id: idClass || null,
+				listQuestions_id: idList || null,
+				test_id: idTest || null,
+				type: 'DISCURSIVA',
+				answer,
+				environment,
+				timeConsuming,
+				ip,
+				char_change_number,
+				createdAt: new Date()
+			})
+
+			return res.status(200).json(submission)
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+	async updateSubmissionByDiscursiveQuestion(req, res) {
+		const { hitPercentage, idUser, idQuestion, idList, idTest, idClass } = req.body
+		//console.log({ hitPercentage, idUser, idQuestion, idList, idTest, idClass })
+		try {
+			if(req.userProfile !== 'PROFESSOR'){
+				return res.status(401).json({ msg: "Sem permissão" })
+			}
+			const submission = await Submission.findOne({
+				where:{
+					user_id: idUser,
+					question_id: idQuestion,
+					class_id: idClass || null,
+					listQuestions_id: idList || null,
+					test_id: idTest || null,
+				}
+			});
+			await submission.update({
+				hitPercentage,
+			});
+			if (idTest) {
+				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
+					where: {
+						user_id: idUser,
+						question_id: idQuestion,
+						class_id: idClass,
+						test_id: idTest,
+					},
+					defaults: {
+						user_id: idUser,
+						question_id: idQuestion,
+						class_id: idClass,
+						test_id: idTest,
+						hitPercentage
+					}
+				})
+				if (!created) {
+					await feedBackTest.update({
+						hitPercentage
+					});
+				}
+			}
+			return res.status(200).json(submission);
 		}
 		catch (err) {
 			console.log(err);

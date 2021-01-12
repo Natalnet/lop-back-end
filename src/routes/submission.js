@@ -33,5 +33,7 @@ class_id e (listQuestions_id ou test_id) são obrigatórios
 obs2: Essa rota só pode ser chamada após a chamada à apiCompiler e tiver obitido os resultdos
 */
 router.post('/submission/ObjectiveQuestion',SubmissionController.saveSubmissionByObjectiveQuestion)
+router.post('/submission/discursiveQuestion',SubmissionController.saveSubmissionByDiscursiveQuestion)
+router.put('/submission/discursiveQuestion',SubmissionController.updateSubmissionByDiscursiveQuestion)
 
 module.exports = (app) => app.use(router)
