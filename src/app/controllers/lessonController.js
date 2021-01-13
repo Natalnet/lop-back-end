@@ -2,7 +2,7 @@ const path = require('path');
 const sequelize = require('../../database/connection');
 const { Op, ConnectionRefusedError } = require('sequelize')
 
-const { Course, User, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'));
+const { Course, User, Question, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'));
 const crypto = require('crypto');
 
 class LessonController {
@@ -59,7 +59,7 @@ class LessonController {
     }
 
     async createLesson(req, res) {
-        const { title, description, course_id } = req.body;
+        const { title, description, course_id, questions } = req.body;
         try {
             const course = await Course.findByPk(course_id);
             if (!course) {
@@ -68,11 +68,15 @@ class LessonController {
             if (course.author_id !== req.userId) {
                 return res.status(401).json({ msg: "Sem permissão" });
             }
-            await Lesson.create({
+            const lesson = await Lesson.create({
                 title,
                 description,
                 course_id
             })
+            const bulkQuestions = await Promise.all([...questions].map(async qId =>Question.findByPk(qId) ))
+			if(bulkQuestions.length>0){
+				await lesson.addQuestions(bulkQuestions);
+			}
             return res.status(200).json({ msg: 'ok' });
         }
         catch (err) {
@@ -89,7 +93,7 @@ class LessonController {
 
     async updateLesson(req, res) {
         const { id } = req.params;
-        const { title, description } = req.body;
+        const { title, description, questions } = req.body;
         try {
             const lesson = await Lesson.findByPk(id);
             if (!lesson) {
@@ -106,6 +110,10 @@ class LessonController {
                 title,
                 description,
             })
+            const bulkQuestions = await Promise.all([...questions].map(async qId => Question.findByPk(qId) ))
+			if(bulkQuestions.length > 0){
+				await lesson.setQuestions(bulkQuestions);
+			}
             return res.status(200).json({ msg: 'ok' });
         }
         catch (err) {

@@ -3,14 +3,14 @@ const { Op, fn } = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class QuestionController {
 
 	async index(req, res) {
-		const { idList, idTest } = req.query;
+		const { idList, idTest, idLesson } = req.query;
 		try {
-			let listPromise, testPromise;
+			let listPromise, testPromise, lessonPromise;
 			if(idList){
 				listPromise = ListQuestions.findOne({
 					where: {
@@ -23,6 +23,14 @@ class QuestionController {
 				testPromise = Test.findOne({
 					where: {
 						id: idTest
+					},
+					attributes: ["title"/*,"password","showAllTestCases"*/]
+				})
+			}
+			else if(idLesson){
+				lessonPromise = Lesson.findOne({
+					where: {
+						id: idLesson
 					},
 					attributes: ["title"/*,"password","showAllTestCases"*/]
 				})
@@ -54,13 +62,26 @@ class QuestionController {
 					attributes: ["id"]
 				}]
 			}			
+			else if (idLesson) {
+				query.include = [...query.include, {
+					model: Lesson,
+					as: "lessons",
+					where: {
+						id: idLesson,
+					},
+					attributes: ["id"]
+				}]
+			}			
 			const questionsPromise = Question.findAll(query)
-			let list, test, questions;
+			let list, test, lesson, questions;
 			if(idList){
 				[list, questions] = await Promise.all([listPromise, questionsPromise])
 			}
 			else if(idTest){
 				[test, questions] = await Promise.all([testPromise, questionsPromise])
+			}
+			else if(idLesson){
+				[lesson, questions] = await Promise.all([lessonPromise, questionsPromise])
 			}
 			questions = await Promise.all(questions.map(async question => {
 				const submissionsCount = await Submission.count({
@@ -91,6 +112,9 @@ class QuestionController {
 			}
 			else if(idTest){
 				response.test = test
+			}
+			else if(idLesson){
+				response.lesson = lesson
 			}
 			return res.status(200).json(response)
 		}
