@@ -32,7 +32,7 @@ class QuestionController {
 					where: {
 						id: idLesson
 					},
-					attributes: ["title"/*,"password","showAllTestCases"*/]
+					attributes: ['title','description']
 				})
 			}
 			const query = {
@@ -169,16 +169,6 @@ class QuestionController {
 					}
 				]
 			}
-			//console.log('orderBy', sortBy);
-			// if (!sortBy) {
-			// 	query.order = [
-			// 		fn('RAND')
-			// 	]
-			// } else {
-			// 	query.order = [
-			// 		sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
-			// 	]
-			// }
 
 			if (tagId) {
 				//console.log('idTag: ',tagId)
@@ -257,7 +247,6 @@ class QuestionController {
 				total: parseInt(count),
 				totalPages: parseInt(totalPages)
 			}
-			const end = Date.now();
 			return res.status(200).json(questionsPaginate);
 		}
 		catch (err) {
@@ -267,9 +256,10 @@ class QuestionController {
 	}
 
 	async show(req, res) {
-		const { idList, idTest, idClass, draft, difficulty } = req.query
+		const { idList, idTest, idClass, idLesson, draft, difficulty } = req.query
 		const idQuestion = req.params.id
 		const excludeFieldes = req.query.exclude ? req.query.exclude.split(' ') : [];
+		//console.log({idQuestion, idList, idTest, idClass, idLesson,})
 		try {
 			let questionDraftPromise = "";
 			let userDifficultyPromise = "";
@@ -294,7 +284,8 @@ class QuestionController {
 						question_id: idQuestion,
 						class_id: idClass || null,
 						listQuestions_id: idList || null,
-						test_id: idTest || null
+						test_id: idTest || null,
+						lesson_id: idLesson || null
 					},
 					attributes: ['answer', 'char_change_number']
 				})
@@ -314,7 +305,8 @@ class QuestionController {
 					question_id: idQuestion,
 					class_id: idClass || null,
 					listQuestions_id: idList || null,
-					test_id: idTest || null
+					test_id: idTest || null,
+					lesson_id: idLesson || null
 				},
 				attributes: ['id', 'type', 'hitPercentage','answer', 'timeConsuming', 'createdAt'],
 				order: [

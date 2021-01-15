@@ -108,6 +108,8 @@ module.exports = (sequelize) => {
 	model['Draft'].belongsTo(model['Test'], {as:'test', foreignKey: 'test_id'});
 	//Draft N:1 Class
 	model['Draft'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
+	//Draft N:1 Lesson
+	model['Draft'].belongsTo(model['Lesson'], {as:'lesson', foreignKey: 'lesson_id'});
 
 	//Question N:N User
 	model['Question'].belongsToMany(model['User'], { as: {singular: 'userAccess', plural: 'userAccesses'}, foreignKey : 'question_id',through:{ model:model['Access'],unique:false} })

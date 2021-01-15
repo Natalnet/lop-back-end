@@ -3,14 +3,14 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class SubmissionController {
 	async index_paginate(req, res) {
 		const field = req.query.field || 'name'
 		const includeString = req.query.include || ''
 		const limitDocsPerPage = parseInt(req.query.docsPerPage || 15);
-		const { idClass, idUser, idList, idTest, idQuestion, profile } = req.query;
+		const { idClass, idUser, idList, idTest, idQuestion, idLesson, profile } = req.query;
 		let page = parseInt(req.params.page || 1);
 		try {
 			let submissions = {}
@@ -32,7 +32,7 @@ class SubmissionController {
 				}, {
 					model: Question,
 					as: 'question',
-					attributes: ['id', 'title', 'description','type', 'alternatives'],
+					attributes: ['id', 'title', 'description', 'type', 'alternatives'],
 					where: {
 						title: {
 							[Op.like]: `%${field === 'title' ? includeString : ''}%`
@@ -48,6 +48,7 @@ class SubmissionController {
 			if (idList) query.where.listQuestions_id = idList
 			if (idTest) query.where.test_id = idTest
 			if (idQuestion) query.where.question_id = idQuestion
+			if (idLesson) query.where.lesson_id = idLesson
 			//console.log("query: ",query)
 			// console.log('aqui 1')
 
@@ -66,6 +67,7 @@ class SubmissionController {
 			let listPromise = ""
 			let testPromise = ""
 			let questionPromise = ""
+			let lessonPromise = ""
 			if (idUser) {
 				userPromise = User.findOne({
 					where: {
@@ -98,8 +100,16 @@ class SubmissionController {
 					attributes: ['title', 'type']
 				})
 			}
+			if (idLesson) {
+				lessonPromise = Lesson.findOne({
+					where: {
+						id: idLesson
+					},
+					attributes: ['title',]
+				})
+			}
 
-			let [rows, user, list, test, question] = await Promise.all([submissionsPromise, userPromise, listPromise, testPromise, questionPromise])
+			let [rows, user, list, test, question, lesson] = await Promise.all([submissionsPromise, userPromise, listPromise, testPromise, questionPromise, lessonPromise])
 			//console.log('aqui 3')
 			if (idList && list) {
 				rows = await Promise.all(rows.map(async submission => {
@@ -127,9 +137,9 @@ class SubmissionController {
 				user,
 				list,
 				test,
-				question
+				lesson,
+				question,
 			}
-			//console.log('aqui 5')
 
 			return res.status(200).json(submissionsPaginate)
 		}
@@ -141,7 +151,7 @@ class SubmissionController {
 
 
 	async saveSubmissionOfProgrammingQuestion(req, res) {
-		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass } = req.body
+		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
 
 			const submission = await Submission.create({
@@ -150,9 +160,10 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
+				lesson_id: idLesson || null,
 				hitPercentage,
 				environment,
-				timeConsuming,
+				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
 				language,
 				answer,
 				ip,
@@ -207,14 +218,15 @@ class SubmissionController {
 		}
 	}
 	async saveSubmissionByObjectiveQuestion(req, res) {
-		const { answer, timeConsuming, ip, environment, idQuestion, idList, idTest, idClass } = req.body
+		const { answer, timeConsuming, ip, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
+		console.log({ idQuestion, idList, idTest, idClass, idLesson })
 		try {
 			const question = await Question.findByPk(idQuestion, {
 				attributes: ['id', 'alternatives']
 			})
 
 			const index = question.alternatives.findIndex(alternative => (
-				alternative.isCorrect && alternative.code === answer 
+				alternative.isCorrect && alternative.code === answer
 			))
 			const hitPercentage = index !== -1 ? 100 : 0;
 			const submission = await Submission.create({
@@ -223,11 +235,12 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
+				lesson_id: idLesson || null,
 				type: 'OBJETIVA',
 				answer,
 				hitPercentage,
 				environment,
-				timeConsuming,
+				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
 				ip,
 				char_change_number: 0,
 				createdAt: new Date()
@@ -263,7 +276,7 @@ class SubmissionController {
 	}
 
 	async saveSubmissionByDiscursiveQuestion(req, res) {
-		const { answer, timeConsuming, ip, char_change_number,  environment, idQuestion, idList, idTest, idClass } = req.body
+		const { answer, timeConsuming, ip, char_change_number, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
 			const submission = await Submission.create({
 				user_id: req.userId,
@@ -271,10 +284,11 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
+				lesson_id: idLesson || null,
 				type: 'DISCURSIVA',
 				answer,
 				environment,
-				timeConsuming,
+				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
 				ip,
 				char_change_number,
 				createdAt: new Date()
@@ -288,19 +302,20 @@ class SubmissionController {
 		}
 	}
 	async updateSubmissionByDiscursiveQuestion(req, res) {
-		const { hitPercentage, idUser, idQuestion, idList, idTest, idClass } = req.body
+		const { hitPercentage, idUser, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		//console.log({ hitPercentage, idUser, idQuestion, idList, idTest, idClass })
 		try {
-			if(req.userProfile !== 'PROFESSOR'){
+			if (req.userProfile !== 'PROFESSOR') {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
 			const submission = await Submission.findOne({
-				where:{
+				where: {
 					user_id: idUser,
 					question_id: idQuestion,
 					class_id: idClass || null,
 					listQuestions_id: idList || null,
 					test_id: idTest || null,
+					lesson_id: idLesson || null,
 				}
 			});
 			await submission.update({
