@@ -238,7 +238,7 @@ class TestController{
 				include:[{
 					model:Question,
 					as:'questions',
-					attributes:['id','title','description']
+					attributes:['id','title','description','type']
 				}],
 			})
 			const classHasTestPromise =  ClassHasTest.findOne({

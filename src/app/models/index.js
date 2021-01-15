@@ -54,6 +54,10 @@ module.exports = (sequelize) => {
 	//Question N:N ListQuestions
 	model['Question'].belongsToMany(model['ListQuestions'], { as: {singular: 'list', plural: 'lists'}, foreignKey : 'question_id',through: model['ListHasQuestion'] })
 	model['ListQuestions'].belongsToMany(model['Question'], { as: {singular: 'question', plural: 'questions'}, foreignKey : 'list_id',through: model['ListHasQuestion'] })
+	
+	//Question N:N Lesson
+	model['Question'].belongsToMany(model['Lesson'], { as: {singular: 'lesson', plural: 'lessons'}, foreignKey : 'question_id',through: model['LessonHasQuestion'] })
+	model['Lesson'].belongsToMany(model['Question'], { as: {singular: 'question', plural: 'questions'}, foreignKey : 'lesson_id',through: model['LessonHasQuestion'] })
 
 	//Question N:N Test
 	model['Question'].belongsToMany(model['Test'], { as: {singular: 'test', plural: 'tests'}, foreignKey : 'question_id',through: model['TestHasQuestion'] })
@@ -73,6 +77,8 @@ module.exports = (sequelize) => {
 	model['Submission'].belongsTo(model['Test'], {as:'test', foreignKey: 'test_id'});
 	//Submission N:1 Class
 	model['Submission'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
+	//Submission N:1 Lesson
+	model['Submission'].belongsTo(model['Lesson'], {as:'lesson', foreignKey: 'lesson_id'});
 
 	//Plagiarism N:1 Question
 	model['Plagiarism'].belongsTo(model['Question'], {as:'question', foreignKey: 'question_id'});
@@ -102,6 +108,8 @@ module.exports = (sequelize) => {
 	model['Draft'].belongsTo(model['Test'], {as:'test', foreignKey: 'test_id'});
 	//Draft N:1 Class
 	model['Draft'].belongsTo(model['Class'], {as:'class', foreignKey: 'class_id'});
+	//Draft N:1 Lesson
+	model['Draft'].belongsTo(model['Lesson'], {as:'lesson', foreignKey: 'lesson_id'});
 
 	//Question N:N User
 	model['Question'].belongsToMany(model['User'], { as: {singular: 'userAccess', plural: 'userAccesses'}, foreignKey : 'question_id',through:{ model:model['Access'],unique:false} })
@@ -119,7 +127,6 @@ module.exports = (sequelize) => {
 		User 				     : model['User'],
 		UserPending 		     : model['UserPending'],
 		Question 			     : model['Question'],
-		//ObjectiveQuestion        : model['ObjectiveQuestion'],
 		ListQuestions 		     : model['ListQuestions'],
 		Class 				     : model['Class'],
 		Tag                      : model['Tag'],
@@ -131,11 +138,11 @@ module.exports = (sequelize) => {
 		ClassHasListQuestion     : model['ClassHasListQuestion'],
 		ClassHasTest             : model['ClassHasTest'],
 		ClassHasCourse           : model['ClassHasCourse'],
+		LessonHasQuestion        : model['LessonHasQuestion'],
 		Submission               : model['Submission'],
 		Plagiarism               : model['Plagiarism'],
 		FeedBackTest             : model['FeedBackTest'],
 		QuestionHasTag           : model['QuestionHasTag'],
-		//ObjectiveQuestionHasTag  : model['ObjectiveQuestionHasTag'],
 		Difficulty               : model['Difficulty'],
 		Access                   : model['Access'],
 		Draft                    : model['Draft'],
