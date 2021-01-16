@@ -48,13 +48,13 @@ module.exports = (sequelize, DataTypes) => {
 			}
 		},
 		type: {
-			type: DataTypes.ENUM('PROGRAMAÇÃO', 'OBJETIVA', 'DISCURSIVA'),
-			defaultValue: "PROGRAMAÇÃO",
+			type: DataTypes.ENUM('PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE'),
+			defaultValue: "PROGRAMMING",
 			allowNull: false,
 			validate: {
 				isIn: {
-					args: [['PROGRAMAÇÃO', 'OBJETIVA', 'DISCURSIVA']],
-					msg: "Status só pode ser 'PROGRAMAÇÃO', 'OBJETIVA' ou 'DISCURSIVA'"
+					args: [['PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE']],
+					msg: "Status só pode ser 'PROGRAMMING', 'OBJECTIVE' ou 'DISCURSIVE'"
 				}
 			}
 		},

@@ -50,7 +50,7 @@ class FeedBackTestController {
                     as: 'questions',
                     attributes: ['id', 'title'],
                     // where: {
-                    //     type: 'PROGRAMAÇÃO'
+                    //     type: 'PROGRAMMING'
                     // }
                 }]
             })

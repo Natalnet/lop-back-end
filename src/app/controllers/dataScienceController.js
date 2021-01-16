@@ -371,7 +371,7 @@ class DataScienceController {
 		try {
 			let questions = await Question.findAll({
 				where: {
-					type: 'PROGRAMAÇÃO',
+					type: 'PROGRAMMING',
 				},
 				attributes: ['id', 'title', 'difficulty'],
 				order: ['title'],
