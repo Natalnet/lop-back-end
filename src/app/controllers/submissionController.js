@@ -37,7 +37,7 @@ class SubmissionController {
 						title: {
 							[Op.like]: `%${field === 'title' ? includeString : ''}%`
 						},
-						//type: 'PROGRAMAÇÃO'
+						//type: 'PROGRAMMING'
 					}
 				}]
 			}
@@ -236,7 +236,7 @@ class SubmissionController {
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
 				lesson_id: idLesson || null,
-				type: 'OBJETIVA',
+				type: 'OBJECTIVE',
 				answer,
 				hitPercentage,
 				environment,
@@ -285,7 +285,7 @@ class SubmissionController {
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
 				lesson_id: idLesson || null,
-				type: 'DISCURSIVA',
+				type: 'DISCURSIVE',
 				answer,
 				environment,
 				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,

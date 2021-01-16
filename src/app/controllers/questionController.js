@@ -147,7 +147,7 @@ class QuestionController {
 					status: {
 						[Op.in]: status.split(' ')
 					},
-					type: 'PROGRAMAÇÃO',
+					type: 'PROGRAMMING',
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
@@ -348,7 +348,7 @@ class QuestionController {
 			question = JSON.parse(JSON.stringify(question));
 
 			//se o tipo da questão é objetiva e não há submissões, não retornar o gabarito
-			if(question.type === 'OBJETIVA' && !lastSubmissionPromise){
+			if(question.type === 'OBJECTIVE' && !lastSubmissionPromise){
 				question.alternatives.forEach(alternative => {
 					delete alternative.isCorrect;
 				});
@@ -372,7 +372,7 @@ class QuestionController {
 			const { title, description, results, difficulty, tags, status, katexDescription, solution } = req.body
 			const code = crypto.randomBytes(5).toString('hex')
 			const question = await Question.create({
-				type: 'PROGRAMAÇÃO',
+				type: 'PROGRAMMING',
 				title,
 				description,
 				results,

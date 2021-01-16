@@ -51,7 +51,7 @@ class ObjectiveQuestionController {
 				alternative.code = crypto.randomBytes(2).toString('hex');
 			})
 			const objectiveQuestions = await Question.create({
-				type: 'OBJETIVA',
+				type: 'OBJECTIVE',
 				title,
 				description,
 				code,
@@ -142,7 +142,7 @@ class ObjectiveQuestionController {
 					status: {
 						[Op.in]: status.split(' ')
 					},
-					type: 'OBJETIVA'
+					type: 'OBJECTIVE'
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]

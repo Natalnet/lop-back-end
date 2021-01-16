@@ -49,7 +49,7 @@ class DiscursiveQuestionController {
 			}
 			const code = crypto.randomBytes(5).toString('hex');
 			const discursiveQuestion = await Question.create({
-				type: 'DISCURSIVA',
+				type: 'DISCURSIVE',
 				title,
 				description,
 				code,
@@ -134,7 +134,7 @@ class DiscursiveQuestionController {
 					status: {
 						[Op.in]: status.split(' ')
 					},
-					type: 'DISCURSIVA'
+					type: 'DISCURSIVE'
 				},
 				order: [
 					sort === 'DESC' ? [sortBy, 'DESC'] : [sortBy]
