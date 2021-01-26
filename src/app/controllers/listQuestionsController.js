@@ -3,7 +3,7 @@ const {Op, fn, col} = require('sequelize')
 const ListQuestionsService = require('../services/listQuestionsService');
 const sequelize = require('../../database/connection');
 const { resolve } = require('path');
-const {ListQuestions,Question,Class,Submission,User,ClassHasListQuestion} = sequelize.import(resolve(__dirname,'..','models'))
+const {ListQuestions,Question,User} = sequelize.import(resolve(__dirname,'..','models'))
 
 class ListQuestionsController{
 	async index(req,res){

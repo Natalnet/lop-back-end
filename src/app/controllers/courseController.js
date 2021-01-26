@@ -8,14 +8,17 @@ const crypto = require('crypto');
 class CourseController {
 
     async getCourses(req, res) {
+        const idNotIn = req.query.idNotIn || ''
         const titleOrCode = req.query.titleOrCode || ''
         const limitDocsPerPage = parseInt(req.query.docsPerPage || 10);
         let page = parseInt(req.params.page || 1);
-
         try {
             const courses = {}
             const query = {
                 where: {
+                    id:{
+						[Op.notIn]:idNotIn.split(' ')
+					},
                     [Op.or]: {
                         title: {
                             [Op.like]: `%${titleOrCode}%`
@@ -35,6 +38,16 @@ class CourseController {
                         model: User,
                         as: 'author',
                         attributes: ['id', 'email','name'],
+                    },
+                    {
+                        model: Class,
+                        as: 'classes',
+                        attributes:[],
+                        // where:{
+                        //     id:{
+                        //         [Op.ne]: idNotIn
+                        //     },
+                        // }
                     }
                 ]
             }
@@ -185,6 +198,9 @@ class CourseController {
     async createCourse(req, res) {
         const { title, description } = req.body;
         const code = crypto.randomBytes(5).toString('hex');
+        if(req.userProfile !== 'PROFESSOR'){
+            return res.status(401).json({ msg: "Sem permissão" })
+        }
         try {
             await Course.create({
                 title,

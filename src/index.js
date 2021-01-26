@@ -13,6 +13,7 @@ const PRIVATEKEY = process.env.PRIVATEKEY || '<local_da_chave>';
 const FULLCHAIN = process.env.FULLCHAIN || '<local_da_chave>';
 const CHAIN = process.env.CHAIN || '<local_da_chave>';
 const NODE_ENV = process.env.NODE_ENV;
+app.use(cors())
 
 if(NODE_ENV === 'develop'){
     server = require('http').createServer(app)
@@ -25,9 +26,12 @@ else{
     server = require('https').createServer(credentials, app)
 }
 
-const io = require('socket.io')(server)
+const io = require('socket.io')(server,{
+    cors:{
+        origin: process.env.URL_FRONTEND || "http://localhost:3000",
+    }
+})
 
-app.use(cors())
 app.use(require('./sockets')(io))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));

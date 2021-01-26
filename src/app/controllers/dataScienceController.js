@@ -370,6 +370,9 @@ class DataScienceController {
 	async getDataScienceQeustions(req, res) {
 		try {
 			let questions = await Question.findAll({
+				where: {
+					type: 'PROGRAMMING',
+				},
 				attributes: ['id', 'title', 'difficulty'],
 				order: ['title'],
 
