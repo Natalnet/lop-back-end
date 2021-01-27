@@ -3,7 +3,7 @@ const { Op, fn } = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions, /*Lesson*/ } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class QuestionController {
 
@@ -27,14 +27,14 @@ class QuestionController {
 					attributes: ["title"/*,"password","showAllTestCases"*/]
 				})
 			}
-			else if(idLesson){
-				lessonPromise = Lesson.findOne({
-					where: {
-						id: idLesson
-					},
-					attributes: ['title','description']
-				})
-			}
+			// else if(idLesson){
+			// 	lessonPromise = Lesson.findOne({
+			// 		where: {
+			// 			id: idLesson
+			// 		},
+			// 		attributes: ['title','description']
+			// 	})
+			// }
 			const query = {
 				include: [{
 					model: User,
@@ -62,16 +62,16 @@ class QuestionController {
 					attributes: ["id"]
 				}]
 			}			
-			else if (idLesson) {
-				query.include = [...query.include, {
-					model: Lesson,
-					as: "lessons",
-					where: {
-						id: idLesson,
-					},
-					attributes: ["id"]
-				}]
-			}			
+			// else if (idLesson) {
+			// 	query.include = [...query.include, {
+			// 		model: Lesson,
+			// 		as: "lessons",
+			// 		where: {
+			// 			id: idLesson,
+			// 		},
+			// 		attributes: ["id"]
+			// 	}]
+			// }			
 			const questionsPromise = Question.findAll(query)
 			let list, test, lesson, questions;
 			if(idList){
@@ -80,9 +80,9 @@ class QuestionController {
 			else if(idTest){
 				[test, questions] = await Promise.all([testPromise, questionsPromise])
 			}
-			else if(idLesson){
-				[lesson, questions] = await Promise.all([lessonPromise, questionsPromise])
-			}
+			// else if(idLesson){
+			// 	[lesson, questions] = await Promise.all([lessonPromise, questionsPromise])
+			// }
 			questions = await Promise.all(questions.map(async question => {
 				const submissionsCount = await Submission.count({
 					where: {
@@ -113,9 +113,9 @@ class QuestionController {
 			else if(idTest){
 				response.test = test
 			}
-			else if(idLesson){
-				response.lesson = lesson
-			}
+			// else if(idLesson){
+			// 	response.lesson = lesson
+			// }
 			return res.status(200).json(response)
 		}
 		catch (err) {
@@ -259,7 +259,6 @@ class QuestionController {
 		const { idList, idTest, idClass, idLesson, draft, difficulty } = req.query
 		const idQuestion = req.params.id
 		const excludeFieldes = req.query.exclude ? req.query.exclude.split(' ') : [];
-		//console.log({idQuestion, idList, idTest, idClass, idLesson,})
 		try {
 			let questionDraftPromise = "";
 			let userDifficultyPromise = "";
@@ -285,7 +284,7 @@ class QuestionController {
 						class_id: idClass || null,
 						listQuestions_id: idList || null,
 						test_id: idTest || null,
-						lesson_id: idLesson || null
+						// lesson_id: idLesson || null
 					},
 					attributes: ['answer', 'char_change_number']
 				})
@@ -306,7 +305,7 @@ class QuestionController {
 					class_id: idClass || null,
 					listQuestions_id: idList || null,
 					test_id: idTest || null,
-					lesson_id: idLesson || null
+					// lesson_id: idLesson || null
 				},
 				attributes: ['id', 'type', 'hitPercentage','answer', 'timeConsuming', 'createdAt'],
 				order: [

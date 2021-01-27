@@ -3,7 +3,7 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, /*Lesson*/ } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class SubmissionController {
 	async index_paginate(req, res) {
@@ -48,7 +48,7 @@ class SubmissionController {
 			if (idList) query.where.listQuestions_id = idList
 			if (idTest) query.where.test_id = idTest
 			if (idQuestion) query.where.question_id = idQuestion
-			if (idLesson) query.where.lesson_id = idLesson
+			// if (idLesson) query.where.lesson_id = idLesson
 			//console.log("query: ",query)
 			// console.log('aqui 1')
 
@@ -100,14 +100,14 @@ class SubmissionController {
 					attributes: ['title', 'type']
 				})
 			}
-			if (idLesson) {
-				lessonPromise = Lesson.findOne({
-					where: {
-						id: idLesson
-					},
-					attributes: ['title',]
-				})
-			}
+			// if (idLesson) {
+			// 	lessonPromise = Lesson.findOne({
+			// 		where: {
+			// 			id: idLesson
+			// 		},
+			// 		attributes: ['title',]
+			// 	})
+			// }
 
 			let [rows, user, list, test, question, lesson] = await Promise.all([submissionsPromise, userPromise, listPromise, testPromise, questionPromise, lessonPromise])
 			//console.log('aqui 3')
@@ -160,7 +160,7 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
-				lesson_id: idLesson || null,
+				// lesson_id: idLesson || null,
 				hitPercentage,
 				environment,
 				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
@@ -219,7 +219,6 @@ class SubmissionController {
 	}
 	async saveSubmissionByObjectiveQuestion(req, res) {
 		const { answer, timeConsuming, ip, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
-		console.log({ idQuestion, idList, idTest, idClass, idLesson })
 		try {
 			const question = await Question.findByPk(idQuestion, {
 				attributes: ['id', 'alternatives']
@@ -235,7 +234,7 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
-				lesson_id: idLesson || null,
+				// lesson_id: idLesson || null,
 				type: 'OBJECTIVE',
 				answer,
 				hitPercentage,
@@ -284,7 +283,7 @@ class SubmissionController {
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
-				lesson_id: idLesson || null,
+				// lesson_id: idLesson || null,
 				type: 'DISCURSIVE',
 				answer,
 				environment,
@@ -315,7 +314,7 @@ class SubmissionController {
 					class_id: idClass || null,
 					listQuestions_id: idList || null,
 					test_id: idTest || null,
-					lesson_id: idLesson || null,
+					// lesson_id: idLesson || null,
 				}
 			});
 			await submission.update({
