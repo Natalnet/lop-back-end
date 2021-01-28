@@ -13,7 +13,7 @@ class DraftController{
 					class_id : idClass || null,
 					listQuestions_id : idList || null,
 					test_id : idTest || null,
-					// lesson_id: idLesson || null
+					lesson_id: idLesson || null
 				},
 				defaults:{
 					user_id : req.userId,
@@ -21,7 +21,7 @@ class DraftController{
 					class_id : idClass || null,
 					listQuestions_id : idList || null,
 					test_id : idTest || null,
-					// lesson_id: idLesson || null,
+					lesson_id: idLesson || null,
 					answer: answer || '',
 					char_change_number,
 				}
