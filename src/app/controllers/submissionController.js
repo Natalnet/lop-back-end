@@ -153,7 +153,21 @@ class SubmissionController {
 	async saveSubmissionOfProgrammingQuestion(req, res) {
 		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
-
+			const lastSubmission = await Submission.findOne({
+				where: {
+					user_id: req.userId,
+					question_id: idQuestion,
+					class_id: idClass || null,
+					listQuestions_id: idList || null,
+					test_id: idTest || null,
+					lesson_id: idLesson || null,
+				},
+				attributes: ['id', 'timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+			})
+			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
 			const submission = await Submission.create({
 				user_id: req.userId,
 				question_id: idQuestion,
@@ -163,7 +177,7 @@ class SubmissionController {
 				lesson_id: idLesson || null,
 				hitPercentage,
 				environment,
-				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
+				timeConsuming: totalTimeConsuming,
 				language,
 				answer,
 				ip,
@@ -219,6 +233,21 @@ class SubmissionController {
 	}
 	async saveSubmissionByObjectiveQuestion(req, res) {
 		const { answer, timeConsuming, ip, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
+		const lastSubmission = await Submission.findOne({
+			where: {
+				user_id: req.userId,
+				question_id: idQuestion,
+				class_id: idClass || null,
+				listQuestions_id: idList || null,
+				test_id: idTest || null,
+				lesson_id: idLesson || null,
+			},
+			attributes: ['id', 'timeConsuming', 'createdAt'],
+			order: [
+				['createdAt', 'DESC']
+			],
+		})
+		const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
 		try {
 			const question = await Question.findByPk(idQuestion, {
 				attributes: ['id', 'alternatives']
@@ -239,7 +268,7 @@ class SubmissionController {
 				answer,
 				hitPercentage,
 				environment,
-				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
+				timeConsuming: totalTimeConsuming,
 				ip,
 				char_change_number: 0,
 				createdAt: new Date()
@@ -277,6 +306,21 @@ class SubmissionController {
 	async saveSubmissionByDiscursiveQuestion(req, res) {
 		const { answer, timeConsuming, ip, char_change_number, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
+			const lastSubmission = await Submission.findOne({
+				where: {
+					user_id: req.userId,
+					question_id: idQuestion,
+					class_id: idClass || null,
+					listQuestions_id: idList || null,
+					test_id: idTest || null,
+					lesson_id: idLesson || null,
+				},
+				attributes: ['id', 'timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+			})
+			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
 			const submission = await Submission.create({
 				user_id: req.userId,
 				question_id: idQuestion,
@@ -287,7 +331,7 @@ class SubmissionController {
 				type: 'DISCURSIVE',
 				answer,
 				environment,
-				timeConsuming: timeConsuming < 0 ? 0 : timeConsuming,
+				timeConsuming: totalTimeConsuming,
 				ip,
 				char_change_number,
 				createdAt: new Date()
