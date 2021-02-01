@@ -210,6 +210,46 @@ class DataScienceController {
 			return res.status(500).json(err)
 		}
 	}
+	async getDataScienceTestByClass(req, res) {
+		const { idClass } = req.params;
+		try {
+			const classRoom = await Class.findByPk(idClass);
+			if (!classRoom) {
+				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
+			}
+			let tests = await classRoom.getTests({
+				attributes: ['id', 'title', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+				include: [{
+					model: User,
+					as: 'author',
+					attributes: ['name', 'email']
+				}]
+			});
+			tests = JSON.parse(JSON.stringify(tests))
+			tests.forEach(tests => {
+				delete tests.classHasTest;
+				let shortTitle = '';
+				tests.title.split(' ').forEach(word => {
+					const code = word.charCodeAt(0);
+	
+					if ((code > 47 && code < 58) || // numeric (0-9)
+						(code > 64 && code < 91) || // upper alpha (A-Z)
+						(code > 96 && code < 123)) { // lower alpha (a-z)
+						shortTitle += word[0].toUpperCase()
+					}
+				})
+				tests.shortTitle = shortTitle;
+			})
+			return res.status(200).json(tests)
+		}
+		catch (err) {
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
 
 	async getDataScienceTestClass(req, res) {
 		const { idClass } = req.params;
@@ -370,6 +410,9 @@ class DataScienceController {
 	async getDataScienceQeustions(req, res) {
 		try {
 			let questions = await Question.findAll({
+				where: {
+					type: 'PROGRAMMING',
+				},
 				attributes: ['id', 'title', 'difficulty'],
 				order: ['title'],
 

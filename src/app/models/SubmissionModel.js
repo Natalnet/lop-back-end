@@ -13,6 +13,17 @@ module.exports = (sequelize,DataTypes)=>{
 			primaryKey: true,
 			defaultValue:DataTypes.UUIDV4
 		},
+		type: {
+			type: DataTypes.ENUM('PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE'),
+			defaultValue: "PROGRAMMING",
+			allowNull: false,
+			validate: {
+				isIn: {
+					args: [['PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE']],
+					msg: "Status só pode ser 'PROGRAMMING', 'OBJECTIVE' ou 'DISCURSIVE'"
+				}
+			}
+		},
 		ip:{
 			type:DataTypes.STRING(200),
 		},
@@ -22,11 +33,10 @@ module.exports = (sequelize,DataTypes)=>{
 		},
 		hitPercentage:{
 			type:DataTypes.FLOAT(5),
-			allowNull:false,
 		},
 		language:{
-			type:DataTypes.ENUM('javascript','cpp','c','python','java'),
-			allowNull:false,
+			type:DataTypes.ENUM('javascript','cpp','c','python','java','blockly'),
+			allowNull:true,
 		},
 		answer:{
 			type:DataTypes.TEXT

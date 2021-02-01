@@ -17,7 +17,7 @@ class ListQuestionsService{
 				include:[{
 					model:Question,
 					as:'questions',
-					attributes:['id','title','description','katexDescription']
+					attributes:['id','title','type','description','katexDescription']
 				}],
             });
             const classHasListQuestionPromise =  ClassHasListQuestion.findOne({

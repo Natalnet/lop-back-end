@@ -6,111 +6,117 @@ https://sequelize.org/master/manual/associations.html
 
 Para criar campos virtuais:
 https://sequelize.org/master/class/lib/data-types.js~VIRTUAL.html
-*/ 
+*/
 const path = require('path')
-module.exports = (sequelize,DataTypes)=>{
-	const Question = sequelize.define('question',{
-		id:{
-			type:DataTypes.UUID,
-			allowNull:false,
+module.exports = (sequelize, DataTypes) => {
+	const Question = sequelize.define('question', {
+		id: {
+			type: DataTypes.UUID,
+			allowNull: false,
 			primaryKey: true,
-			defaultValue:DataTypes.UUIDV4
+			defaultValue: DataTypes.UUIDV4
 		},
-		title:{
-			type:DataTypes.STRING(200),
-			allowNull:false,
-		    set(title) {
-		      if (title) this.setDataValue('title', title.trim());
-		    },
-			validate:{
-				notNull:{
-					msg:"Título é obrigatório"
+		title: {
+			type: DataTypes.STRING(200),
+			allowNull: false,
+			set(title) {
+				if (title) this.setDataValue('title', title.trim());
+			},
+			validate: {
+				notNull: {
+					msg: "Título é obrigatório"
 				},
-				notEmpty:{
-					msg:"Título é obrigatório"
+				notEmpty: {
+					msg: "Título é obrigatório"
 				}
 
 			}
 		},
-		code:{
+		code: {
 			type: DataTypes.STRING(10),
-			allowNull : false, // default é true
-			unique:{
-				msg:'Já existe uma questão cadastrada com esse código :('
+			allowNull: false, // default é true
+			unique: {
+				msg: 'Já existe uma questão cadastrada com esse código :('
 			},
-			validate:{
-				notNull:{
-					msg:"código é obrigatório"
+			validate: {
+				notNull: {
+					msg: "código é obrigatório"
 				},
-				notEmpty:{
-					msg:"código é obrigatório"
+				notEmpty: {
+					msg: "código é obrigatório"
 				}
 			}
 		},
-		description:{
-			type : DataTypes.TEXT,
-			allowNull : false, // default é true
-		    set(description) {
-		      if(description) this.setDataValue('description', description.trim());
-		    },
-			validate:{
-				notNull:{
-					msg:"Descrição é obrigatório"
-				},
-				notEmpty:{
-					msg:"Descrição é obrigatório"
+		type: {
+			type: DataTypes.ENUM('PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE'),
+			defaultValue: "PROGRAMMING",
+			allowNull: false,
+			validate: {
+				isIn: {
+					args: [['PROGRAMMING', 'OBJECTIVE', 'DISCURSIVE']],
+					msg: "Status só pode ser 'PROGRAMMING', 'OBJECTIVE' ou 'DISCURSIVE'"
 				}
 			}
 		},
-		solution:{
-			type : DataTypes.TEXT,
+		description: {
+			type: DataTypes.TEXT,
+			allowNull: false, // default é true
+			set(description) {
+				if (description) this.setDataValue('description', description.trim());
+			},
+			validate: {
+				notNull: {
+					msg: "Descrição é obrigatório"
+				},
+				notEmpty: {
+					msg: "Descrição é obrigatório"
+				}
+			}
 		},
-		katexDescription:{
-			type : DataTypes.TEXT,
-		    set(katexDescription) {
-		      if (katexDescription) this.setDataValue('katexDescription', katexDescription.trim());
-		    },
+		solution: {
+			type: DataTypes.TEXT,
 		},
-		status:{
-			type:DataTypes.ENUM('PÚBLICA','PRIVADA'),
-			defaultValue:"PÚBLICA",
-			allowNull:false,
-			validate:{
-				isIn:{
-					args:[['PÚBLICA','PRIVADA']],
+		katexDescription: {
+			type: DataTypes.TEXT,
+			set(katexDescription) {
+				if (katexDescription) this.setDataValue('katexDescription', katexDescription.trim());
+			},
+		},
+		status: {
+			type: DataTypes.ENUM('PÚBLICA', 'PRIVADA'),
+			defaultValue: "PÚBLICA",
+			allowNull: false,
+			validate: {
+				isIn: {
+					args: [['PÚBLICA', 'PRIVADA']],
 					msg: "Status só pode ser 'PÚBLICA' ou 'PRIVADA'"
 				}
 			}
 		},
-		difficulty:{
-			type : DataTypes.ENUM('1','2','3','4','5'),
-			allowNull:false,
-			validate:{
-				isIn:{
-					args:[[1,2,3,4,5]],
+
+		difficulty: {
+			type: DataTypes.ENUM('1', '2', '3', '4', '5'),
+			allowNull: false,
+			validate: {
+				isIn: {
+					args: [[1, 2, 3, 4, 5]],
 					msg: "Dificudade só pode ser '1', '2', '3', '4'ou '5"
 				}
 			}
 		},
-		results:{
-			type : DataTypes.JSON,
-			allowNull : false, // default é true
-			validate:{
-				notNull:{
-					msg:"Resultados é obrigatório"
-				},
-				notEmpty:{
-					msg:"Resultados é obrigatório"
-				},
-			}
+		results: {
+			type: DataTypes.JSON,
+		},
+		alternatives: {
+			type: DataTypes.JSON,
 		},
 
-	},{
-		freezeTableName:true,
+	}, {
+		freezeTableName: true,
 		//underscored: true,
 	})
 
-	
+
 	return Question;
 
 }
