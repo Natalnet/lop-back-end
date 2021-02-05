@@ -12,6 +12,7 @@ router.use('/user', AuthMiddleware.authentication)
 router.get('/user/:id', UserController.getUser)
 router.get('/user', UserMiddleware.index, UserController.index)
 router.get('/user/page/:page', UserMiddleware.index_paginate, UserController.index_paginate)
+router.get('/user/page/:page/all', UserController.getAllUsers)
 router.get('/user/list/:idList/class/:idClass/question/:idQuestion', UserController.getUsersWithLastSubmissionByQuestionByListByClass)
 
 router.get('/user/class/:id', UserController.getUsersByClass)

@@ -10,6 +10,7 @@ router.use('/test',AuthMiddleware.authentication);
 router.get('/test',TestMiddleware.index, TestController.index);
 router.get('/test/page/:page',TestMiddleware.index_paginate,TestController.index_paginate);
 router.get('/test/:id',TestMiddleware.show,TestController.show);
+router.get('/test/check/password', TestController.checkPassowrd);
 router.get('/test/:id/class/:idClass/question/:idQuestion', TestController.getUserSubmissionsByTest);
 router.get('/apistatus', TestController.getApiStatus);
 

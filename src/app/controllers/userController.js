@@ -12,7 +12,6 @@ class UserController{
 		const profile = req.query.profile || ""
 		const fields = req.query.fields?req.query.fields.split(' ').map(f=>f.trim()):['id','name','email','profile','createdAt','updatedAt']
 		const solicitations = req.query.solicitations || ""
-
 		try{
 			const query = {
 				where:{
@@ -49,6 +48,7 @@ class UserController{
 		}
 
 	}
+
 	async index_paginate(req,res){
 		const field = req.query.field || 'name'
 		const includeString = req.query.include || ''
@@ -67,16 +67,10 @@ class UserController{
 						[Op.like]: `%${field==='email'?includeString:''}%` 
 					}, 
 				},
-				order:[
-					['name']
-				],
-			}
-			const include = []
-			if(classes && classes==="yes"){
-				query.order = [
+				order: [
 					['profile','DESC'],['name']
-				]
-				query.include = [...include,{
+				],
+				include: [{
 					model:Class,
 					as:'classes',
 					where:{
@@ -84,6 +78,7 @@ class UserController{
 					}
 				}]
 			}
+
 			users.count = await User.count(query)
 
 			const totalPages = Math.ceil(users.count/limitDocsPerPage)
@@ -100,7 +95,64 @@ class UserController{
 					name:user.name,
 					email:user.email,
 					profile:user.profile,
-					enrollment:classes && user.classes[0].classHasUser.enrollment
+					enrollment:user.classes[0].classHasUser.enrollment
+				}
+			})
+			const usersPaginate = {
+				docs        : users.rows,
+				currentPage : page,
+				perPage     : parseInt(limitDocsPerPage),
+				total       : parseInt(users.count),
+				totalPages  : parseInt(totalPages)
+			}
+			return res.status(200).json(usersPaginate)
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+	async getAllUsers(req,res){
+		const field = req.query.field || 'name'
+		const includeString = req.query.include || ''
+		const limitDocsPerPage= parseInt(req.query.docsPerPage || 15);
+		let page = parseInt(req.params.page || 1);
+		try{
+
+			if(req.userProfile !== 'ADMINISTRADOR'){
+				return res.status(401).json({msg: 'Sem permissão'})
+			}
+			const users = {}
+			const query = {
+				where:{
+					name: { 
+						[Op.like]: `%${field==='name'?includeString:''}%` 
+					},
+					email: { 
+						[Op.like]: `%${field==='email'?includeString:''}%` 
+					}, 
+				},
+				order:[
+					['name']
+				],
+			}
+
+			users.count = await User.count(query)
+
+			const totalPages = Math.ceil(users.count/limitDocsPerPage)
+			page = parseInt(page > totalPages ? totalPages : page)
+			page = page<=0?1:page
+
+			query.limit = limitDocsPerPage
+			query.offset = (page-1)*limitDocsPerPage
+
+			users.rows = await User.findAll(query)
+			users.rows = users.rows.map(user=>{
+				return {
+					id:user.id,
+					name:user.name,
+					email:user.email,
+					profile:user.profile,
 				}
 			})
 			const usersPaginate = {
