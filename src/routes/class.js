@@ -6,6 +6,7 @@ const ClassMiddleware = require('../app/middlewares/classMiddleware')
 router.use('/class',AuthMiddleware.authentication)
 
 router.get('/class',ClassController.index);
+router.get('/class/open',ClassController.getActiveClasses);
 router.get('/class/page/:page',ClassController.index_paginate);
 router.get('/class/:id',ClassMiddleware.show,ClassController.show);
 router.post('/class/store',ClassMiddleware.store,ClassController.store);
