@@ -56,6 +56,9 @@ class TestController{
 				testCopy.questionsCount = questions.length
 				testCopy.questionsCompletedSumissionsCount = questions.filter(q=>q.completedSumissionsCount>0).length
 				testCopy.classHasTest = {createdAt, password, status, showAllTestCases, id}
+				if(req.userProfile === 'ALUNO'){
+					delete testCopy.classHasTest.password;
+				}
 				return testCopy
 			}))
 	
@@ -70,6 +73,25 @@ class TestController{
 		catch(err){
 			console.log(err)
 			return res.status(500).json(err)
+		}
+	}
+	async checkPassowrd(req, res){
+		const password = req.query.password? req.query.password.trim():''
+		const idTest = req.query.idTest? req.query.idTest: '';
+		try{
+			const classHasTest = await ClassHasTest.findOne({
+				where:{
+					test_id: idTest,
+					password: password
+				}
+			})
+			if(classHasTest){
+				return res.status(200).json({msg: 'ok'})
+			}
+			return res.status(400).json({msg: 'Senha não bate'})
+		}
+		catch(err){
+			return res.status(500).json(err);
 		}
 	}
 	async index_paginate(req,res){
@@ -283,6 +305,9 @@ class TestController{
 			questions.forEach(q=> delete q.completedSumissionsCount)
 			test.questions = questions
 			test.classHasTest = classHasTest
+			if(req.userProfile === 'ALUNO'){
+				delete test.classHasTest.password
+			}
 			const response = req.query.idUser?{test,user}:test
 			
 			return res.status(200).json(response)

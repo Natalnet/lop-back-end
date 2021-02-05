@@ -3,28 +3,114 @@ const crypto = require('crypto');
 const path = require('path')
 const {Op} = require('sequelize')
 const sequelize = require('../../database/connection')
-const {Class,User,ListQuestions,Test,Question,ClassHasListQuestion,Submission} = sequelize.import(path.resolve(__dirname,'..','models'))
+const {Class,User,ListQuestions,Test,ClassHasUser} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 
 class ClassController{
-	async index(req,res){
-		const code= req.query.code
-		const state = req.query.state?[req.query.state.split(" ")]:["ATIVA","INATIVA"]
-		const myClasses = req.query.myClasses
-		const idNotIn = req.query.idNotIn || ""
-		 
+	async index(req,res){		 
 		try{
 			const query = {
 				where : {
+					state: 'ATIVA',
+				},
+				attributes:{ 
+					exclude:["createdAt","updatedAt","author_id"]
+				},
+				order:[
+					['createdAt','DESC']
+				],
+				include:[{
+					model:User,
+					as:'author',
+				},{
+					model : User,
+					as : 'users',
+					where:{
+						id:req.userId,
+					},
+					attributes:['id']
+				}]
+			}
+
+			let classes = await Class.findAll(query)
+			
+			classes = await Promise.all(classes.map(async turma=>{
+				const turmaCopy = JSON.parse(JSON.stringify(turma))
+				const listsCount = await ListQuestions.count({
+					include:[{
+						model:Class,
+						as:'classes',
+						where:{
+							id:turma.id
+						}
+					}]
+				})
+				turmaCopy.listsCount = listsCount
+				const usersCount = await User.count({
+					include:[{
+						model:Class,
+						as:'classes',
+						where:{
+							id:turma.id
+						}
+					}]
+				})
+				turmaCopy.usersCount = usersCount
+				const solicitationsCount = await User.count({
+					include:[{
+						model:Class,
+						as:'solicitedClasses',
+						where:{
+							id:turma.id
+						}
+					}]
+				})
+				turmaCopy.solicitationsCount = solicitationsCount
+				const testsCount = await Test.count({
+					include:[{
+						model:Class,
+						as:'classes',
+						where:{
+							id:turma.id
+						}
+					}]
+				})
+				turmaCopy.testsCount = testsCount
+				turmaCopy.author = {
+					id:turmaCopy.author.id,
+					email:turmaCopy.author.email,
+					name:turmaCopy.author.name,
+				}
+				
+				delete turmaCopy.users
+
+				return turmaCopy
+			}))
+			
+			return res.status(200).json(classes)
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+	async getActiveClasses(req,res){
+		const code = req.query.code? req.query.code.trim(): '';
+		try{
+			const classhasUsers = await ClassHasUser.findAll({
+				where: {
+					user_id: req.userId
+				},
+				attributes: ['user_id', 'class_id']
+			});
+			const idsMyclasses = classhasUsers.map(classhasUser => classhasUser.class_id);
+			const query = {
+				where : {
 					id:{
-						[Op.notIn]:idNotIn.split(" ")
+						[Op.notIn]: idsMyclasses
 					},
-					code:{
-						[Op.like]: `%${code || ''}%` 
-					},
-					state:{
-						[Op.in] : state
-					},
+					code: code || '',
+					state: 'ATIVA',
 				},
 				attributes:{ 
 					exclude:["createdAt","updatedAt","author_id"]
@@ -38,19 +124,7 @@ class ClassController{
 				}]
 			}
 
-			if(myClasses && myClasses==="yes"){
-				query.include = [...query.include,{
-					model : User,
-					as : 'users',
-					where:{
-						id:req.userId,
-					},
-					attributes:['id']
-				}]
-			}
-			
 			let classes = await Class.findAll(query)
-			
 			classes = await Promise.all(classes.map(async turma=>{
 				const turmaCopy = JSON.parse(JSON.stringify(turma))
 				const listsCount = await ListQuestions.count({
@@ -220,9 +294,20 @@ class ClassController{
 	}
 
 	async show(req,res){
-		const idClass=req.params.id
-		const {user,profile} = req.query
+		const idClass=req.params.id;
+		const {user,profile} = req.query;
+
 		try{
+			const classHasUser = await ClassHasUser.findOne({
+				where:{
+					user_id: req.userId,
+					class_id: idClass
+	
+				}
+			});
+			if(!classHasUser){
+				return res.status(401).json({msg: 'Sem permissão'})
+			}
 			const query = {
 				where:{
 					id:idClass,
@@ -240,8 +325,11 @@ class ClassController{
 					}
 				}]
 			}
-			const classInfo = await Class.findOne(query)
-			return res.status(200).json(classInfo)
+			const classRoom = await Class.findOne(query);
+			if(req.userProfile === 'ALUNO' && classRoom.state === 'INATIVA'){
+				return res.status(401).json({msg: 'Sem permissão'})
+			}
+			return res.status(200).json(classRoom);
 		}
 		catch(err){
 			console.log(err)
