@@ -24,6 +24,17 @@ module.exports = (sequelize,DataTypes)=>{
 				}
 			}
 		},
+		correcao:{
+			type:DataTypes.ENUM('DISPONIVEL','INDISPONIVEL'),
+			defaultValue:"INDISPONIVEL",
+			allowNull:false,
+			validate:{
+				isIn:{
+					args:[['DISPONIVEL','INDISPONIVEL']],
+					msg: "Correcao só pode ser 'DISPONIVEL' ou 'INDISPONIVEL'"
+				}
+			}
+		},
 		showAllTestCases:{
 			type:DataTypes.BOOLEAN,
 			defaultValue:false,
