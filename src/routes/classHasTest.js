@@ -7,6 +7,7 @@ router.use('/classHasTest',AuthMiddleware.authentication)
 
 router.post('/classHasTest/store',ClassHasTestController.store)
 router.put('/classHasTest/:id/update/status',classHasTestMiddleware.update,ClassHasTestController.updateStatus)
+router.put('/classHasTest/:id/update/correcao',classHasTestMiddleware.update,ClassHasTestController.updateCorrecao)
 router.put('/classHasTest/:id/update',classHasTestMiddleware.update,ClassHasTestController.update)
 router.delete('/classHasTest/:id/delete',ClassHasTestController.delete)
 
