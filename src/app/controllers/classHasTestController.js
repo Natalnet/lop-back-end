@@ -69,6 +69,30 @@ class ClassHasTestController{
 			return res.status(500).json(err);
 		}
 	}
+
+	async updateCorrecao(req,res){
+		const idTest = req.params.id
+		const {correcao} = req.body
+		const {idClass} = req.query
+		try{
+			const classHasTest = await ClassHasTest.findOne({
+				where:{
+					test_id: idTest,
+					class_id: idClass
+				}
+			})
+			await classHasTest.update({
+				correcao,
+			})
+			//req.io.sockets.in(idClass).emit('changeStatusTest',{status,idTest})
+			return res.status(200).json({msg:"ok"})
+		}
+		catch(err){
+			console.log('erro ao atualizar status da prova')
+			console.log(err)
+			return res.status(500).json(err);
+		}
+	}
 	async update(req,res){
 		const idTest = req.params.id
 		const {password, showAllTestCases} = req.body
