@@ -189,7 +189,6 @@ class FeedBackTestController {
                 delete questionCopy.testHasQuestion;
                 return questionCopy;
             }))
-            console.log("Questions found returning");
             //console.log(questions);
             return res.status(200).json({ questions, user });
         }

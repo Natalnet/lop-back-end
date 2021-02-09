@@ -26,7 +26,6 @@ class FeedBackTestMiddleware{
         const idUser = req.query.idUser ? req.query.idUser : req.userId;
 
         const isUuid = /[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}/
-        console.log(`gotten ${idClass} ${idTest} ${idUser}`);
         if(req.userProfile!=="PROFESSOR" && req.userProfile !== "ALUNO"){
             return res.status(401).json({msg:"Sem permissão"})
         }
@@ -40,7 +39,7 @@ class FeedBackTestMiddleware{
         if(!idTest || (idTest && !isUuid.test(idTest))){
             return res.status(404).json({msg:'página não encontrada'})
         }
-        
+
 		return next()
     }
     
