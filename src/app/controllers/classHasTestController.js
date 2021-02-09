@@ -84,7 +84,7 @@ class ClassHasTestController{
 			await classHasTest.update({
 				correcao,
 			})
-			//req.io.sockets.in(idClass).emit('changeStatusTest',{status,idTest})
+			req.io.sockets.in(idClass).emit('changeCorrecaoTest',{correcao,idTest})
 			return res.status(200).json({msg:"ok"})
 		}
 		catch(err){
