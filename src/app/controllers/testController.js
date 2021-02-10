@@ -30,7 +30,7 @@ class TestController{
 			let tests = await Test.findAll(queryTest)
 
 			tests = await Promise.all(tests.map(async test=>{
-				const {createdAt, password, status, showAllTestCases, id} = test.classes[0].classHasTest
+				const {createdAt, password, status, correcao, showAllTestCases, id} = test.classes[0].classHasTest
 				const questions = await Promise.all(test.questions.map(async question=>{
 					const query = {
 						where:{
@@ -55,7 +55,7 @@ class TestController{
 				delete testCopy.questions
 				testCopy.questionsCount = questions.length
 				testCopy.questionsCompletedSumissionsCount = questions.filter(q=>q.completedSumissionsCount>0).length
-				testCopy.classHasTest = {createdAt, password, status, showAllTestCases, id}
+				testCopy.classHasTest = {createdAt, password, status, correcao, showAllTestCases, id}
 				if(req.userProfile === 'ALUNO'){
 					delete testCopy.classHasTest.password;
 				}
@@ -268,7 +268,7 @@ class TestController{
 					test_id : idTest,
 					class_id: idClass
 				},
-				attributes:['createdAt','password','showAllTestCases','status']
+				attributes:['createdAt','password','correcao','showAllTestCases','status']
 			})
 
 			let [test,classHasTest,user] = await Promise.all([
