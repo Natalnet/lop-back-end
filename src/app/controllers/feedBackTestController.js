@@ -129,7 +129,8 @@ class FeedBackTestController {
     async show(req, res) {
         const idClass = req.query.idClass;
         const idTest = req.query.idTest;
-        const idUser = req.query.idUser;
+        const idUser = req.query.idUser ? req.query.idUser : req.userId;
+
         try {
             const testPromise = Test.findOne({
                 where: {
@@ -188,6 +189,7 @@ class FeedBackTestController {
                 delete questionCopy.testHasQuestion;
                 return questionCopy;
             }))
+            //console.log(questions);
             return res.status(200).json({ questions, user });
         }
         catch (err) {
@@ -195,6 +197,7 @@ class FeedBackTestController {
             return res.status(500).json(err)
         }
     }
+
     async store(req, res) {
 
         const {
