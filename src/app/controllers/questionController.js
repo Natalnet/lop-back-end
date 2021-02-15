@@ -347,11 +347,12 @@ class QuestionController {
 			question = JSON.parse(JSON.stringify(question));
 
 			//se o tipo da questão é objetiva e não há submissões, não retornar o gabarito
-			if(question.type === 'OBJECTIVE' && !lastSubmissionPromise){
+			if(question.type === 'OBJECTIVE' && req.userProfile !== 'PROFESSOR' &&  !lastSubmission){
 				question.alternatives.forEach(alternative => {
 					delete alternative.isCorrect;
 				});
 			}
+
 			question.userDifficulty = userDifficulty ? userDifficulty.difficulty || '' : ''
 			question.questionDraft = questionDraft
 			question.lastSubmission = lastSubmission
