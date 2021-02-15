@@ -191,7 +191,6 @@ class ClassController{
 		const includeString = req.query.include || ''
 		const limitDocsPerPage= parseInt(req.query.docsPerPage || 15);
 		let page = parseInt(req.params.page || 1);
-		const myClasses = req.query.myClasses
 		try{
 			
 			const classes = {}
@@ -211,25 +210,23 @@ class ClassController{
 					model:User,
 					as:'author',
 					//attributes:['name,email']
-				}]
-			}
-			if(myClasses && myClasses==="yes"){
-				query.include = [...query.include,{
+				},{
 					model : User,
 					as : 'users',
 					where:{
-						id:req.userId,
+						id: req.userId,
 					},
 					attributes:['id']
 				}]
 			}
+
 			classes.count = await Class.count(query)
 
 			const totalPages = Math.ceil(classes.count/limitDocsPerPage)
 			page = parseInt(page>totalPages?totalPages:page)
 			page = page<=0?1:page
 
-			query.ofsset = (page-1)*limitDocsPerPage
+			query.offset = (page-1)*limitDocsPerPage
 			query.limit = limitDocsPerPage
 
 			classes.rows = await Class.findAll(query)

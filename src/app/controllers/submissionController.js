@@ -3,7 +3,7 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, ClassHasTest } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class SubmissionController {
 	async index_paginate(req, res) {
@@ -153,6 +153,18 @@ class SubmissionController {
 	async saveSubmissionOfProgrammingQuestion(req, res) {
 		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
+			if (idTest) {
+				const classHasTest = await ClassHasTest.findOne({
+					where: {
+						test_id: idTest,
+						class_id: idClass
+					},
+					attributes: ['id', 'status']
+				})
+				if (classHasTest.status === 'FECHADA') {
+					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
+				}
+			}
 			const lastSubmission = await Submission.findOne({
 				where: {
 					user_id: req.userId,
@@ -233,22 +245,35 @@ class SubmissionController {
 	}
 	async saveSubmissionByObjectiveQuestion(req, res) {
 		const { answer, timeConsuming, ip, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
-		const lastSubmission = await Submission.findOne({
-			where: {
-				user_id: req.userId,
-				question_id: idQuestion,
-				class_id: idClass || null,
-				listQuestions_id: idList || null,
-				test_id: idTest || null,
-				lesson_id: idLesson || null,
-			},
-			attributes: ['id', 'timeConsuming', 'createdAt'],
-			order: [
-				['createdAt', 'DESC']
-			],
-		})
-		const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
 		try {
+			if (idTest) {
+				const classHasTest = await ClassHasTest.findOne({
+					where: {
+						test_id: idTest,
+						class_id: idClass
+					},
+					attributes: ['id', 'status']
+				})
+				if (classHasTest.status === 'FECHADA') {
+					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
+				}
+			}
+
+			const lastSubmission = await Submission.findOne({
+				where: {
+					user_id: req.userId,
+					question_id: idQuestion,
+					class_id: idClass || null,
+					listQuestions_id: idList || null,
+					test_id: idTest || null,
+					lesson_id: idLesson || null,
+				},
+				attributes: ['id', 'timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+			})
+			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
 			const question = await Question.findByPk(idQuestion, {
 				attributes: ['id', 'alternatives']
 			})
@@ -274,6 +299,7 @@ class SubmissionController {
 				createdAt: new Date()
 			})
 			if (idTest) {
+
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
 					where: {
 						user_id: req.userId,
@@ -306,6 +332,18 @@ class SubmissionController {
 	async saveSubmissionByDiscursiveQuestion(req, res) {
 		const { answer, timeConsuming, ip, char_change_number, environment, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
+			if (idTest) {
+				const classHasTest = await ClassHasTest.findOne({
+					where: {
+						test_id: idTest,
+						class_id: idClass
+					},
+					attributes: ['id', 'status']
+				})
+				if (classHasTest.status === 'FECHADA') {
+					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
+				}
+			}
 			const lastSubmission = await Submission.findOne({
 				where: {
 					user_id: req.userId,
