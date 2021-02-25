@@ -1,9 +1,9 @@
 
 const path = require('path')
 const { Op } = require('sequelize')
-
+const moment = require('moment');
 const sequelize = require('../../database/connection')
-const { Submission, Question, ClassHasListQuestion, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, Question, ClassHasListQuestion, ClassHasUser, ClassHasTest, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DataScienceController {
 	async getDataScienceTeachers(req, res) {
@@ -170,80 +170,102 @@ class DataScienceController {
 			return res.status(500).json(err)
 		}
 	}
-	async getDataScienceListByClass(req, res) {
-		const { idClass } = req.params;
+	async getDataScienceList(req, res) {
+		const { createdAt } = req.query;
 		try {
-			const classRoom = await Class.findByPk(idClass);
-			if (!classRoom) {
-				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
+			if (!moment(createdAt).isValid() || !createdAt) {
+				return res.status(400).json({ msg: 'createdAt inválido' })
 			}
-			let lists = await classRoom.getLists({
-				attributes: ['id', 'title', 'createdAt'],
+			let classHasLists = await ClassHasListQuestion.findAll({
+				where: {
+					createdAt: {
+						[Op.gt]: new Date(createdAt)
+					}
+				},
 				order: [
 					['createdAt', 'DESC']
 				],
-				include: [{
-					model: User,
-					as: 'author',
-					attributes: ['name', 'email']
-				}]
-			});
-			lists = JSON.parse(JSON.stringify(lists))
-			lists.forEach(list => {
-				delete list.classHasListQuestion;
+			})
+			classHasLists = JSON.parse(JSON.stringify(classHasLists))
+			classHasLists = await Promise.all(classHasLists.map(async classHasList => {
+				const list = await ListQuestions.findByPk(classHasList.list_id, {
+					attributes: ['id', 'title', 'createdAt'],
+					include: [{
+						model: User,
+						as: 'author',
+						attributes: ['name', 'email']
+					}]
+				})
 				let shortTitle = '';
 				list.title.split(' ').forEach(word => {
 					const code = word.charCodeAt(0);
-	
 					if ((code > 47 && code < 58) || // numeric (0-9)
 						(code > 64 && code < 91) || // upper alpha (A-Z)
 						(code > 96 && code < 123)) { // lower alpha (a-z)
 						shortTitle += word[0].toUpperCase()
 					}
 				})
-				list.shortTitle = shortTitle;
-			})
-			return res.status(200).json(lists)
+				return {
+					id: list.id,
+					title: list.title,
+					shortTitle,
+					id_class: classHasList.class_id,
+					author: list.author,
+					createdAt: list.createdAt,
+				}
+			}))
+			return res.status(200).json(classHasLists)
 		}
 		catch (err) {
 			console.log(err)
 			return res.status(500).json(err)
 		}
 	}
-	async getDataScienceTestByClass(req, res) {
-		const { idClass } = req.params;
+	async getDataScienceTest(req, res) {
+		const { createdAt } = req.query;
 		try {
-			const classRoom = await Class.findByPk(idClass);
-			if (!classRoom) {
-				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
+			if (!moment(createdAt).isValid() || !createdAt) {
+				return res.status(400).json({ msg: 'createdAt inválido' })
 			}
-			let tests = await classRoom.getTests({
-				attributes: ['id', 'title', 'createdAt'],
+			let classHasTests = await ClassHasTest.findAll({
+				where: {
+					createdAt: {
+						[Op.gt]: new Date(createdAt)
+					}
+				},
 				order: [
 					['createdAt', 'DESC']
 				],
-				include: [{
-					model: User,
-					as: 'author',
-					attributes: ['name', 'email']
-				}]
-			});
-			tests = JSON.parse(JSON.stringify(tests))
-			tests.forEach(tests => {
-				delete tests.classHasTest;
+			})
+			classHasTests = JSON.parse(JSON.stringify(classHasTests))
+			classHasTests = await Promise.all(classHasTests.map(async classHasTest => {
+				const test = await Test.findByPk(classHasTest.test_id, {
+					attributes: ['id', 'title', 'createdAt'],
+					include: [{
+						model: User,
+						as: 'author',
+						attributes: ['name', 'email']
+					}]
+				})
 				let shortTitle = '';
-				tests.title.split(' ').forEach(word => {
+				test.title.split(' ').forEach(word => {
 					const code = word.charCodeAt(0);
-	
 					if ((code > 47 && code < 58) || // numeric (0-9)
 						(code > 64 && code < 91) || // upper alpha (A-Z)
 						(code > 96 && code < 123)) { // lower alpha (a-z)
 						shortTitle += word[0].toUpperCase()
 					}
 				})
-				tests.shortTitle = shortTitle;
-			})
-			return res.status(200).json(tests)
+				return {
+					id: test.id,
+					title: test.title,
+					shortTitle,
+					id_class: classHasTest.class_id,
+					author: test.author,
+					createdAt: test.createdAt,
+				}
+			}))
+			return res.status(200).json(classHasTests)
 		}
 		catch (err) {
 			console.log(err)
@@ -407,11 +429,119 @@ class DataScienceController {
 		}
 	}
 
-	async getDataScienceQeustions(req, res) {
+	async getDataScienceSubmission(req, res) {
+		const { createdAt } = req.query;
 		try {
+			if (!moment(createdAt).isValid() || !createdAt) {
+				return res.status(400).json({ msg: 'createdAt inválido' })
+			}
+			let submissions = await Submission.findAll({
+				where: {
+					class_id: {
+						[Op.not]: null,
+					},
+					createdAt: {
+						[Op.gt]: new Date(createdAt)
+					}
+				},
+				order: [
+					['createdAt', 'DESC']
+				],
+				attributes: ['environment', 'hitPercentage', 'language', 'char_change_number', 'timeConsuming', 'createdAt', 'listQuestions_id', 'test_id', 'question_id', 'class_id'],
+				include: [{
+					model: User,
+					as: 'user',
+					where: {
+						profile: "ALUNO",
+					},
+					attributes: ['id', 'name', 'email'],
+				}, {
+					model: Question,
+					as: 'question',
+					attributes: ['title']
+				}, {
+					model: ListQuestions,
+					as: 'list',
+					attributes: ['title']
+				}, {
+					model: Test,
+					as: 'test',
+					attributes: ['title']
+				},
+				]
+			})
+			submissions = JSON.parse(JSON.stringify(submissions));
+			submissions = await Promise.all(submissions.map(async submission => {
+				const classHasUser = await ClassHasUser.findOne({
+					where: {
+						class_id: submission.class_id,
+						user_id: submission.user.id
+					},
+					attributes: ['enrollment']
+				})
+				submission.user = `${submission.user.name}`;
+				submission.question = submission.question.title;
+				submission.list = submission.list && submission.list.title;
+				submission.test = submission.test && submission.test.title;
+				submission.id_class = submission.class_id;
+				submission.enrollment = classHasUser.enrollment;
+				delete submission.question_id;
+				delete submission.listQuestions_id;
+				delete submission.test_id;
+				delete submission.class_id;
+				return submission;
+			}));
+			return res.status(200).json(submissions);
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
+	async getDataScienceClasses(req, res) {
+		const { createdAt } = req.query;
+		try {
+			if (!moment(createdAt).isValid() || !createdAt) {
+				return res.status(400).json({ msg: 'createdAt inválido' })
+			}
+			let classes = await Class.findAll({
+				where: {
+					createdAt: {
+						[Op.gt]: new Date(createdAt)
+					}
+				},
+				order: [
+					['createdAt', 'DESC']
+				],
+				attributes: ['id', 'name', 'state', 'code', 'year', 'semester', 'createdAt'],
+				include: [{
+					model: User,
+					as: 'author',
+					attributes: ['id', 'name', 'email'],
+				}]
+			})
+			return res.status(200).json(classes);
+		}
+		catch (err) {
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
+	async getDataScienceQeustions(req, res) {
+		const { createdAt } = req.query;
+
+		try {
+			if (!moment(createdAt).isValid() || !createdAt) {
+				return res.status(400).json({ msg: 'createdAt inválido' })
+			}
 			let questions = await Question.findAll({
 				where: {
 					type: 'PROGRAMMING',
+				},
+				createdAt: {
+					[Op.gt]: new Date(createdAt)
 				},
 				attributes: ['id', 'title', 'difficulty'],
 				order: ['title'],

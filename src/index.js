@@ -1,10 +1,10 @@
-require('dotenv/config')
+require('dotenv/config');
 const fs = require('fs');
 const https = require('https');
 const http = require('http');
 const express = require('express');
-const bodyParser = require('body-parser')
-const cors = require('cors')
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const app = express();
 let server;
 
