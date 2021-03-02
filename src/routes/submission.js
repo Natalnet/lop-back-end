@@ -5,7 +5,8 @@ const SubmissionController = require('../app/controllers/submissionController')
 //midleware de auenticação
 router.use('/submission',AuthMiddleware.authentication)
 
-router.get('/submissions/page/:page',SubmissionController.index_paginate)
+router.get('/submission/page/:page',SubmissionController.index_paginate)
+router.get('/submission/count',SubmissionController.getCountsubmisssions)
 
 //cria uma submissão
 router.post('/submission/store',SubmissionController.saveSubmissionOfProgrammingQuestion)
