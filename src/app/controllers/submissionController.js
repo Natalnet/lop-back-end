@@ -149,6 +149,17 @@ class SubmissionController {
 		}
 	}
 
+	async getCountsubmisssions(req, res){
+		try{
+			const countSubmissions = await Submission.count();
+			return res.status(200).json({ countSubmissions})
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
 
 	async saveSubmissionOfProgrammingQuestion(req, res) {
 		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson } = req.body
@@ -430,5 +441,7 @@ class SubmissionController {
 			return res.status(500).json(err)
 		}
 	}
+
+	
 }
 module.exports = new SubmissionController()
