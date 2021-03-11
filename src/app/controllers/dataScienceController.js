@@ -430,47 +430,74 @@ class DataScienceController {
 	}
 
 	async getDataScienceSubmission(req, res) {
-		const { createdAt } = req.query;
+		const { createdAt, untilAt, class_id } = req.query;
 		try {
-			if (!moment(createdAt).isValid() || !createdAt) {
-				return res.status(400).json({ msg: 'createdAt inválido' })
+			if ((!moment(createdAt).isValid() || !createdAt) && (!moment(untilAt).isValid() || !untilAt)) {
+				return res.status(400).json({ msg: 'createdAt ou untilAt devem ser passados' })
 			}
-			let submissions = await Submission.findAll({
+			const query = {
 				where: {
-					class_id: {
-						[Op.not]: null,
-					},
 					createdAt: {
-						[Op.gt]: new Date(createdAt)
+
 					}
 				},
 				order: [
 					['createdAt', 'DESC']
 				],
 				attributes: ['environment', 'hitPercentage', 'language', 'char_change_number', 'timeConsuming', 'createdAt', 'listQuestions_id', 'test_id', 'question_id', 'class_id'],
-				include: [{
-					model: User,
-					as: 'user',
-					where: {
-						profile: "ALUNO",
+				include: [
+					{
+						model: User,
+						as: 'user',
+						where: {
+							profile: "ALUNO",
+						},
+						attributes: ['id', 'name', 'email'],
 					},
-					attributes: ['id', 'name', 'email'],
-				}, {
-					model: Question,
-					as: 'question',
-					attributes: ['title']
-				}, {
-					model: ListQuestions,
-					as: 'list',
-					attributes: ['title']
-				}, {
-					model: Test,
-					as: 'test',
-					attributes: ['title']
-				},
+					{
+						model: Question,
+						as: 'question',
+						attributes: ['title']
+					},
+					{
+						model: ListQuestions,
+						as: 'list',
+						attributes: ['title']
+					},
+					{
+						model: Test,
+						as: 'test',
+						attributes: ['title']
+					},
 				]
-			})
-			submissions = JSON.parse(JSON.stringify(submissions));
+			}
+
+			if (class_id) {
+				query.where = {
+					class_id,
+				}
+			}
+			else {
+				query.where = {
+					class_id: {
+						[Op.not]: null,
+					},
+				}
+			}
+
+			if (createdAt) {
+				query.where.createdAt = {
+					...query.where.createdAt,
+					[Op.gt]: new Date(createdAt)
+				}
+			}
+			if (untilAt) {
+				query.where.createdAt = {
+					...query.where.createdAt,
+					[Op.lte]: new Date(untilAt)
+				}
+			}
+			let submissions = await Submission.findAll(query)
 			submissions = await Promise.all(submissions.map(async submission => {
 				const classHasUser = await ClassHasUser.findOne({
 					where: {
@@ -491,10 +518,12 @@ class DataScienceController {
 				delete submission.class_id;
 				return submission;
 			}));
+
 			return res.status(200).json(submissions);
 		}
 		catch (err) {
 			console.log(err);
+			console.log('FALHA AO OBTER SUBMISSÕES')
 			return res.status(500).json(err)
 		}
 	}
@@ -543,7 +572,7 @@ class DataScienceController {
 				createdAt: {
 					[Op.gt]: new Date(createdAt)
 				},
-				attributes: ['id', 'title', 'difficulty'],
+				attributes: ['id', 'title', 'difficulty', 'createdAt'],
 				order: ['title'],
 
 				include: [{
