@@ -498,6 +498,7 @@ class DataScienceController {
 				}
 			}
 			let submissions = await Submission.findAll(query)
+			submissions = JSON.parse(JSON.stringify(submissions))
 			submissions = await Promise.all(submissions.map(async submission => {
 				const classHasUser = await ClassHasUser.findOne({
 					where: {
@@ -544,12 +545,51 @@ class DataScienceController {
 					['createdAt', 'DESC']
 				],
 				attributes: ['id', 'name', 'state', 'code', 'year', 'semester', 'createdAt'],
-				include: [{
-					model: User,
-					as: 'author',
-					attributes: ['id', 'name', 'email'],
-				}]
+				include: [
+					{
+						model: User,
+						as: 'author',
+						attributes: ['id', 'name', 'email'],
+					},
+					{
+						model: User,
+						as: 'users',
+						where: {
+							profile: 'PROFESSOR'
+						},
+						attributes: ['id', 'name', 'email'],
+					},
+				]
 			})
+			classes = JSON.parse(JSON.stringify(classes));
+			classes = await Promise.all(classes.map(async classRoom=>{
+				const studentsCount = await Class.count({
+					where: {
+						id: classRoom.id
+					},
+					include: [{
+						model: User,
+						as: 'users',
+						where: {
+							profile: 'ALUNO'
+						}
+					}]
+				})
+				
+				const classRoomResponse = {
+					...classRoom,
+					author_id: classRoom.author.id,
+					studentsCount,
+					teachersCount: classRoom.users.length
+				}
+				classRoomResponse.teachers = classRoomResponse.users;
+				classRoomResponse.teachers = classRoomResponse.teachers.map((teacher)=>
+					teacher.id
+				)
+				delete classRoomResponse.users;
+				delete classRoomResponse.author;
+				return classRoomResponse;
+			}))
 			return res.status(200).json(classes);
 		}
 		catch (err) {
