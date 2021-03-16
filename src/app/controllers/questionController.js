@@ -255,6 +255,18 @@ class QuestionController {
 		}
 	}
 
+	
+	async getCountQuestions(req, res){
+		try{
+			const countQuestions = await Question.count();
+			return res.status(200).json({ countQuestions})
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
 	async show(req, res) {
 		const { idList, idTest, idClass, idLesson, draft, difficulty } = req.query
 		const idQuestion = req.params.id

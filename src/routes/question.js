@@ -3,17 +3,18 @@ const AuthMiddleware = require('../app/middlewares/authMiddleware')
 const QuestionController = require('../app/controllers/questionController')
 const QuestionMiddleware = require('../app/middlewares/questionMiddleware')
 //Midllware de autenticação
-route.use('/question',AuthMiddleware.authentication)
+route.use('/question', AuthMiddleware.authentication)
 
 //--------------------------------obtem todas os exercícios--------------------------------
-route.get('/question',QuestionController.index);
+route.get('/question', QuestionController.index);
 /*
 -----------------------------------------------------------------------------------------------
 */
+route.get('/question/count', QuestionController.getCountQuestions)
 
 
 //----------------------------obtem todas os exercícios páginados-----------------------------
-route.get('/question/page/:page',QuestionController.index_paginate)
+route.get('/question/page/:page', QuestionController.index_paginate)
 /*
     recebe na query
     status -> estatus da questão, pode recerber os seguintes valores:
@@ -42,7 +43,7 @@ route.get('/question/page/:page',QuestionController.index_paginate)
 */
 
 //----------------------------obtem um exercício com o id enviado na rota-----------------------------
-route.get('/question/:id',QuestionMiddleware.show, QuestionController.show);
+route.get('/question/:id', QuestionMiddleware.show, QuestionController.show);
 /*
     recebe na query
     exclude -> campos do qual não queira que seja retornado (separados por espaço)
@@ -79,8 +80,8 @@ route.get('/question/:id',QuestionMiddleware.show, QuestionController.show);
 ----------------------------------------------------------------------------------------------------------
 */
 
-route.post('/question/store',QuestionMiddleware.store,QuestionController.store);
-route.put('/question/update/:id',QuestionMiddleware.update,QuestionController.update);
+route.post('/question/store', QuestionMiddleware.store, QuestionController.store);
+route.put('/question/update/:id', QuestionMiddleware.update, QuestionController.update);
 
 
 module.exports = (app) => app.use(route)
