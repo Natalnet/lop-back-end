@@ -154,6 +154,18 @@ class TestController{
 			return res.status(500).json(err)
 		}
 	}
+
+	async getCountTests(req, res){
+		try{
+			const countTests = await Test.count();
+			return res.status(200).json({ countTests})
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
 	async getUserSubmissionsByTest(req, res){
 		try{
 			const { id, idClass, idQuestion} = req.params;

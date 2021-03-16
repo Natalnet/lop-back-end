@@ -85,6 +85,18 @@ class ListQuestionsController{
 			return res.status(500).json(err)
 		}
 	}
+
+	async getCountLists(req, res){
+		try{
+			const countLists = await ListQuestions.count();
+			return res.status(200).json({ countLists})
+		}
+		catch(err){
+			console.log(err);
+			return res.status(500).json(err)
+		}
+	}
+
 	async show(req,res){
 		const idList = req.params.id;
 		const idClass = req.query.idClass;
