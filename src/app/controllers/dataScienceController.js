@@ -1,6 +1,6 @@
 
 const path = require('path')
-const { Op } = require('sequelize')
+const { Op, QueryTypes } = require('sequelize')
 const moment = require('moment');
 const sequelize = require('../../database/connection')
 const { Submission, Question, ClassHasListQuestion, ClassHasUser, ClassHasTest, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
@@ -164,6 +164,97 @@ class DataScienceController {
 				return userCopy;
 			}))
 			return res.status(200).json(users)
+		}
+		catch (err) {
+			console.log(err)
+			return res.status(500).json(err)
+		}
+	}
+	async getDataScienceListClassStudeants(req, res) {
+		const { idClass } = req.params;
+		try {
+			const classRoom = await Class.findByPk(idClass, {
+				attributes: ['id'],
+				include: [
+					{
+						model: ListQuestions,
+						as: 'lists',
+						attributes: ['id', 'title'],
+					},
+				]
+			})
+			const query = `
+			SELECT res.user_id, u.name, u.profile, res.listQuestions_id, count(*) as questionsCompletedSumissionsCount, s2.questionsCount from (SELECT s.user_id, s.listQuestions_id, s.question_id, s.createdAt, s.class_id FROM submission s
+				where s.user_id IN (SELECT user_id FROM classhasuser where class_id='${idClass}')
+				and s.class_id='${idClass}' 
+				and s.hitPercentage=100 group by s.user_id, s.question_id) res
+				INNER JOIN user u ON u.id=res.user_id
+				INNER JOIN (
+					SELECT list_id, count(*) as questionsCount FROM listhasquestion where list_id IN (
+						SELECT list_id FROM classhaslistquestion where class_id='${idClass}'
+					) group by list_id
+				) s2 ON s2.list_id=res.listQuestions_id
+				INNER JOIN classhaslistquestion chlq ON chlq.class_id=res.class_id AND chlq.list_id=res.listQuestions_id
+				where chlq.submissionDeadline IS NULL OR res.createdAt < chlq.submissionDeadline
+				group by user_id, listQuestions_id order by u.name, res.listQuestions_id;
+			`;
+			const records = await sequelize.query(query, {
+				type: QueryTypes.SELECT
+			});
+			let lists = {};
+			const classRoomLists = classRoom.lists.map(list => ({
+				id: list.id,
+				title: list.title,
+				// submissionDeadline: list.classHasListQuestion.submissionDeadline
+			}))
+			classRoomLists.forEach(list => {
+				lists[list.id] = list.title;
+			});
+
+			let userRecords = {};
+			const users = [];
+			records.forEach(record => {
+				if (userRecords[record.user_id] === undefined && record.profile === 'ALUNO') {
+					users.push({
+						id: record.user_id,
+						name: record.name,
+						lists: classRoomLists
+					});
+					userRecords[record.user_id] = true;
+				}
+			})
+			//adicionando listas à usuários
+			users.forEach(user => {
+				user.lists = JSON.parse(JSON.stringify(user.lists));
+				user.lists.forEach(list => {
+					const index = records.findIndex(record => (
+						record.user_id === user.id && record.listQuestions_id === list.id
+					));
+					let questionsCount = 0;
+					let questionsCompletedSumissionsCount = 0;
+					if (index !== -1 /*&& list.submissionDeadline*/) {
+						questionsCount = records[index].questionsCount;
+						questionsCompletedSumissionsCount = records[index].questionsCompletedSumissionsCount;
+					}
+					else {
+						questionsCount = 1;
+						questionsCompletedSumissionsCount = 0;
+					}
+					list.score = Number(((questionsCompletedSumissionsCount / questionsCount) * 100).toFixed(2));
+				});
+			})
+			//adicionando média
+			users.forEach((user, i) => {
+			    user.lists.push({
+			        id: `${i + user.id}`,
+			        title: 'Média',
+			        score: Number((user.lists.reduce((previousValue, currentIndex) => {
+			            return previousValue + currentIndex.score
+			        }, 0) / user.lists.length).toFixed(2)),
+			    })
+			});
+
+			return res.status(200).json(users);
 		}
 		catch (err) {
 			console.log(err)
@@ -562,7 +653,7 @@ class DataScienceController {
 				]
 			})
 			classes = JSON.parse(JSON.stringify(classes));
-			classes = await Promise.all(classes.map(async classRoom=>{
+			classes = await Promise.all(classes.map(async classRoom => {
 				const studentsCount = await Class.count({
 					where: {
 						id: classRoom.id
@@ -575,7 +666,7 @@ class DataScienceController {
 						}
 					}]
 				})
-				
+
 				const classRoomResponse = {
 					...classRoom,
 					author_id: classRoom.author.id,
@@ -583,7 +674,7 @@ class DataScienceController {
 					teachersCount: classRoom.users.length
 				}
 				classRoomResponse.teachers = classRoomResponse.users;
-				classRoomResponse.teachers = classRoomResponse.teachers.map((teacher)=>
+				classRoomResponse.teachers = classRoomResponse.teachers.map((teacher) =>
 					teacher.id
 				)
 				delete classRoomResponse.users;

@@ -22,15 +22,13 @@
     "moment": "^2.29.1",
     "mongoose": "^5.4.22",
     "moss-node-client": "^1.0.2",
-    "mysql2": "^1.7.0",
+    "mysql2": "^2.2.5",
     "nodemailer": "^6.1.0",
     "path": "^0.12.7",
-    "pg": "^7.12.1",
     "sequelize": "^5.19.1",
     "socket.io": "^3.0.4"
   },
   "devDependencies": {
-    "nodemon": "^2.0.2",
-    "sequelize-cli": "^5.5.1"
+    "nodemon": "^2.0.2"
   }
 }
