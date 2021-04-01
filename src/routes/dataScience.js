@@ -9,6 +9,7 @@ const {
     getDataScienceList,
     getDataScienceTest,
     getDataScienceListClass,
+    getDataScienceListClassStudeants,
     getDataScienceTestClass,
     getDataScienceQeustions,
     getDataScienceClasses
@@ -27,6 +28,7 @@ router.get('/dataScience/test', validate, getDataScienceTest);
 router.get('/dataScience/class', validate, getDataScienceClasses);
 router.get('/dataScience/question', validate, getDataScienceQeustions);
 router.get('/dataScience/class/:idClass/list', authentication, getDataScienceListClass);
+router.get('/dataScience/class/:idClass/list/dashboard', authentication, getDataScienceListClassStudeants);
 router.get('/dataScience/class/:idClass/test', authentication, getDataScienceTestClass);
 
 module.exports = app => app.use(router);
