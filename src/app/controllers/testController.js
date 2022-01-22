@@ -157,7 +157,7 @@ class TestController{
 
 	async getCountTests(req, res){
 		try{
-			const countTests = await Test.count();
+			const countTests = 0;
 			return res.status(200).json({ countTests})
 		}
 		catch(err){

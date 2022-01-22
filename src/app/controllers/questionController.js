@@ -258,7 +258,7 @@ class QuestionController {
 	
 	async getCountQuestions(req, res){
 		try{
-			const countQuestions = await Question.count();
+			const countQuestions = 0;
 			return res.status(200).json({ countQuestions})
 		}
 		catch(err){
