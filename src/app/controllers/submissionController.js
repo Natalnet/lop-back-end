@@ -223,7 +223,6 @@ class SubmissionController {
 				const submissionWhitUserAndQuestion = JSON.parse(JSON.stringify(sub))
 				submissionWhitUserAndQuestion.user = user
 				submissionWhitUserAndQuestion.question = question
-				req.io.sockets.in(idClass).emit('SubmissionClass', submissionWhitUserAndQuestion)
 			})
 			if (idTest) {
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({

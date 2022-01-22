@@ -33,7 +33,6 @@ class ClassHasListQuestionController{
 				list = JSON.parse(JSON.stringify(list))
 				list.questions = questions
 				list.classHasListQuestion = classHasListQuestionCopy
-				req.io.sockets.in(idClass).emit('addListToClass',list)
 
 			})
 			return res.status(200).json({msg:'ok'})
@@ -56,7 +55,6 @@ class ClassHasListQuestionController{
 
 			await classHasListQuestion.destroy({ force: true }).then(async ()=>{
 				const list = await ListQuestions.findByPk(idList)
-				req.io.sockets.in(idClass).emit('removeListFromClass',list)
 			})
 			
 			return res.status(200).json({msg:'ok'})

@@ -35,7 +35,6 @@ class ClassHasTestController{
 				test = JSON.parse(JSON.stringify(test))
 				test.questions = questions
 				test.classHasTest = classHasTestCopy
-				req.io.sockets.in(idClass).emit('addTestToClass',test)
 
 			})
 			return res.status(200).json({msg:'ok'})
@@ -60,7 +59,6 @@ class ClassHasTestController{
 			await classHasTest.update({
 				status,
 			})
-			req.io.sockets.in(idClass).emit('changeStatusTest',{status,idTest})
 			return res.status(200).json({msg:"ok"})
 		}
 		catch(err){
@@ -84,7 +82,6 @@ class ClassHasTestController{
 			await classHasTest.update({
 				correcao,
 			})
-			req.io.sockets.in(idClass).emit('changeCorrecaoTest',{correcao,idTest})
 			return res.status(200).json({msg:"ok"})
 		}
 		catch(err){
@@ -108,7 +105,6 @@ class ClassHasTestController{
 				password,
 				showAllTestCases: showAllTestCases || false			
 			})
-			//req.io.sockets.in(idClass).emit('changeStatusTest',{status,idTest})
 			return res.status(200).json({msg:"ok"})
 		}
 		catch(err){
@@ -135,7 +131,6 @@ class ClassHasTestController{
 				await test.update({
 					status:"FECHADA"
 				})
-				req.io.sockets.in(idClass).emit('removeTestFromClass',test)
 			})
 			
 			return res.status(200).json({msg:'ok'})

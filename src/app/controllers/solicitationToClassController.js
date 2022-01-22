@@ -40,7 +40,6 @@ class SolicitationToClassController{
 				})
 				user = JSON.parse(JSON.stringify(user))
 				user.enrollment = enrollment
-				req.io.sockets.in(idClass).emit('soliciteClass',user)
 			})
 			return res.status(200).json({
 				user_id:req.userId,
@@ -65,8 +64,6 @@ class SolicitationToClassController{
 				}
 			})
 			//console.log(req.userEmail)
-			if(emailUser) req.io.sockets.in(emailUser).emit('RejectSolicitation',idClass)
-			else req.io.sockets.in(idClass).emit('cancelSolicitClass',idUser)
 			return res.status(200).json({msg:'ok'})
 		}
 		catch(err){
@@ -87,10 +84,6 @@ class SolicitationToClassController{
 				})
 			}))
 
-			users.forEach(user => {
-				req.io.sockets.in(user.email).emit('RejectSolicitation',idClass);
-			});
-			
 			return res.status(200).json({msg:'ok'});
 		}
 		catch(err){

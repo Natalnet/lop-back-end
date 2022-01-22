@@ -149,11 +149,6 @@ class PlagiarismController {
                         }
                         //console.log('url-> ',url);
 
-                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                        //     moss_url: plagiarism.moss_url,
-                        //     createdAt: plagiarism.createdAt,
-                        //     err: false
-                        // })
                     })
                     .catch(err => {
                         console.log('catch');
@@ -166,10 +161,7 @@ class PlagiarismController {
                                 existsSync(filePath) && unlinkSync(filePath);
                             }
                             rmdirSync(classPath, { recursive: true });
-                        }                        // req.io.sockets.in(`${idList}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                        //     url: null,
-                        //     err: true
-                        // })
+                        }
                     })
                 setTimeout(() => {
                     //console.log('deleted-->>');
@@ -361,12 +353,6 @@ class PlagiarismController {
                                 rmdirSync(classPath, { recursive: true });
                             }
                             //console.log('url-> ',url);
-
-                            // req.io.sockets.in(`${idTest}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                            //     moss_url: plagiarism.moss_url,
-                            //     createdAt: plagiarism.createdAt,
-                            //     err: false
-                            // })
                         })
                         .catch(err => {
                             console.log('catch');
@@ -379,10 +365,7 @@ class PlagiarismController {
                                     existsSync(filePath) && unlinkSync(filePath);
                                 }
                                 rmdirSync(classPath, { recursive: true });
-                            }                        // req.io.sockets.in(`${idTest}-${idClass}-${idQuestion}`).emit('urlPlagiarism',{
-                            //     url: null,
-                            //     err: true
-                            // })
+                            }
                         })
                     setTimeout(() => {
                         //console.log('deleted-->>');

@@ -12,7 +12,6 @@ class ClassHasUserController{
 				class_id: idClass,
 				enrollment
 			})
-			req.io.sockets.in(userEmail).emit('AcceptSolicitation',idClass)
 			return res.status(200).json(classHasUser)
 		}
         catch(err){
@@ -31,10 +30,6 @@ class ClassHasUserController{
 					enrollment: user.enrollment
 				})			
 			}));
-
-			users.forEach(user => {
-				req.io.sockets.in(user.email).emit('AcceptSolicitation',idClass);
-			});
 
 			return res.status(200).json(classHasUsers);
 		}
