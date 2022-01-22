@@ -88,7 +88,7 @@ class ListQuestionsController{
 
 	async getCountLists(req, res){
 		try{
-			const countLists = 0;
+			const countLists = await ListQuestions.count();
 			return res.status(200).json({ countLists})
 		}
 		catch(err){

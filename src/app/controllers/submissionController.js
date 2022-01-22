@@ -151,7 +151,7 @@ class SubmissionController {
 
 	async getCountsubmisssions(req, res){
 		try{
-			const countSubmissions = await 0;
+			const countSubmissions = await Submission.count();
 			return res.status(200).json({ countSubmissions})
 		}
 		catch(err){
