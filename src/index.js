@@ -26,13 +26,6 @@ else{
     server = require('https').createServer(credentials, app)
 }
 
-const io = require('socket.io')(server,{
-    cors:{
-        origin: process.env.URL_FRONTEND || "http://localhost:3000",
-    }
-})
-
-app.use(require('./sockets')(io))
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 
