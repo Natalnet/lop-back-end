@@ -197,19 +197,8 @@ class QuestionController {
 			questions = questions.slice((page - 1) * limitDocsPerPage, (page - 1) * limitDocsPerPage + limitDocsPerPage)
 
 			questions = await Promise.all(questions.map(async question => {
-				const submissionsCount = await Submission.count({
-					where: {
-						question_id: question.id
-					},
-
-				})
-				const submissionsCorrectsCount = await Submission.count({
-					where: {
-						question_id: question.id,
-						hitPercentage: 100
-					},
-
-				})
+				const submissionsCount = 1
+				const submissionsCorrectsCount = 1
 				const mySubmissionsCount = await Submission.count({
 					where: {
 						user_id: req.userId,
