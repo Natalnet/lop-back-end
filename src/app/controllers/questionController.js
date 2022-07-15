@@ -199,19 +199,8 @@ class QuestionController {
 			questions = await Promise.all(questions.map(async question => {
 				const submissionsCount = 1
 				const submissionsCorrectsCount = 1
-				const mySubmissionsCount = await Submission.count({
-					where: {
-						user_id: req.userId,
-						question_id: question.id,
-					},
-				})
-				const mySubmissionsCorrectCount = await Submission.count({
-					where: {
-						user_id: req.userId,
-						question_id: question.id,
-						hitPercentage: 100
-					},
-				})
+				const mySubmissionsCount = 1
+				const mySubmissionsCorrectCount = 1
 
 				const accessCount = await Access.count({
 					where: {
