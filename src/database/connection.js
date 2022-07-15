@@ -6,7 +6,11 @@ const DB_PASSWORD = process.env.DB_PASSWORD;
 const sequelize = new Sequelize(DB, DB_USER, DB_PASSWORD, {
   host: 'localhost',
   dialect: 'mysql',
-  logging: false
+  logging: false,
+  pool: {
+    acquire: 600000,
+    idle: 600000,
+  }
 })
 
 
