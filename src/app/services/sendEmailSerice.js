@@ -16,7 +16,7 @@ module.exports = async (action,key,email)=>{
     }
     console.log(process.env.PORT_MAILER,process.env.USER_MAILER,process.env.PASS_MAILER);
     const transport = nodemailer.createTransport({
-        service: 'Outlook365',
+        service: 'gmail',
         port: process.env.PORT_MAILER,
         secure: true,
         auth: {
