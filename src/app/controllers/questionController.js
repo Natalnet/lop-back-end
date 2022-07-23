@@ -310,28 +310,12 @@ class QuestionController {
 				
 			})
 		
-			const submissionsCountPromise = Submission.count({
-				where: {
-					question_id: idQuestion
-				},
-
-			})
-			const submissionsCorrectsCountPromise = Submission.count({
-				where: {
-					question_id: idQuestion,
-					hitPercentage: 100
-				},
-			})
-			
-
-			let [question, questionDraft, userDifficulty, lastSubmission, accessCount, submissionsCount, submissionsCorrectsCount] = await Promise.all([
+			let [question, questionDraft, userDifficulty, lastSubmission, accessCount] = await Promise.all([
 				questionPromise,
 				questionDraftPromise,
 				userDifficultyPromise,
 				lastSubmissionPromise,
 				accessCountPromise,
-				submissionsCountPromise,
-				submissionsCorrectsCountPromise,
 
 			])
 			question = JSON.parse(JSON.stringify(question));
@@ -347,8 +331,6 @@ class QuestionController {
 			question.questionDraft = questionDraft
 			question.lastSubmission = lastSubmission
 			question.accessCount = accessCount
-			question.submissionsCount = submissionsCount
-			question.submissionsCorrectsCount = submissionsCorrectsCount
 			return res.status(200).json(question)
 		}
 		catch (err) {
