@@ -6,7 +6,7 @@ const {
   Question,
   Class,
   Submission,
-  User,
+  SubmissionStats,
   ClassHasListQuestion,
 } = sequelize.import(resolve(__dirname, "..", "models"));
 
@@ -127,7 +127,7 @@ class ListQuestionsService {
         class_id: idClass,
       },
     };
-    const submissions = await Submission.findAll(submissionsQuery);
+    const submissions = await SubmissionStats.findAll(submissionsQuery);
 
     lists = lists.map((list) => {
       let { createdAt, submissionDeadline } =

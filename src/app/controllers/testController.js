@@ -4,7 +4,7 @@ const {Op} = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const {Test,Question,Class,Submission,User,ClassHasTest} = sequelize.import(path.resolve(__dirname,'..','models'))
+const {Test,Question,Class,Submission,SubmissionStats,User,ClassHasTest} = sequelize.import(path.resolve(__dirname,'..','models'))
 
 class TestController{
 	async index(req,res){
@@ -40,9 +40,9 @@ class TestController{
 							class_id    : idClass
 						}
 					}
-					const submissionsCount = await Submission.count(query)
+					const submissionsCount = await SubmissionStats.count(query)
 					query.where.hitPercentage = 100
-					const completedSumissionsCount = await Submission.count(query)
+					const completedSumissionsCount = await SubmissionStats.count(query)
 					const questionCopy = JSON.parse(JSON.stringify(question))
 					delete questionCopy.testHasQuestion
 					delete questionCopy.id

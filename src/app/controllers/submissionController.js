@@ -3,7 +3,7 @@ const path = require('path')
 const { Op } = require('sequelize')
 
 const sequelize = require('../../database/connection')
-const { Submission, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, ClassHasTest } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Submission, SubmissionStats, FeedBackTest, User, Question, ListQuestions, ClassHasListQuestion, Test, ClassHasTest } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class SubmissionController {
 	async index_paginate(req, res) {
@@ -176,7 +176,7 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
-			const lastSubmission = await Submission.findOne({
+			const submissionQuery = {
 				where: {
 					user_id: req.userId,
 					question_id: idQuestion,
@@ -189,9 +189,15 @@ class SubmissionController {
 				order: [
 					['createdAt', 'DESC']
 				],
-			})
+			}
+			const lastSubmissionPromise = Submission.findOne(submissionQuery)
+			const lastSubmissionStatusPromise = SubmissionStats.findOne(submissionQuery)
+			const [lastSubmission, lastSubmissionStatus] = await Promise.all([lastSubmissionPromise, lastSubmissionStatusPromise])
+
 			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const submission = await Submission.create({
+			const totalTimeConsumingSubmissionStats = lastSubmissionStatus ? lastSubmissionStatus.timeConsuming + timeConsuming : timeConsuming;
+			
+			const submissionCreateParams = {
 				user_id: req.userId,
 				question_id: idQuestion,
 				class_id: idClass || null,
@@ -206,24 +212,16 @@ class SubmissionController {
 				ip,
 				char_change_number,
 				createdAt: new Date()
-			}).then(async sub => {
-				const userPromise = User.findOne({
-					where: {
-						id: sub.user_id,
-					},
-					attributes: ['name']
-				})
-				const QuestionPromise = Question.findOne({
-					where: {
-						id: sub.question_id,
-					},
-					attributes: ['title', 'description']
-				})
-				const [user, question] = await Promise.all([userPromise, QuestionPromise])
-				const submissionWhitUserAndQuestion = JSON.parse(JSON.stringify(sub))
-				submissionWhitUserAndQuestion.user = user
-				submissionWhitUserAndQuestion.question = question
-			})
+			}
+			const submissionStatsCreateParams = {
+				...submissionCreateParams,
+				timeConsuming: totalTimeConsumingSubmissionStats
+			}
+			await Promise.all([
+				Submission.create(submissionCreateParams), 
+				SubmissionStats.create(submissionStatsCreateParams)
+			])
+
 			if (idTest) {
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
 					where: {
@@ -246,7 +244,7 @@ class SubmissionController {
 					})
 				}
 			}
-			return res.status(200).json(submission)
+			return res.status(200).json({ msg: "Submissão salva com sucesso!" })
 		}
 		catch (err) {
 			console.log(err);
