@@ -1,6 +1,6 @@
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { FeedBackTest, User, Class, Test, Submission, Question } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { FeedBackTest, User, Class, Test, SubmissionStats, Question } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class FeedBackTestController {
     async index_paginate(req, res) {
@@ -60,7 +60,7 @@ class FeedBackTestController {
             users.rows = await Promise.all(users.rows.map(async user => {
                 const infoSubmissionsAndFeedBacks = await Promise.all(test.questions.map(async question => {
                     //pega a última submissão na prova
-                    const submission = await Submission.findOne({
+                    const submission = await SubmissionStats.findOne({
                         where: {
                             user_id: user.id,
                             question_id: question.id,
@@ -155,7 +155,7 @@ class FeedBackTestController {
             const [test, user] = await Promise.all([testPromise, userPromise])
 
             const questions = await Promise.all(test.questions.map(async question => {
-                const submission = await Submission.findOne({
+                const submission = await SubmissionStats.findOne({
                     where: {
                         class_id: idClass,
                         test_id: idTest,

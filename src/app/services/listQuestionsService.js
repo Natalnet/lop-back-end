@@ -5,7 +5,6 @@ const {
   ListQuestions,
   Question,
   Class,
-  Submission,
   SubmissionStats,
   ClassHasListQuestion,
 } = sequelize.import(resolve(__dirname, "..", "models"));
@@ -59,15 +58,16 @@ class ListQuestionsService {
               class_id: idClass,
             },
           };
-          const submissionsCount = await Submission.count(query);
+          const submissionsCount = await SubmissionStats.count(query);
           query.where.hitPercentage = 100;
-          const correctSumissionsCount = await Submission.count(query);
+          const correctSumissionsCount = await SubmissionStats.count(query);
+      
           if (submissionDeadline) {
             query.where.createdAt = {
               [Op.lte]: submissionDeadline,
             };
           }
-          const completedSumissionsCount = await Submission.count(query);
+          const completedSumissionsCount = await SubmissionStats.count(query);
 
           const questionCopy = JSON.parse(JSON.stringify(question));
           delete questionCopy.listHasQuestion;

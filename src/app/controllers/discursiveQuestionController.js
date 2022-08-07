@@ -2,7 +2,7 @@ const crypto = require('crypto');
 const { Op, fn } = require('sequelize')
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { Question, Tag, User, Submission, Access  } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { Question, Tag, User, SubmissionStats, Access  } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DiscursiveQuestionController {
 	async getInfoDiscursiveQuestion(req, res) {
@@ -175,26 +175,26 @@ class DiscursiveQuestionController {
 			discursiveQuestion = discursiveQuestion.slice((page - 1) * limitDocsPerPage, (page - 1) * limitDocsPerPage + limitDocsPerPage)
 
 			discursiveQuestion = await Promise.all(discursiveQuestion.map(async question => {
-				const submissionsCount = await Submission.count({
+				const submissionsCount = await SubmissionStats.count({
 					where: {
 						question_id: question.id
 					},
 
 				})
-				const submissionsCorrectsCount = await Submission.count({
+				const submissionsCorrectsCount = await SubmissionStats.count({
 					where: {
 						question_id: question.id,
 						hitPercentage: 100
 					},
 
 				})
-				const mySubmissionsCount = await Submission.count({
+				const mySubmissionsCount = await SubmissionStats.count({
 					where: {
 						user_id: req.userId,
 						question_id: question.id,
 					},
 				})
-				const mySubmissionsCorrectCount = await Submission.count({
+				const mySubmissionsCorrectCount = await SubmissionStats.count({
 					where: {
 						user_id: req.userId,
 						question_id: question.id,

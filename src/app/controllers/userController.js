@@ -4,7 +4,7 @@ const path = require('path')
 const bcrypt = require('bcryptjs');
 
 const sequelize = require('../../database/connection')
-const { User, Class, ClassHasListQuestion, Submission } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { User, Class, ClassHasListQuestion,SubmissionStats } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class UserController {
 	// Get a paginated list of all Users
@@ -326,10 +326,10 @@ class UserController {
 						[Op.lte]: submissionDeadline
 					}
 				}
-				let lastSubmission = await Submission.findOne(query);
+				let lastSubmission = await SubmissionStats.findOne(query);
 				if (!lastSubmission) {
 					delete query.where.hitPercentage;
-					lastSubmission = await Submission.findOne(query);
+					lastSubmission = await SubmissionStats.findOne(query);
 				}
 
 				const userCopy = JSON.parse(JSON.stringify(user));

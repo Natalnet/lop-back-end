@@ -52,7 +52,7 @@ class SubmissionController {
 			//console.log("query: ",query)
 			// console.log('aqui 1')
 
-			submissions.count = await Submission.count(query)
+			submissions.count = await SubmissionStats.count(query)
 			// console.log('count submissions: ',submissions.count)
 			// console.log('aqui 2')
 
@@ -62,7 +62,7 @@ class SubmissionController {
 			query.limit = limitDocsPerPage
 			query.offset = (page - 1) * limitDocsPerPage
 
-			const submissionsPromise = Submission.findAll(query)
+			const submissionsPromise = SubmissionStats.findAll(query)
 			let userPromise = ""
 			let listPromise = ""
 			let testPromise = ""
@@ -151,7 +151,7 @@ class SubmissionController {
 
 	async getCountsubmisssions(req, res){
 		try{
-			const countSubmissions = await Submission.count();
+			const countSubmissions = await SubmissionStats.count();
 			return res.status(200).json({ countSubmissions})
 		}
 		catch(err){
@@ -191,11 +191,11 @@ class SubmissionController {
 				],
 			}
 			const lastSubmissionPromise = Submission.findOne(submissionQuery)
-			const lastSubmissionStatusPromise = SubmissionStats.findOne(submissionQuery)
-			const [lastSubmission, lastSubmissionStatus] = await Promise.all([lastSubmissionPromise, lastSubmissionStatusPromise])
+			const lastSubmissionStatsPromise = SubmissionStats.findOne(submissionQuery)
+			const [lastSubmission, lastSubmissionStats] = await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
 
 			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const totalTimeConsumingSubmissionStats = lastSubmissionStatus ? lastSubmissionStatus.timeConsuming + timeConsuming : timeConsuming;
+			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
 			
 			const submissionCreateParams = {
 				user_id: req.userId,
@@ -266,8 +266,7 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
-
-			const lastSubmission = await Submission.findOne({
+			const submissionQuery = {
 				where: {
 					user_id: req.userId,
 					question_id: idQuestion,
@@ -280,8 +279,15 @@ class SubmissionController {
 				order: [
 					['createdAt', 'DESC']
 				],
-			})
+			}
+			const lastSubmissionPromise = Submission.findOne(submissionQuery)
+			const lastSubmissionStatsPromise = SubmissionStats.findOne(submissionQuery)
+			const [lastSubmission, lastSubmissionStats] = await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
+
 			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
+			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
+
+			
 			const question = await Question.findByPk(idQuestion, {
 				attributes: ['id', 'alternatives']
 			})
@@ -290,7 +296,7 @@ class SubmissionController {
 				alternative.isCorrect && alternative.code === answer
 			))
 			const hitPercentage = index !== -1 ? 100 : 0;
-			const submission = await Submission.create({
+			const submissionCreateParams = {
 				user_id: req.userId,
 				question_id: idQuestion,
 				class_id: idClass || null,
@@ -305,7 +311,15 @@ class SubmissionController {
 				ip,
 				char_change_number: 0,
 				createdAt: new Date()
-			})
+			}
+			const submissionStatsCreateParams = {
+				...submissionCreateParams,
+				timeConsuming: totalTimeConsumingSubmissionStats
+			}
+			await Promise.all([
+				Submission.create(submissionCreateParams), 
+				SubmissionStats.create(submissionStatsCreateParams)
+			])
 			if (idTest) {
 
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
@@ -329,7 +343,7 @@ class SubmissionController {
 					})
 				}
 			}
-			return res.status(200).json(submission)
+			return res.status(200).json({ msg: "Submissão salva com sucesso!" })
 		}
 		catch (err) {
 			console.log(err);
@@ -352,7 +366,7 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
-			const lastSubmission = await Submission.findOne({
+			const submissionsQuery = {
 				where: {
 					user_id: req.userId,
 					question_id: idQuestion,
@@ -365,9 +379,13 @@ class SubmissionController {
 				order: [
 					['createdAt', 'DESC']
 				],
-			})
+			}
+			const lastSubmissionPromise =  Submission.findOne(submissionsQuery)
+			const lastSubmissionStatsPromise =  SubmissionStats.findOne(submissionsQuery)
+			const [lastSubmission, lastSubmissionStats] =  await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
 			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const submission = await Submission.create({
+			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
+			const submissionCreateParams = {
 				user_id: req.userId,
 				question_id: idQuestion,
 				class_id: idClass || null,
@@ -381,9 +399,16 @@ class SubmissionController {
 				ip,
 				char_change_number,
 				createdAt: new Date()
-			})
-
-			return res.status(200).json(submission)
+			}
+			const submissionStatsCreateParams = {
+				...submissionCreateParams,
+				timeConsuming: totalTimeConsumingSubmissionStats
+			}
+			await Promise.all([
+				Submission.create(submissionCreateParams), 
+				SubmissionStats.create(submissionStatsCreateParams)
+			])
+			return res.status(200).json({ msg: "Submissão salva com sucesso!" })
 		}
 		catch (err) {
 			console.log(err);
@@ -396,7 +421,7 @@ class SubmissionController {
 			if (req.userProfile !== 'PROFESSOR') {
 				return res.status(401).json({ msg: "Sem permissão" })
 			}
-			const submission = await Submission.findOne({
+			const submissionQuery = {
 				where: {
 					user_id: idUser,
 					question_id: idQuestion,
@@ -405,10 +430,15 @@ class SubmissionController {
 					test_id: idTest || null,
 					lesson_id: idLesson || null,
 				}
-			});
-			await submission.update({
-				hitPercentage,
-			});
+			}
+			const submissionPromise = Submission.findOne(submissionQuery);
+			const submissionStatsPromise = SubmissionStats.findOne(submissionQuery)
+			const [submission, submissionStats] = await Promise.all([submissionPromise, submissionStatsPromise])
+			await Promise.all([
+				submission.update({ hitPercentage }), 
+				submissionStats.update({ hitPercentage })
+			])
+			
 			if (idTest) {
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
 					where: {

@@ -3,7 +3,7 @@ const { mkdirSync, existsSync, rmdirSync, writeFileSync, unlinkSync } = require(
 const { resolve, join } = require('path');
 const { Op } = require('sequelize')
 const sequelize = require('../../database/connection');
-const { ListQuestions, Test, Question, Class, Submission, ClassHasListQuestion, ClassHasTest,Plagiarism } = sequelize.import(resolve(__dirname, '..', 'models'))
+const { ListQuestions, Test, Question, Class, SubmissionStats, ClassHasListQuestion, ClassHasTest,Plagiarism } = sequelize.import(resolve(__dirname, '..', 'models'))
 
 class PlagiarismController {
     async createUrlListPlagiarism(req, res) {
@@ -75,10 +75,10 @@ class PlagiarismController {
                     [Op.lte]: submissionDeadline
                 }
             }
-            let lastSubmission = await Submission.findOne(query);
+            let lastSubmission = await SubmissionStats.findOne(query);
             if (!lastSubmission) {
                 delete query.where.hitPercentage;
-                lastSubmission = await Submission.findOne(query);
+                lastSubmission = await SubmissionStats.findOne(query);
             }
 
             const userCopy = JSON.parse(JSON.stringify(user));
@@ -282,10 +282,10 @@ class PlagiarismController {
                     ],
                 }
 
-                let lastSubmission = await Submission.findOne(query);
+                let lastSubmission = await SubmissionStats.findOne(query);
                 if (!lastSubmission) {
                     delete query.where.hitPercentage;
-                    lastSubmission = await Submission.findOne(query);
+                    lastSubmission = await SubmissionStats.findOne(query);
                 }
 
                 const userCopy = JSON.parse(JSON.stringify(user));

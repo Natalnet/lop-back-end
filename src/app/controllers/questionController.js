@@ -3,7 +3,7 @@ const { Op, fn } = require('sequelize')
 
 const path = require('path')
 const sequelize = require('../../database/connection')
-const { User, Question, Difficulty, Tag, Draft,Test, Submission, Access, ListQuestions, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { User, Question, Difficulty, Tag, Draft, Test, SubmissionStats, Access, ListQuestions, Lesson } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class QuestionController {
 
@@ -84,13 +84,13 @@ class QuestionController {
 				[lesson, questions] = await Promise.all([lessonPromise, questionsPromise])
 			}
 			questions = await Promise.all(questions.map(async question => {
-				const submissionsCount = await Submission.count({
+				const submissionsCount = await SubmissionStats.count({
 					where: {
 						question_id: question.id
 					},
 
 				})
-				const submissionsCorrectsCount = await Submission.count({
+				const submissionsCorrectsCount = await SubmissionStats.count({
 					where: {
 						question_id: question.id,
 						hitPercentage: 100
@@ -179,8 +179,9 @@ class QuestionController {
 					},
 				}
 			}
-
+			console.log(query)
 			let questions = await Question.findAll(query);
+			console.log('passou')
 			//let {count,rows} = await Question.findAndCountAll(query)
 			//let count = await Question.count(query)
 			const count = questions.length;
@@ -288,7 +289,7 @@ class QuestionController {
 				})
 			}
 
-			const lastSubmissionPromise = Submission.findOne({
+			const lastSubmissionPromise = SubmissionStats.findOne({
 				where: {
 					user_id: req.userId,
 					question_id: idQuestion,

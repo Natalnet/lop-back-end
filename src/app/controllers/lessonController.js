@@ -1,7 +1,7 @@
 const path = require('path');
 const sequelize = require('../../database/connection');
 
-const { Course, Question, Lesson, Submission } = sequelize.import(path.resolve(__dirname, '..', 'models'));
+const { Course, Question, Lesson, SubmissionStats } = sequelize.import(path.resolve(__dirname, '..', 'models'));
 
 class LessonController {
 
@@ -68,9 +68,9 @@ class LessonController {
                         class_id: idClass || null,
                     }
                 }
-                const submissionsCount = await Submission.count(query)
+                const submissionsCount = await SubmissionStats.count(query)
                 query.where.hitPercentage = 100
-                const completedSumissionsCount = await Submission.count(query)
+                const completedSumissionsCount = await SubmissionStats.count(query)
                 delete question.lessonHasQuestion;
                 question.completedSumissionsCount = completedSumissionsCount
                 question.submissionsCount = submissionsCount
