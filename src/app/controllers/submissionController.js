@@ -160,6 +160,12 @@ class SubmissionController {
 		}
 	}
 
+	async createSubmission(
+		{ hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson }
+	){
+
+	}
+
 
 	async saveSubmissionOfProgrammingQuestion(req, res) {
 		const { hitPercentage, language, answer, timeConsuming, ip, environment, char_change_number, idQuestion, idList, idTest, idClass, idLesson } = req.body
@@ -176,51 +182,54 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
-			const submissionQuery = {
-				where: {
-					user_id: req.userId,
-					question_id: idQuestion,
-					class_id: idClass || null,
-					listQuestions_id: idList || null,
-					test_id: idTest || null,
-					lesson_id: idLesson || null,
-				},
-				attributes: ['id', 'timeConsuming', 'createdAt'],
-				order: [
-					['createdAt', 'DESC']
-				],
-			}
-			const lastSubmissionPromise = Submission.findOne(submissionQuery)
-			const lastSubmissionStatsPromise = SubmissionStats.findOne(submissionQuery)
-			const [lastSubmission, lastSubmissionStats] = await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
-
-			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
-			
-			const submissionCreateParams = {
+			const submissionWhere = {
 				user_id: req.userId,
 				question_id: idQuestion,
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
 				lesson_id: idLesson || null,
+			}
+			const submissionQuery = {
+				where: submissionWhere,
+				attributes: ['id', 'timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+			}
+			const lastSubmission = await Submission.findOne(submissionQuery)
+	
+			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
+			
+			const submissionParams = {
 				hitPercentage,
 				environment,
-				timeConsuming: totalTimeConsuming,
 				language,
 				answer,
 				ip,
 				char_change_number,
+			}
+			const submissionCreateParams = {
+				...submissionWhere,
+				...submissionParams,
+				timeConsuming: totalTimeConsuming,
 				createdAt: new Date()
 			}
-			const submissionStatsCreateParams = {
-				...submissionCreateParams,
-				timeConsuming: totalTimeConsumingSubmissionStats
+
+			await Submission.create(submissionCreateParams)
+
+			const [lastSubmissioStats, isSubmissionStatsCreated] = await SubmissionStats.findOrCreate({
+				where: submissionWhere,
+				defaults: submissionCreateParams
+			})
+
+			
+			if(!isSubmissionStatsCreated){
+				await lastSubmissioStats.update({
+					...submissionParams,
+					timeConsuming: lastSubmissioStats.timeConsuming + timeConsuming,
+				})
 			}
-			await Promise.all([
-				Submission.create(submissionCreateParams), 
-				SubmissionStats.create(submissionStatsCreateParams)
-			])
 
 			if (idTest) {
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
@@ -266,26 +275,26 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
+			const submissionWhere = {
+				user_id: req.userId,
+				question_id: idQuestion,
+				class_id: idClass || null,
+				listQuestions_id: idList || null,
+				test_id: idTest || null,
+				lesson_id: idLesson || null,
+			}
 			const submissionQuery = {
-				where: {
-					user_id: req.userId,
-					question_id: idQuestion,
-					class_id: idClass || null,
-					listQuestions_id: idList || null,
-					test_id: idTest || null,
-					lesson_id: idLesson || null,
-				},
+				where: submissionWhere,
 				attributes: ['id', 'timeConsuming', 'createdAt'],
 				order: [
 					['createdAt', 'DESC']
 				],
 			}
-			const lastSubmissionPromise = Submission.findOne(submissionQuery)
-			const lastSubmissionStatsPromise = SubmissionStats.findOne(submissionQuery)
-			const [lastSubmission, lastSubmissionStats] = await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
+			const lastSubmission = await Submission.findOne(submissionQuery)
+			// const lastSubmissionStatsPromise = SubmissionStats.findOne(submissionQuery)
 
 			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
+			// const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
 
 			
 			const question = await Question.findByPk(idQuestion, {
@@ -296,30 +305,35 @@ class SubmissionController {
 				alternative.isCorrect && alternative.code === answer
 			))
 			const hitPercentage = index !== -1 ? 100 : 0;
-			const submissionCreateParams = {
-				user_id: req.userId,
-				question_id: idQuestion,
-				class_id: idClass || null,
-				listQuestions_id: idList || null,
-				test_id: idTest || null,
-				lesson_id: idLesson || null,
-				type: 'OBJECTIVE',
-				answer,
+
+			const submissionParams = {
 				hitPercentage,
 				environment,
-				timeConsuming: totalTimeConsuming,
+				answer,
 				ip,
-				char_change_number: 0,
+			}
+			const submissionCreateParams = {
+				...submissionWhere,
+				...submissionParams,
+				type: 'OBJECTIVE',
+				timeConsuming: totalTimeConsuming,
 				createdAt: new Date()
 			}
-			const submissionStatsCreateParams = {
-				...submissionCreateParams,
-				timeConsuming: totalTimeConsumingSubmissionStats
+
+			await Submission.create(submissionCreateParams)
+
+			const [lastSubmissioStats, isSubmissionStatsCreated] = await SubmissionStats.findOrCreate({
+				where: submissionWhere,
+				defaults: submissionCreateParams
+			})
+
+			
+			if(!isSubmissionStatsCreated){
+				await lastSubmissioStats.update({
+					...submissionParams,
+					timeConsuming: lastSubmissioStats.timeConsuming + timeConsuming,
+				})
 			}
-			await Promise.all([
-				Submission.create(submissionCreateParams), 
-				SubmissionStats.create(submissionStatsCreateParams)
-			])
 			if (idTest) {
 
 				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
@@ -366,48 +380,71 @@ class SubmissionController {
 					return res.status(400).json({ msg: "O professor recolheu a prova! :'(" })
 				}
 			}
-			const submissionsQuery = {
-				where: {
-					user_id: req.userId,
-					question_id: idQuestion,
-					class_id: idClass || null,
-					listQuestions_id: idList || null,
-					test_id: idTest || null,
-					lesson_id: idLesson || null,
-				},
-				attributes: ['id', 'timeConsuming', 'createdAt'],
-				order: [
-					['createdAt', 'DESC']
-				],
-			}
-			const lastSubmissionPromise =  Submission.findOne(submissionsQuery)
-			const lastSubmissionStatsPromise =  SubmissionStats.findOne(submissionsQuery)
-			const [lastSubmission, lastSubmissionStats] =  await Promise.all([lastSubmissionPromise, lastSubmissionStatsPromise])
-			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
-			const totalTimeConsumingSubmissionStats = lastSubmissionStats ? lastSubmissionStats.timeConsuming + timeConsuming : timeConsuming;
-			const submissionCreateParams = {
+			const submissionWhere = {
 				user_id: req.userId,
 				question_id: idQuestion,
 				class_id: idClass || null,
 				listQuestions_id: idList || null,
 				test_id: idTest || null,
 				lesson_id: idLesson || null,
-				type: 'DISCURSIVE',
+			}
+			const submissionsQuery = {
+				where: submissionWhere,
+				attributes: ['id', 'timeConsuming', 'createdAt'],
+				order: [
+					['createdAt', 'DESC']
+				],
+			}
+			const lastSubmission =  await Submission.findOne(submissionsQuery)
+			const totalTimeConsuming = lastSubmission ? lastSubmission.timeConsuming + timeConsuming : timeConsuming;
+			const submissionParams = {
 				answer,
 				environment,
 				timeConsuming: totalTimeConsuming,
 				ip,
 				char_change_number,
+			}
+			const submissionCreateParams = {
+				...submissionWhere,
+				...submissionParams,
+				type: 'DISCURSIVE',
 				createdAt: new Date()
 			}
-			const submissionStatsCreateParams = {
-				...submissionCreateParams,
-				timeConsuming: totalTimeConsumingSubmissionStats
+	
+			await Submission.create(submissionCreateParams)
+			const [lastSubmissioStats, isSubmissionStatsCreated] = await SubmissionStats.findOrCreate({
+				where: submissionWhere,
+				defaults: submissionCreateParams
+			})
+			if(!isSubmissionStatsCreated){
+				await lastSubmissioStats.update({
+					...submissionParams,
+					timeConsuming: lastSubmissioStats.timeConsuming + timeConsuming,
+				})
 			}
-			await Promise.all([
-				Submission.create(submissionCreateParams), 
-				SubmissionStats.create(submissionStatsCreateParams)
-			])
+			if (idTest) {
+
+				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
+					where: {
+						user_id: req.userId,
+						question_id: idQuestion,
+						class_id: idClass,
+						test_id: idTest,
+					},
+					defaults: {
+						user_id: req.userId,
+						question_id: idQuestion,
+						class_id: idClass,
+						test_id: idTest,
+						hitPercentage,
+					}
+				})
+				if (!created) {
+					await feedBackTest.update({
+						hitPercentage,
+					})
+				}
+			}
 			return res.status(200).json({ msg: "Submissão salva com sucesso!" })
 		}
 		catch (err) {
@@ -415,6 +452,7 @@ class SubmissionController {
 			return res.status(500).json(err)
 		}
 	}
+
 	async updateSubmissionByDiscursiveQuestion(req, res) {
 		const { hitPercentage, idUser, idQuestion, idList, idTest, idClass, idLesson } = req.body
 		try {
@@ -435,7 +473,7 @@ class SubmissionController {
 			const submissionStatsPromise = SubmissionStats.findOne(submissionQuery)
 			const [submission, submissionStats] = await Promise.all([submissionPromise, submissionStatsPromise])
 			await Promise.all([
-				submission.update({ hitPercentage }), 
+				submission.update({   }), 
 				submissionStats.update({ hitPercentage })
 			])
 			
