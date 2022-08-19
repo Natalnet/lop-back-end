@@ -3,7 +3,7 @@ const path = require('path')
 const { Op, QueryTypes } = require('sequelize')
 const moment = require('moment');
 const sequelize = require('../../database/connection')
-const { Submission, Question, ClassHasListQuestion, ClassHasUser, ClassHasTest, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
+const { SubmissionStats, Question, ClassHasListQuestion, ClassHasUser, ClassHasTest, ListQuestions, Test, Class, User, Tag } = sequelize.import(path.resolve(__dirname, '..', 'models'))
 
 class DataScienceController {
 	async getDataScienceTeachers(req, res) {
@@ -135,15 +135,15 @@ class DataScienceController {
 							}
 						}
 
-						const submissionsCount = await Submission.count(query)
+						const submissionsCount = await SubmissionStats.count(query)
 						query.where.hitPercentage = 100
-						const correctSumissionsCount = await Submission.count(query)
+						const correctSumissionsCount = await SubmissionStats.count(query)
 						if (submissionDeadline) {
 							query.where.createdAt = {
 								[Op.lte]: submissionDeadline
 							}
 						}
-						const completedSumissionsCount = await Submission.count(query)
+						const completedSumissionsCount = await SubmissionStats.count(query)
 						const questionCopy = JSON.parse(JSON.stringify(question))
 						delete questionCopy.listHasQuestion
 						questionCopy.completedSumissionsCount = completedSumissionsCount
@@ -400,7 +400,7 @@ class DataScienceController {
 				tests = await Promise.all(tests.map(async test => {
 
 					const questions = await Promise.all(test.questions.map(async question => {
-						const submission = await Submission.findOne({
+						const submission = await SubmissionStats.findOne({
 							where: {
 								user_id: user.id,
 								question_id: question.id,
@@ -443,7 +443,7 @@ class DataScienceController {
 			if (!classRoom) {
 				return res.status(404).json({ msg: 'Não foi encontrado nenhuma turma com o id informado' });
 			}
-			let submissions = await Submission.findAll({
+			let submissions = await SubmissionStats.findAll({
 				where: {
 					class_id: idClass
 				},
@@ -588,7 +588,7 @@ class DataScienceController {
 					[Op.lte]: new Date(untilAt)
 				}
 			}
-			let submissions = await Submission.findAll(query)
+			let submissions = await SubmissionStats.findAll(query)
 			submissions = JSON.parse(JSON.stringify(submissions))
 			submissions = await Promise.all(submissions.map(async submission => {
 				const classHasUser = await ClassHasUser.findOne({
