@@ -179,9 +179,7 @@ class QuestionController {
 					},
 				}
 			}
-			console.log(query)
 			let questions = await Question.findAll(query);
-			console.log('passou')
 			//let {count,rows} = await Question.findAndCountAll(query)
 			//let count = await Question.count(query)
 			const count = questions.length;
@@ -200,8 +198,19 @@ class QuestionController {
 			questions = await Promise.all(questions.map(async question => {
 				const submissionsCount = 1
 				const submissionsCorrectsCount = 1
-				const mySubmissionsCount = 1
-				const mySubmissionsCorrectCount = 1
+				const mySubmissionsCount = await SubmissionStats.count({
+					where: {
+						user_id: req.userId,
+						question_id: question.id,
+					},
+				})
+				const mySubmissionsCorrectCount = await SubmissionStats.count({
+					where: {
+						user_id: req.userId,
+						question_id: question.id,
+						hitPercentage: 100
+					},
+				})
 
 				const accessCount = await Access.count({
 					where: {
