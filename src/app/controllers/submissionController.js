@@ -422,29 +422,7 @@ class SubmissionController {
 					timeConsuming: lastSubmissioStats.timeConsuming + timeConsuming,
 				})
 			}
-			if (idTest) {
 
-				const [feedBackTest, created] = await FeedBackTest.findOrCreate({
-					where: {
-						user_id: req.userId,
-						question_id: idQuestion,
-						class_id: idClass,
-						test_id: idTest,
-					},
-					defaults: {
-						user_id: req.userId,
-						question_id: idQuestion,
-						class_id: idClass,
-						test_id: idTest,
-						hitPercentage,
-					}
-				})
-				if (!created) {
-					await feedBackTest.update({
-						hitPercentage,
-					})
-				}
-			}
 			return res.status(200).json({ msg: "Submissão salva com sucesso!" })
 		}
 		catch (err) {
@@ -469,9 +447,16 @@ class SubmissionController {
 					lesson_id: idLesson || null,
 				}
 			}
+			Object.keys(submissionQuery.where).forEach(key => {
+				if (!submissionQuery.where[key]) {
+					delete submissionQuery.where[key]
+				}
+			})
 			const submissionPromise = Submission.findOne(submissionQuery);
+			
 			const submissionStatsPromise = SubmissionStats.findOne(submissionQuery)
 			const [submission, submissionStats] = await Promise.all([submissionPromise, submissionStatsPromise])
+			// console.log(submissionStats)
 			await Promise.all([
 				submission.update({   }), 
 				submissionStats.update({ hitPercentage })
