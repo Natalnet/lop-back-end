@@ -20,7 +20,7 @@
     "handlebars": "^4.7.6",
     "jsonwebtoken": "^8.5.1",
     "moment": "^2.29.1",
-    "mongoose": "^5.4.22",
+    "mongoose": "^5.13.15",
     "moss-node-client": "^1.0.2",
     "mysql2": "^2.2.5",
     "nodemailer": "^6.1.0",
