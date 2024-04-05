@@ -6,6 +6,12 @@ const path = require('path')
 const sequelize = require('../../database/connection')
 const {Test,Question,Class,SubmissionStats,User,ClassHasTest} = sequelize.import(path.resolve(__dirname,'..','models'))
 
+function hashPassword(password) {
+	const hash = crypto.createHash('sha256');
+	hash.update(password);
+	return hash.digest('hex');
+}
+
 class TestController{
 	async index(req,res){
 		const idUser = req.query.idUser || req.userId;
@@ -82,10 +88,9 @@ class TestController{
 			const classHasTest = await ClassHasTest.findOne({
 				where:{
 					test_id: idTest,
-					password: password
 				}
 			})
-			if(classHasTest){
+			if(classHasTest && hashPassword(classHasTest.password) === password){
 				return res.status(200).json({msg: 'ok'})
 			}
 			return res.status(400).json({msg: 'Senha não bate'})
