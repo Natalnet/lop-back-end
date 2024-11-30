@@ -18,7 +18,7 @@
     "express": "^4.16.4",
     "fs": "^0.0.1-security",
     "handlebars": "^4.7.6",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "moment": "^2.29.1",
     "mongoose": "^5.4.22",
     "moss-node-client": "^1.0.2",
